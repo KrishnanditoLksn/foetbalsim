@@ -4111,6 +4111,1136 @@ class GameStatesCompanion extends UpdateCompanion<GameStateRow> {
   }
 }
 
+class $FixturesTable extends Fixtures
+    with TableInfo<$FixturesTable, FixtureRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FixturesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _leagueIdMeta = const VerificationMeta(
+    'leagueId',
+  );
+  @override
+  late final GeneratedColumn<String> leagueId = GeneratedColumn<String>(
+    'league_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roundMeta = const VerificationMeta('round');
+  @override
+  late final GeneratedColumn<int> round = GeneratedColumn<int>(
+    'round',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _homeClubIdMeta = const VerificationMeta(
+    'homeClubId',
+  );
+  @override
+  late final GeneratedColumn<String> homeClubId = GeneratedColumn<String>(
+    'home_club_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _awayClubIdMeta = const VerificationMeta(
+    'awayClubId',
+  );
+  @override
+  late final GeneratedColumn<String> awayClubId = GeneratedColumn<String>(
+    'away_club_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _homeGoalsMeta = const VerificationMeta(
+    'homeGoals',
+  );
+  @override
+  late final GeneratedColumn<int> homeGoals = GeneratedColumn<int>(
+    'home_goals',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _awayGoalsMeta = const VerificationMeta(
+    'awayGoals',
+  );
+  @override
+  late final GeneratedColumn<int> awayGoals = GeneratedColumn<int>(
+    'away_goals',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    leagueId,
+    round,
+    date,
+    homeClubId,
+    awayClubId,
+    homeGoals,
+    awayGoals,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fixtures';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FixtureRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('league_id')) {
+      context.handle(
+        _leagueIdMeta,
+        leagueId.isAcceptableOrUnknown(data['league_id']!, _leagueIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_leagueIdMeta);
+    }
+    if (data.containsKey('round')) {
+      context.handle(
+        _roundMeta,
+        round.isAcceptableOrUnknown(data['round']!, _roundMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roundMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('home_club_id')) {
+      context.handle(
+        _homeClubIdMeta,
+        homeClubId.isAcceptableOrUnknown(
+          data['home_club_id']!,
+          _homeClubIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_homeClubIdMeta);
+    }
+    if (data.containsKey('away_club_id')) {
+      context.handle(
+        _awayClubIdMeta,
+        awayClubId.isAcceptableOrUnknown(
+          data['away_club_id']!,
+          _awayClubIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_awayClubIdMeta);
+    }
+    if (data.containsKey('home_goals')) {
+      context.handle(
+        _homeGoalsMeta,
+        homeGoals.isAcceptableOrUnknown(data['home_goals']!, _homeGoalsMeta),
+      );
+    }
+    if (data.containsKey('away_goals')) {
+      context.handle(
+        _awayGoalsMeta,
+        awayGoals.isAcceptableOrUnknown(data['away_goals']!, _awayGoalsMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FixtureRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FixtureRow(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      leagueId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}league_id'],
+          )!,
+      round:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}round'],
+          )!,
+      date:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}date'],
+          )!,
+      homeClubId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}home_club_id'],
+          )!,
+      awayClubId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}away_club_id'],
+          )!,
+      homeGoals: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}home_goals'],
+      ),
+      awayGoals: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}away_goals'],
+      ),
+    );
+  }
+
+  @override
+  $FixturesTable createAlias(String alias) {
+    return $FixturesTable(attachedDatabase, alias);
+  }
+}
+
+class FixtureRow extends DataClass implements Insertable<FixtureRow> {
+  final int id;
+  final String leagueId;
+  final int round;
+  final DateTime date;
+  final String homeClubId;
+  final String awayClubId;
+  final int? homeGoals;
+  final int? awayGoals;
+  const FixtureRow({
+    required this.id,
+    required this.leagueId,
+    required this.round,
+    required this.date,
+    required this.homeClubId,
+    required this.awayClubId,
+    this.homeGoals,
+    this.awayGoals,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['league_id'] = Variable<String>(leagueId);
+    map['round'] = Variable<int>(round);
+    map['date'] = Variable<DateTime>(date);
+    map['home_club_id'] = Variable<String>(homeClubId);
+    map['away_club_id'] = Variable<String>(awayClubId);
+    if (!nullToAbsent || homeGoals != null) {
+      map['home_goals'] = Variable<int>(homeGoals);
+    }
+    if (!nullToAbsent || awayGoals != null) {
+      map['away_goals'] = Variable<int>(awayGoals);
+    }
+    return map;
+  }
+
+  FixturesCompanion toCompanion(bool nullToAbsent) {
+    return FixturesCompanion(
+      id: Value(id),
+      leagueId: Value(leagueId),
+      round: Value(round),
+      date: Value(date),
+      homeClubId: Value(homeClubId),
+      awayClubId: Value(awayClubId),
+      homeGoals:
+          homeGoals == null && nullToAbsent
+              ? const Value.absent()
+              : Value(homeGoals),
+      awayGoals:
+          awayGoals == null && nullToAbsent
+              ? const Value.absent()
+              : Value(awayGoals),
+    );
+  }
+
+  factory FixtureRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FixtureRow(
+      id: serializer.fromJson<int>(json['id']),
+      leagueId: serializer.fromJson<String>(json['leagueId']),
+      round: serializer.fromJson<int>(json['round']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      homeClubId: serializer.fromJson<String>(json['homeClubId']),
+      awayClubId: serializer.fromJson<String>(json['awayClubId']),
+      homeGoals: serializer.fromJson<int?>(json['homeGoals']),
+      awayGoals: serializer.fromJson<int?>(json['awayGoals']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'leagueId': serializer.toJson<String>(leagueId),
+      'round': serializer.toJson<int>(round),
+      'date': serializer.toJson<DateTime>(date),
+      'homeClubId': serializer.toJson<String>(homeClubId),
+      'awayClubId': serializer.toJson<String>(awayClubId),
+      'homeGoals': serializer.toJson<int?>(homeGoals),
+      'awayGoals': serializer.toJson<int?>(awayGoals),
+    };
+  }
+
+  FixtureRow copyWith({
+    int? id,
+    String? leagueId,
+    int? round,
+    DateTime? date,
+    String? homeClubId,
+    String? awayClubId,
+    Value<int?> homeGoals = const Value.absent(),
+    Value<int?> awayGoals = const Value.absent(),
+  }) => FixtureRow(
+    id: id ?? this.id,
+    leagueId: leagueId ?? this.leagueId,
+    round: round ?? this.round,
+    date: date ?? this.date,
+    homeClubId: homeClubId ?? this.homeClubId,
+    awayClubId: awayClubId ?? this.awayClubId,
+    homeGoals: homeGoals.present ? homeGoals.value : this.homeGoals,
+    awayGoals: awayGoals.present ? awayGoals.value : this.awayGoals,
+  );
+  FixtureRow copyWithCompanion(FixturesCompanion data) {
+    return FixtureRow(
+      id: data.id.present ? data.id.value : this.id,
+      leagueId: data.leagueId.present ? data.leagueId.value : this.leagueId,
+      round: data.round.present ? data.round.value : this.round,
+      date: data.date.present ? data.date.value : this.date,
+      homeClubId:
+          data.homeClubId.present ? data.homeClubId.value : this.homeClubId,
+      awayClubId:
+          data.awayClubId.present ? data.awayClubId.value : this.awayClubId,
+      homeGoals: data.homeGoals.present ? data.homeGoals.value : this.homeGoals,
+      awayGoals: data.awayGoals.present ? data.awayGoals.value : this.awayGoals,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FixtureRow(')
+          ..write('id: $id, ')
+          ..write('leagueId: $leagueId, ')
+          ..write('round: $round, ')
+          ..write('date: $date, ')
+          ..write('homeClubId: $homeClubId, ')
+          ..write('awayClubId: $awayClubId, ')
+          ..write('homeGoals: $homeGoals, ')
+          ..write('awayGoals: $awayGoals')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    leagueId,
+    round,
+    date,
+    homeClubId,
+    awayClubId,
+    homeGoals,
+    awayGoals,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FixtureRow &&
+          other.id == this.id &&
+          other.leagueId == this.leagueId &&
+          other.round == this.round &&
+          other.date == this.date &&
+          other.homeClubId == this.homeClubId &&
+          other.awayClubId == this.awayClubId &&
+          other.homeGoals == this.homeGoals &&
+          other.awayGoals == this.awayGoals);
+}
+
+class FixturesCompanion extends UpdateCompanion<FixtureRow> {
+  final Value<int> id;
+  final Value<String> leagueId;
+  final Value<int> round;
+  final Value<DateTime> date;
+  final Value<String> homeClubId;
+  final Value<String> awayClubId;
+  final Value<int?> homeGoals;
+  final Value<int?> awayGoals;
+  const FixturesCompanion({
+    this.id = const Value.absent(),
+    this.leagueId = const Value.absent(),
+    this.round = const Value.absent(),
+    this.date = const Value.absent(),
+    this.homeClubId = const Value.absent(),
+    this.awayClubId = const Value.absent(),
+    this.homeGoals = const Value.absent(),
+    this.awayGoals = const Value.absent(),
+  });
+  FixturesCompanion.insert({
+    this.id = const Value.absent(),
+    required String leagueId,
+    required int round,
+    required DateTime date,
+    required String homeClubId,
+    required String awayClubId,
+    this.homeGoals = const Value.absent(),
+    this.awayGoals = const Value.absent(),
+  }) : leagueId = Value(leagueId),
+       round = Value(round),
+       date = Value(date),
+       homeClubId = Value(homeClubId),
+       awayClubId = Value(awayClubId);
+  static Insertable<FixtureRow> custom({
+    Expression<int>? id,
+    Expression<String>? leagueId,
+    Expression<int>? round,
+    Expression<DateTime>? date,
+    Expression<String>? homeClubId,
+    Expression<String>? awayClubId,
+    Expression<int>? homeGoals,
+    Expression<int>? awayGoals,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (leagueId != null) 'league_id': leagueId,
+      if (round != null) 'round': round,
+      if (date != null) 'date': date,
+      if (homeClubId != null) 'home_club_id': homeClubId,
+      if (awayClubId != null) 'away_club_id': awayClubId,
+      if (homeGoals != null) 'home_goals': homeGoals,
+      if (awayGoals != null) 'away_goals': awayGoals,
+    });
+  }
+
+  FixturesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? leagueId,
+    Value<int>? round,
+    Value<DateTime>? date,
+    Value<String>? homeClubId,
+    Value<String>? awayClubId,
+    Value<int?>? homeGoals,
+    Value<int?>? awayGoals,
+  }) {
+    return FixturesCompanion(
+      id: id ?? this.id,
+      leagueId: leagueId ?? this.leagueId,
+      round: round ?? this.round,
+      date: date ?? this.date,
+      homeClubId: homeClubId ?? this.homeClubId,
+      awayClubId: awayClubId ?? this.awayClubId,
+      homeGoals: homeGoals ?? this.homeGoals,
+      awayGoals: awayGoals ?? this.awayGoals,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (leagueId.present) {
+      map['league_id'] = Variable<String>(leagueId.value);
+    }
+    if (round.present) {
+      map['round'] = Variable<int>(round.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (homeClubId.present) {
+      map['home_club_id'] = Variable<String>(homeClubId.value);
+    }
+    if (awayClubId.present) {
+      map['away_club_id'] = Variable<String>(awayClubId.value);
+    }
+    if (homeGoals.present) {
+      map['home_goals'] = Variable<int>(homeGoals.value);
+    }
+    if (awayGoals.present) {
+      map['away_goals'] = Variable<int>(awayGoals.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FixturesCompanion(')
+          ..write('id: $id, ')
+          ..write('leagueId: $leagueId, ')
+          ..write('round: $round, ')
+          ..write('date: $date, ')
+          ..write('homeClubId: $homeClubId, ')
+          ..write('awayClubId: $awayClubId, ')
+          ..write('homeGoals: $homeGoals, ')
+          ..write('awayGoals: $awayGoals')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $InboxMessagesTable extends InboxMessages
+    with TableInfo<$InboxMessagesTable, InboxRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InboxMessagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<InboxCategory, String> category =
+      GeneratedColumn<String>(
+        'category',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<InboxCategory>($InboxMessagesTable.$convertercategory);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isReadMeta = const VerificationMeta('isRead');
+  @override
+  late final GeneratedColumn<bool> isRead = GeneratedColumn<bool>(
+    'is_read',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_read" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _actionTypeMeta = const VerificationMeta(
+    'actionType',
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<InboxActionType, String>
+  actionType = GeneratedColumn<String>(
+    'action_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<InboxActionType>($InboxMessagesTable.$converteractionType);
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedMeta = const VerificationMeta(
+    'resolved',
+  );
+  @override
+  late final GeneratedColumn<bool> resolved = GeneratedColumn<bool>(
+    'resolved',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("resolved" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _choiceMeta = const VerificationMeta('choice');
+  @override
+  late final GeneratedColumn<String> choice = GeneratedColumn<String>(
+    'choice',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    date,
+    category,
+    title,
+    body,
+    isRead,
+    actionType,
+    payload,
+    resolved,
+    choice,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inbox_messages';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InboxRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    context.handle(_categoryMeta, const VerificationResult.success());
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('is_read')) {
+      context.handle(
+        _isReadMeta,
+        isRead.isAcceptableOrUnknown(data['is_read']!, _isReadMeta),
+      );
+    }
+    context.handle(_actionTypeMeta, const VerificationResult.success());
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    }
+    if (data.containsKey('resolved')) {
+      context.handle(
+        _resolvedMeta,
+        resolved.isAcceptableOrUnknown(data['resolved']!, _resolvedMeta),
+      );
+    }
+    if (data.containsKey('choice')) {
+      context.handle(
+        _choiceMeta,
+        choice.isAcceptableOrUnknown(data['choice']!, _choiceMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InboxRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InboxRow(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      date:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}date'],
+          )!,
+      category: $InboxMessagesTable.$convertercategory.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}category'],
+        )!,
+      ),
+      title:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}title'],
+          )!,
+      body:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}body'],
+          )!,
+      isRead:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_read'],
+          )!,
+      actionType: $InboxMessagesTable.$converteractionType.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}action_type'],
+        )!,
+      ),
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      ),
+      resolved:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}resolved'],
+          )!,
+      choice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}choice'],
+      ),
+    );
+  }
+
+  @override
+  $InboxMessagesTable createAlias(String alias) {
+    return $InboxMessagesTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<InboxCategory, String, String> $convertercategory =
+      const EnumNameConverter<InboxCategory>(InboxCategory.values);
+  static JsonTypeConverter2<InboxActionType, String, String>
+  $converteractionType = const EnumNameConverter<InboxActionType>(
+    InboxActionType.values,
+  );
+}
+
+class InboxRow extends DataClass implements Insertable<InboxRow> {
+  final int id;
+  final DateTime date;
+  final InboxCategory category;
+  final String title;
+  final String body;
+  final bool isRead;
+  final InboxActionType actionType;
+  final String? payload;
+  final bool resolved;
+  final String? choice;
+  const InboxRow({
+    required this.id,
+    required this.date,
+    required this.category,
+    required this.title,
+    required this.body,
+    required this.isRead,
+    required this.actionType,
+    this.payload,
+    required this.resolved,
+    this.choice,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date'] = Variable<DateTime>(date);
+    {
+      map['category'] = Variable<String>(
+        $InboxMessagesTable.$convertercategory.toSql(category),
+      );
+    }
+    map['title'] = Variable<String>(title);
+    map['body'] = Variable<String>(body);
+    map['is_read'] = Variable<bool>(isRead);
+    {
+      map['action_type'] = Variable<String>(
+        $InboxMessagesTable.$converteractionType.toSql(actionType),
+      );
+    }
+    if (!nullToAbsent || payload != null) {
+      map['payload'] = Variable<String>(payload);
+    }
+    map['resolved'] = Variable<bool>(resolved);
+    if (!nullToAbsent || choice != null) {
+      map['choice'] = Variable<String>(choice);
+    }
+    return map;
+  }
+
+  InboxMessagesCompanion toCompanion(bool nullToAbsent) {
+    return InboxMessagesCompanion(
+      id: Value(id),
+      date: Value(date),
+      category: Value(category),
+      title: Value(title),
+      body: Value(body),
+      isRead: Value(isRead),
+      actionType: Value(actionType),
+      payload:
+          payload == null && nullToAbsent
+              ? const Value.absent()
+              : Value(payload),
+      resolved: Value(resolved),
+      choice:
+          choice == null && nullToAbsent ? const Value.absent() : Value(choice),
+    );
+  }
+
+  factory InboxRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InboxRow(
+      id: serializer.fromJson<int>(json['id']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      category: $InboxMessagesTable.$convertercategory.fromJson(
+        serializer.fromJson<String>(json['category']),
+      ),
+      title: serializer.fromJson<String>(json['title']),
+      body: serializer.fromJson<String>(json['body']),
+      isRead: serializer.fromJson<bool>(json['isRead']),
+      actionType: $InboxMessagesTable.$converteractionType.fromJson(
+        serializer.fromJson<String>(json['actionType']),
+      ),
+      payload: serializer.fromJson<String?>(json['payload']),
+      resolved: serializer.fromJson<bool>(json['resolved']),
+      choice: serializer.fromJson<String?>(json['choice']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'date': serializer.toJson<DateTime>(date),
+      'category': serializer.toJson<String>(
+        $InboxMessagesTable.$convertercategory.toJson(category),
+      ),
+      'title': serializer.toJson<String>(title),
+      'body': serializer.toJson<String>(body),
+      'isRead': serializer.toJson<bool>(isRead),
+      'actionType': serializer.toJson<String>(
+        $InboxMessagesTable.$converteractionType.toJson(actionType),
+      ),
+      'payload': serializer.toJson<String?>(payload),
+      'resolved': serializer.toJson<bool>(resolved),
+      'choice': serializer.toJson<String?>(choice),
+    };
+  }
+
+  InboxRow copyWith({
+    int? id,
+    DateTime? date,
+    InboxCategory? category,
+    String? title,
+    String? body,
+    bool? isRead,
+    InboxActionType? actionType,
+    Value<String?> payload = const Value.absent(),
+    bool? resolved,
+    Value<String?> choice = const Value.absent(),
+  }) => InboxRow(
+    id: id ?? this.id,
+    date: date ?? this.date,
+    category: category ?? this.category,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    isRead: isRead ?? this.isRead,
+    actionType: actionType ?? this.actionType,
+    payload: payload.present ? payload.value : this.payload,
+    resolved: resolved ?? this.resolved,
+    choice: choice.present ? choice.value : this.choice,
+  );
+  InboxRow copyWithCompanion(InboxMessagesCompanion data) {
+    return InboxRow(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      category: data.category.present ? data.category.value : this.category,
+      title: data.title.present ? data.title.value : this.title,
+      body: data.body.present ? data.body.value : this.body,
+      isRead: data.isRead.present ? data.isRead.value : this.isRead,
+      actionType:
+          data.actionType.present ? data.actionType.value : this.actionType,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      resolved: data.resolved.present ? data.resolved.value : this.resolved,
+      choice: data.choice.present ? data.choice.value : this.choice,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InboxRow(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('category: $category, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('isRead: $isRead, ')
+          ..write('actionType: $actionType, ')
+          ..write('payload: $payload, ')
+          ..write('resolved: $resolved, ')
+          ..write('choice: $choice')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    date,
+    category,
+    title,
+    body,
+    isRead,
+    actionType,
+    payload,
+    resolved,
+    choice,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InboxRow &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.category == this.category &&
+          other.title == this.title &&
+          other.body == this.body &&
+          other.isRead == this.isRead &&
+          other.actionType == this.actionType &&
+          other.payload == this.payload &&
+          other.resolved == this.resolved &&
+          other.choice == this.choice);
+}
+
+class InboxMessagesCompanion extends UpdateCompanion<InboxRow> {
+  final Value<int> id;
+  final Value<DateTime> date;
+  final Value<InboxCategory> category;
+  final Value<String> title;
+  final Value<String> body;
+  final Value<bool> isRead;
+  final Value<InboxActionType> actionType;
+  final Value<String?> payload;
+  final Value<bool> resolved;
+  final Value<String?> choice;
+  const InboxMessagesCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.category = const Value.absent(),
+    this.title = const Value.absent(),
+    this.body = const Value.absent(),
+    this.isRead = const Value.absent(),
+    this.actionType = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.resolved = const Value.absent(),
+    this.choice = const Value.absent(),
+  });
+  InboxMessagesCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime date,
+    required InboxCategory category,
+    required String title,
+    required String body,
+    this.isRead = const Value.absent(),
+    required InboxActionType actionType,
+    this.payload = const Value.absent(),
+    this.resolved = const Value.absent(),
+    this.choice = const Value.absent(),
+  }) : date = Value(date),
+       category = Value(category),
+       title = Value(title),
+       body = Value(body),
+       actionType = Value(actionType);
+  static Insertable<InboxRow> custom({
+    Expression<int>? id,
+    Expression<DateTime>? date,
+    Expression<String>? category,
+    Expression<String>? title,
+    Expression<String>? body,
+    Expression<bool>? isRead,
+    Expression<String>? actionType,
+    Expression<String>? payload,
+    Expression<bool>? resolved,
+    Expression<String>? choice,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (category != null) 'category': category,
+      if (title != null) 'title': title,
+      if (body != null) 'body': body,
+      if (isRead != null) 'is_read': isRead,
+      if (actionType != null) 'action_type': actionType,
+      if (payload != null) 'payload': payload,
+      if (resolved != null) 'resolved': resolved,
+      if (choice != null) 'choice': choice,
+    });
+  }
+
+  InboxMessagesCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? date,
+    Value<InboxCategory>? category,
+    Value<String>? title,
+    Value<String>? body,
+    Value<bool>? isRead,
+    Value<InboxActionType>? actionType,
+    Value<String?>? payload,
+    Value<bool>? resolved,
+    Value<String?>? choice,
+  }) {
+    return InboxMessagesCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      category: category ?? this.category,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      isRead: isRead ?? this.isRead,
+      actionType: actionType ?? this.actionType,
+      payload: payload ?? this.payload,
+      resolved: resolved ?? this.resolved,
+      choice: choice ?? this.choice,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(
+        $InboxMessagesTable.$convertercategory.toSql(category.value),
+      );
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (isRead.present) {
+      map['is_read'] = Variable<bool>(isRead.value);
+    }
+    if (actionType.present) {
+      map['action_type'] = Variable<String>(
+        $InboxMessagesTable.$converteractionType.toSql(actionType.value),
+      );
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (resolved.present) {
+      map['resolved'] = Variable<bool>(resolved.value);
+    }
+    if (choice.present) {
+      map['choice'] = Variable<String>(choice.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InboxMessagesCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('category: $category, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('isRead: $isRead, ')
+          ..write('actionType: $actionType, ')
+          ..write('payload: $payload, ')
+          ..write('resolved: $resolved, ')
+          ..write('choice: $choice')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4120,6 +5250,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlayersTable players = $PlayersTable(this);
   late final $ContractsTable contracts = $ContractsTable(this);
   late final $GameStatesTable gameStates = $GameStatesTable(this);
+  late final $FixturesTable fixtures = $FixturesTable(this);
+  late final $InboxMessagesTable inboxMessages = $InboxMessagesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4131,6 +5263,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     players,
     contracts,
     gameStates,
+    fixtures,
+    inboxMessages,
   ];
 }
 
@@ -6100,6 +7234,567 @@ typedef $$GameStatesTableProcessedTableManager =
       GameStateRow,
       PrefetchHooks Function()
     >;
+typedef $$FixturesTableCreateCompanionBuilder =
+    FixturesCompanion Function({
+      Value<int> id,
+      required String leagueId,
+      required int round,
+      required DateTime date,
+      required String homeClubId,
+      required String awayClubId,
+      Value<int?> homeGoals,
+      Value<int?> awayGoals,
+    });
+typedef $$FixturesTableUpdateCompanionBuilder =
+    FixturesCompanion Function({
+      Value<int> id,
+      Value<String> leagueId,
+      Value<int> round,
+      Value<DateTime> date,
+      Value<String> homeClubId,
+      Value<String> awayClubId,
+      Value<int?> homeGoals,
+      Value<int?> awayGoals,
+    });
+
+class $$FixturesTableFilterComposer
+    extends Composer<_$AppDatabase, $FixturesTable> {
+  $$FixturesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get leagueId => $composableBuilder(
+    column: $table.leagueId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get round => $composableBuilder(
+    column: $table.round,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get homeClubId => $composableBuilder(
+    column: $table.homeClubId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get awayClubId => $composableBuilder(
+    column: $table.awayClubId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get homeGoals => $composableBuilder(
+    column: $table.homeGoals,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get awayGoals => $composableBuilder(
+    column: $table.awayGoals,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FixturesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FixturesTable> {
+  $$FixturesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get leagueId => $composableBuilder(
+    column: $table.leagueId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get round => $composableBuilder(
+    column: $table.round,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get homeClubId => $composableBuilder(
+    column: $table.homeClubId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get awayClubId => $composableBuilder(
+    column: $table.awayClubId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get homeGoals => $composableBuilder(
+    column: $table.homeGoals,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get awayGoals => $composableBuilder(
+    column: $table.awayGoals,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FixturesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FixturesTable> {
+  $$FixturesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get leagueId =>
+      $composableBuilder(column: $table.leagueId, builder: (column) => column);
+
+  GeneratedColumn<int> get round =>
+      $composableBuilder(column: $table.round, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get homeClubId => $composableBuilder(
+    column: $table.homeClubId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get awayClubId => $composableBuilder(
+    column: $table.awayClubId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get homeGoals =>
+      $composableBuilder(column: $table.homeGoals, builder: (column) => column);
+
+  GeneratedColumn<int> get awayGoals =>
+      $composableBuilder(column: $table.awayGoals, builder: (column) => column);
+}
+
+class $$FixturesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FixturesTable,
+          FixtureRow,
+          $$FixturesTableFilterComposer,
+          $$FixturesTableOrderingComposer,
+          $$FixturesTableAnnotationComposer,
+          $$FixturesTableCreateCompanionBuilder,
+          $$FixturesTableUpdateCompanionBuilder,
+          (
+            FixtureRow,
+            BaseReferences<_$AppDatabase, $FixturesTable, FixtureRow>,
+          ),
+          FixtureRow,
+          PrefetchHooks Function()
+        > {
+  $$FixturesTableTableManager(_$AppDatabase db, $FixturesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$FixturesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$FixturesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$FixturesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> leagueId = const Value.absent(),
+                Value<int> round = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<String> homeClubId = const Value.absent(),
+                Value<String> awayClubId = const Value.absent(),
+                Value<int?> homeGoals = const Value.absent(),
+                Value<int?> awayGoals = const Value.absent(),
+              }) => FixturesCompanion(
+                id: id,
+                leagueId: leagueId,
+                round: round,
+                date: date,
+                homeClubId: homeClubId,
+                awayClubId: awayClubId,
+                homeGoals: homeGoals,
+                awayGoals: awayGoals,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String leagueId,
+                required int round,
+                required DateTime date,
+                required String homeClubId,
+                required String awayClubId,
+                Value<int?> homeGoals = const Value.absent(),
+                Value<int?> awayGoals = const Value.absent(),
+              }) => FixturesCompanion.insert(
+                id: id,
+                leagueId: leagueId,
+                round: round,
+                date: date,
+                homeClubId: homeClubId,
+                awayClubId: awayClubId,
+                homeGoals: homeGoals,
+                awayGoals: awayGoals,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FixturesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FixturesTable,
+      FixtureRow,
+      $$FixturesTableFilterComposer,
+      $$FixturesTableOrderingComposer,
+      $$FixturesTableAnnotationComposer,
+      $$FixturesTableCreateCompanionBuilder,
+      $$FixturesTableUpdateCompanionBuilder,
+      (FixtureRow, BaseReferences<_$AppDatabase, $FixturesTable, FixtureRow>),
+      FixtureRow,
+      PrefetchHooks Function()
+    >;
+typedef $$InboxMessagesTableCreateCompanionBuilder =
+    InboxMessagesCompanion Function({
+      Value<int> id,
+      required DateTime date,
+      required InboxCategory category,
+      required String title,
+      required String body,
+      Value<bool> isRead,
+      required InboxActionType actionType,
+      Value<String?> payload,
+      Value<bool> resolved,
+      Value<String?> choice,
+    });
+typedef $$InboxMessagesTableUpdateCompanionBuilder =
+    InboxMessagesCompanion Function({
+      Value<int> id,
+      Value<DateTime> date,
+      Value<InboxCategory> category,
+      Value<String> title,
+      Value<String> body,
+      Value<bool> isRead,
+      Value<InboxActionType> actionType,
+      Value<String?> payload,
+      Value<bool> resolved,
+      Value<String?> choice,
+    });
+
+class $$InboxMessagesTableFilterComposer
+    extends Composer<_$AppDatabase, $InboxMessagesTable> {
+  $$InboxMessagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<InboxCategory, InboxCategory, String>
+  get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRead => $composableBuilder(
+    column: $table.isRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<InboxActionType, InboxActionType, String>
+  get actionType => $composableBuilder(
+    column: $table.actionType,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get resolved => $composableBuilder(
+    column: $table.resolved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get choice => $composableBuilder(
+    column: $table.choice,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$InboxMessagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $InboxMessagesTable> {
+  $$InboxMessagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRead => $composableBuilder(
+    column: $table.isRead,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actionType => $composableBuilder(
+    column: $table.actionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get resolved => $composableBuilder(
+    column: $table.resolved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get choice => $composableBuilder(
+    column: $table.choice,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$InboxMessagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InboxMessagesTable> {
+  $$InboxMessagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<InboxCategory, String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<bool> get isRead =>
+      $composableBuilder(column: $table.isRead, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<InboxActionType, String> get actionType =>
+      $composableBuilder(
+        column: $table.actionType,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<bool> get resolved =>
+      $composableBuilder(column: $table.resolved, builder: (column) => column);
+
+  GeneratedColumn<String> get choice =>
+      $composableBuilder(column: $table.choice, builder: (column) => column);
+}
+
+class $$InboxMessagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InboxMessagesTable,
+          InboxRow,
+          $$InboxMessagesTableFilterComposer,
+          $$InboxMessagesTableOrderingComposer,
+          $$InboxMessagesTableAnnotationComposer,
+          $$InboxMessagesTableCreateCompanionBuilder,
+          $$InboxMessagesTableUpdateCompanionBuilder,
+          (
+            InboxRow,
+            BaseReferences<_$AppDatabase, $InboxMessagesTable, InboxRow>,
+          ),
+          InboxRow,
+          PrefetchHooks Function()
+        > {
+  $$InboxMessagesTableTableManager(_$AppDatabase db, $InboxMessagesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$InboxMessagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () =>
+                  $$InboxMessagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$InboxMessagesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<InboxCategory> category = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<bool> isRead = const Value.absent(),
+                Value<InboxActionType> actionType = const Value.absent(),
+                Value<String?> payload = const Value.absent(),
+                Value<bool> resolved = const Value.absent(),
+                Value<String?> choice = const Value.absent(),
+              }) => InboxMessagesCompanion(
+                id: id,
+                date: date,
+                category: category,
+                title: title,
+                body: body,
+                isRead: isRead,
+                actionType: actionType,
+                payload: payload,
+                resolved: resolved,
+                choice: choice,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime date,
+                required InboxCategory category,
+                required String title,
+                required String body,
+                Value<bool> isRead = const Value.absent(),
+                required InboxActionType actionType,
+                Value<String?> payload = const Value.absent(),
+                Value<bool> resolved = const Value.absent(),
+                Value<String?> choice = const Value.absent(),
+              }) => InboxMessagesCompanion.insert(
+                id: id,
+                date: date,
+                category: category,
+                title: title,
+                body: body,
+                isRead: isRead,
+                actionType: actionType,
+                payload: payload,
+                resolved: resolved,
+                choice: choice,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$InboxMessagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InboxMessagesTable,
+      InboxRow,
+      $$InboxMessagesTableFilterComposer,
+      $$InboxMessagesTableOrderingComposer,
+      $$InboxMessagesTableAnnotationComposer,
+      $$InboxMessagesTableCreateCompanionBuilder,
+      $$InboxMessagesTableUpdateCompanionBuilder,
+      (InboxRow, BaseReferences<_$AppDatabase, $InboxMessagesTable, InboxRow>),
+      InboxRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6116,4 +7811,8 @@ class $AppDatabaseManager {
       $$ContractsTableTableManager(_db, _db.contracts);
   $$GameStatesTableTableManager get gameStates =>
       $$GameStatesTableTableManager(_db, _db.gameStates);
+  $$FixturesTableTableManager get fixtures =>
+      $$FixturesTableTableManager(_db, _db.fixtures);
+  $$InboxMessagesTableTableManager get inboxMessages =>
+      $$InboxMessagesTableTableManager(_db, _db.inboxMessages);
 }

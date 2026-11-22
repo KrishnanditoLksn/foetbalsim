@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../domain/enums/inbox.dart';
 import '../../domain/enums/position.dart';
 import '../../domain/enums/squad_status.dart';
 
@@ -118,4 +119,35 @@ class GameStates extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Jadwal pertandingan satu musim (kedua liga). Skor null = belum dimainkan.
+@DataClassName('FixtureRow')
+class Fixtures extends Table {
+  IntColumn get id => integer()();
+  TextColumn get leagueId => text()();
+  IntColumn get round => integer()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get homeClubId => text()();
+  TextColumn get awayClubId => text()();
+  IntColumn get homeGoals => integer().nullable()();
+  IntColumn get awayGoals => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Inbox: sambutan dewan, laporan laga, kontrak, dan keputusan lainnya.
+@DataClassName('InboxRow')
+class InboxMessages extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get category => textEnum<InboxCategory>()();
+  TextColumn get title => text()();
+  TextColumn get body => text()();
+  BoolColumn get isRead => boolean().withDefault(const Constant(false))();
+  TextColumn get actionType => textEnum<InboxActionType>()();
+  TextColumn get payload => text().nullable()();
+  BoolColumn get resolved => boolean().withDefault(const Constant(false))();
+  TextColumn get choice => text().nullable()();
 }

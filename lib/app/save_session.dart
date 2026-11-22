@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/rng/seeded_random.dart';
 import '../data/database/save_storage.dart';
 import '../data/repositories/world_repository.dart';
+import '../data/services/game_engine.dart';
 import '../domain/generators/world_generator.dart';
 import '../domain/models/game_models.dart';
 import 'providers.dart';
@@ -11,6 +12,8 @@ import 'providers.dart';
 Future<void> activateSave(WidgetRef ref, int slot) async {
   final previous = ref.read(currentDatabaseProvider);
   final db = await SaveStorage.open(slot);
+  // Save lama (v1) belum punya jadwal; dibuatkan di sini bila perlu.
+  await GameEngine(db).ensureSeasonInitialized();
   ref.read(currentDatabaseProvider.notifier).state = db;
   ref.read(activeSaveSlotProvider.notifier).state = slot;
   await previous?.close();
@@ -42,9 +45,9 @@ Future<bool> createNewCareer(
       clubId: clubId,
       seed: seed,
     );
-    await WorldRepository(
-      ref.read(databaseProvider),
-    ).saveWorld(blueprint, state);
+    final db = ref.read(databaseProvider);
+    await WorldRepository(db).saveWorld(blueprint, state);
+    await GameEngine(db).ensureSeasonInitialized();
   } catch (_) {
     // Jangan biarkan slot setengah jadi tersisa sebagai save "rusak".
     final db = ref.read(currentDatabaseProvider);

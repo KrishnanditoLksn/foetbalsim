@@ -9,9 +9,11 @@ import 'package:futbol/domain/models/game_models.dart';
 String _fingerprint(WorldBlueprint w) {
   final buf = StringBuffer();
   for (final p in w.players) {
-    buf.write('${p.id}|${p.clubId}|${p.firstName} ${p.lastName}|${p.age}|'
-        '${p.position.name}|${p.currentAbility}|${p.potentialAbility}|'
-        '${p.marketValue}|');
+    buf.write(
+      '${p.id}|${p.clubId}|${p.firstName} ${p.lastName}|${p.age}|'
+      '${p.position.name}|${p.currentAbility}|${p.potentialAbility}|'
+      '${p.marketValue}|',
+    );
     for (final e in p.attributes.values.entries) {
       buf.write('${e.key.name}=${e.value},');
     }
@@ -44,8 +46,7 @@ void main() {
 
     test('jumlahTim liga sesuai jumlah klub di seed', () {
       for (final league in world.leagues) {
-        final count =
-            world.clubs.where((c) => c.leagueId == league.id).length;
+        final count = world.clubs.where((c) => c.leagueId == league.id).length;
         expect(count, league.jumlahTim, reason: league.name);
       }
     });
@@ -102,10 +103,11 @@ void main() {
 
     test('klub tier 1 rata-rata CA lebih tinggi dari tier 2', () {
       double avgCa(String leagueId) {
-        final clubIds = world.clubs
-            .where((c) => c.leagueId == leagueId)
-            .map((c) => c.id)
-            .toSet();
+        final clubIds =
+            world.clubs
+                .where((c) => c.leagueId == leagueId)
+                .map((c) => c.id)
+                .toSet();
         final ps = world.players.where((p) => clubIds.contains(p.clubId));
         final total = ps.fold<int>(0, (s, p) => s + p.currentAbility);
         return total / ps.length;

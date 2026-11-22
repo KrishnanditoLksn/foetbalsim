@@ -1,46 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
+import '../../core/utils/date_format.dart';
 import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
+import '../../data/services/game_engine.dart';
 import '../../domain/models/game_models.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
-  static const _menu = <(String, IconData)>[
-    ('Inbox', Icons.inbox),
-    ('Skuad', Icons.groups),
-    ('Taktik', Icons.sports),
-    ('Latihan', Icons.fitness_center),
-    ('Transfer', Icons.swap_horiz),
-    ('Jadwal', Icons.calendar_month),
-    ('Klub', Icons.shield),
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stateAsync = ref.watch(gameStateProvider);
+    final statusAsync = ref.watch(gameStatusProvider);
+    final busy = ref.watch(engineBusyProvider);
 
-    return stateAsync.when(
+    return statusAsync.when(
       loading:
           () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
-      data: (state) {
-        if (state == null) {
-          return const Scaffold(
-            body: Center(child: Text('Data karier tidak ditemukan.')),
-          );
-        }
-        final clubId = state.clubId;
-        final clubAsync =
+      data: (s) {
+        final clubId = s.clubId;
+        final club =
             clubId == null
-                ? const AsyncValue<Club?>.data(null)
-                : ref.watch(clubByIdProvider(clubId));
-        final club = clubAsync.valueOrNull;
+                ? null
+                : ref.watch(clubByIdProvider(clubId)).valueOrNull;
 
         return Scaffold(
           appBar: AppBar(
@@ -60,13 +48,17 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Card(
                   child: ListTile(
-                    title: Text('Manajer ${state.managerName}'),
+                    title: Text(formatDateWithDay(s.date)),
                     subtitle: Text(
-                      'Tanggal: ${_formatDate(state.currentDate)}'
-                      '${club == null ? '' : ' · Saldo ${formatMoney(club.balance)}'}',
+                      club == null
+                          ? '-'
+                          : 'Saldo ${formatMoney(club.balance)} · '
+                              'Posisi liga: ${_leaguePosition(ref, club)}',
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _NextMatchCard(status: s, clubId: clubId),
                 const SizedBox(height: 12),
                 Expanded(
                   child: GridView.count(
@@ -75,18 +67,62 @@ class DashboardScreen extends ConsumerWidget {
                     mainAxisSpacing: 12,
                     childAspectRatio: 2.2,
                     children: [
-                      for (final (label, icon) in _menu)
+                      _MenuTile(
+                        label: 'Inbox',
+                        icon: Icons.inbox,
+                        badge: s.pendingActions.length,
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRoutes.inbox),
+                      ),
+                      _MenuTile(
+                        label: 'Skuad',
+                        icon: Icons.groups,
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRoutes.squad),
+                      ),
+                      _MenuTile(
+                        label: 'Jadwal',
+                        icon: Icons.calendar_month,
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRoutes.fixtures),
+                      ),
+                      _MenuTile(
+                        label: 'Klasemen',
+                        icon: Icons.emoji_events,
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRoutes.fixtures),
+                      ),
+                      for (final label in const [
+                        'Taktik',
+                        'Latihan',
+                        'Transfer',
+                        'Klub',
+                      ])
                         _MenuTile(
                           label: label,
-                          icon: icon,
-                          onTap: () => _open(context, label),
+                          icon: Icons.construction,
+                          onTap:
+                              () => ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '$label akan hadir di fase berikutnya.',
+                                  ),
+                                ),
+                              ),
                         ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                // CONTINUE sementara nonaktif; diaktifkan di Fase 2.
-                const FilledButton(onPressed: null, child: Text('CONTINUE')),
+                _ActionButton(status: s, busy: busy),
               ],
             ),
           ),
@@ -95,32 +131,146 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _open(BuildContext context, String label) {
-    if (label == 'Skuad') {
-      Navigator.of(context).pushNamed(AppRoutes.squad);
-      return;
+  static String _leaguePosition(WidgetRef ref, Club club) {
+    final table = ref.watch(leagueTableProvider(club.leagueId)).valueOrNull;
+    if (table == null) return '-';
+    final idx = table.indexWhere((r) => r.clubId == club.id);
+    return idx < 0 ? '-' : '${idx + 1}';
+  }
+}
+
+class _NextMatchCard extends ConsumerWidget {
+  const _NextMatchCard({required this.status, required this.clubId});
+
+  final GameStatus status;
+  final String? clubId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final f = status.todayFixture ?? status.nextFixture;
+    if (f == null || clubId == null) {
+      return Card(
+        child: ListTile(
+          title: Text(
+            status.seasonOver ? 'Musim selesai' : 'Tidak ada laga terdekat',
+          ),
+        ),
+      );
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label akan hadir di fase berikutnya.')),
+    final clubs = ref.watch(allClubsMapProvider).valueOrNull ?? const {};
+    final home = f.homeClubId == clubId;
+    final oppId = home ? f.awayClubId : f.homeClubId;
+    final opp = clubs[oppId]?.name ?? oppId;
+    final isToday = status.todayFixture != null;
+
+    return Card(
+      color: isToday ? Theme.of(context).colorScheme.tertiaryContainer : null,
+      child: ListTile(
+        leading: Icon(isToday ? Icons.sports_soccer : Icons.event),
+        title: Text(isToday ? 'HARI INI: vs $opp' : 'Laga berikutnya: vs $opp'),
+        subtitle: Text(
+          '${home ? 'Kandang' : 'Tandang'} · ${formatDateWithDay(f.date)} · Pekan ${f.round}',
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends ConsumerWidget {
+  const _ActionButton({required this.status, required this.busy});
+
+  final GameStatus status;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pending = status.pendingActions.length;
+
+    if (pending > 0) {
+      return FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.error,
+          foregroundColor: Theme.of(context).colorScheme.onError,
+        ),
+        onPressed: () => Navigator.of(context).pushNamed(AppRoutes.inbox),
+        child: Text('TINDAKAN DIPERLUKAN ($pending)'),
+      );
+    }
+    if (status.todayFixture != null) {
+      return FilledButton(
+        onPressed: busy ? null : () => _playMatch(context, ref),
+        child: const Text('MAINKAN LAGA'),
+      );
+    }
+    if (status.seasonOver) {
+      return const FilledButton(onPressed: null, child: Text('MUSIM SELESAI'));
+    }
+    return FilledButton(
+      onPressed: busy ? null : () => _continue(context, ref),
+      child: const Text('CONTINUE'),
     );
   }
 
-  static String _formatDate(DateTime d) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
-    ];
-    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  Future<void> _continue(BuildContext context, WidgetRef ref) async {
+    final result = await GameActions.continueGame(ref);
+    if (result == null || !context.mounted) return;
+    final reason = switch (result.stop) {
+      ContinueStop.blockingAction => 'Ada keputusan yang perlu Anda ambil.',
+      ContinueStop.matchDay => 'Hari pertandingan tim Anda.',
+      ContinueStop.seasonOver => 'Musim selesai.',
+      ContinueStop.dayLimit =>
+        'Batas ${GameEngine.maxDaysPerContinue} hari tercapai.',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${result.daysAdvanced} hari berjalan. $reason')),
+    );
+  }
+
+  Future<void> _playMatch(BuildContext context, WidgetRef ref) async {
+    final res = await GameActions.playMatchDay(ref);
+    if (res == null || !context.mounted) return;
+    final ours = res.ours;
+    await showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Hasil Laga'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '${ours.homeName}  ${ours.homeGoals} - ${ours.awayGoals}  ${ours.awayName}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(ctx).textTheme.titleLarge,
+                  ),
+                  const Divider(height: 24),
+                  Text(
+                    'Laga lain hari ini',
+                    style: Theme.of(ctx).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  if (res.others.isEmpty) const Text('Tidak ada laga lain.'),
+                  for (final o in res.others)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        '${o.homeName} ${o.homeGoals}-${o.awayGoals} ${o.awayName}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Lanjut'),
+              ),
+            ],
+          ),
+    );
   }
 }
 
@@ -129,11 +279,13 @@ class _MenuTile extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.badge = 0,
   });
 
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final int badge;
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +297,11 @@ class _MenuTile extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 28),
+              Badge(
+                isLabelVisible: badge > 0,
+                label: Text('$badge'),
+                child: Icon(icon, size: 28),
+              ),
               const SizedBox(height: 6),
               Text(label, style: Theme.of(context).textTheme.titleMedium),
             ],
