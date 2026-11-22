@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "season": "2025/26",
+  "nations": [
+    { "id": "ESP", "name": "España", "code": "ESP" }
+  ],
+  "leagues": [
+    {
+      "id": "laliga",
+      "nationId": "ESP",
+      "name": "LALIGA EA SPORTS",
+      "tier": 1,
+      "jumlahTim": 20,
+      "slotPromosi": 0,
+      "slotDegradasi": 3,
+      "slotPlayoff": 0
+    },
+    {
+      "id": "laliga-hypermotion",
+      "nationId": "ESP",
+      "name": "LALIGA HYPERMOTION",
+      "tier": 2,
+      "jumlahTim": 22,
+      "slotPromosi": 2,
+      "slotDegradasi": 4,
+      "slotPlayoff": 4
+    }
+  ],
+  "clubs": [
+    { "id": "alaves", "leagueId": "laliga", "name": "Alavés", "shortName": "ALA", "primaryColor": "#0057B8", "secondaryColor": "#FFFFFF", "reputation": 55, "stadiumName": "Mendizorrotza", "capacity": 19840, "balance": 40000, "transferBudget": 15000, "wageBudget": 25000 },
+    { "id": "athletic-club", "leagueId": "laliga", "name": "Athletic Club", "shortName": "ATH", "primaryColor": "#EE2523", "secondaryColor": "#FFFFFF", "reputation": 78, "stadiumName": "San Mamés", "capacity": 53332, "balance": 90000, "transferBudget": 40000, "wageBudget": 60000 },
+    { "id": "atletico-madrid", "leagueId": "laliga", "name": "Atlético Madrid", "shortName": "ATM", "primaryColor": "#CB3524", "secondaryColor": "#FFFFFF", "reputation": 90, "stadiumName": "Metropolitano", "capacity": 68456, "balance": 180000, "transferBudget": 80000, "wageBudget": 150000 },
+    { "id": "barcelona", "leagueId": "laliga", "name": "Barcelona", "shortName": "BAR", "primaryColor": "#A50044", "secondaryColor": "#004D98", "reputation": 95, "stadiumName": "Olímpic Lluís Companys", "capacity": 55926, "balance": 150000, "transferBudget": 100000, "wageBudget": 250000 },
+    { "id": "celta", "leagueId": "laliga", "name": "Celta de Vigo", "shortName": "CEL", "primaryColor": "#8AC3EE", "secondaryColor": "#FFFFFF", "reputation": 60, "stadiumName": "Balaídos", "capacity": 29000, "balance": 35000, "transferBudget": 15000, "wageBudget": 25000 },
+    { "id": "elche", "leagueId": "laliga", "name": "Elche", "shortName": "ELC", "primaryColor": "#00923F", "secondaryColor": "#FFFFFF", "reputation": 52, "stadiumName": "Martínez Valero", "capacity": 33000, "balance": 30000, "transferBudget": 12000, "wageBudget": 20000 },
+    { "id": "espanyol", "leagueId": "laliga", "name": "Espanyol", "shortName": "ESP", "primaryColor": "#0066B3", "secondaryColor": "#FFFFFF", "reputation": 58, "stadiumName": "RCDE Stadium", "capacity": 40500, "balance": 35000, "transferBudget": 15000, "wageBudget": 22000 },
+    { "id": "getafe", "leagueId": "laliga", "name": "Getafe", "shortName": "GET", "primaryColor": "#0067B1", "secondaryColor": "#FFFFFF", "reputation": 58, "stadiumName": "Coliseum Alfonso Pérez", "capacity": 17393, "balance": 35000, "transferBudget": 14000, "wageBudget": 22000 },
+    { "id": "girona", "leagueId": "laliga", "name": "Girona", "shortName": "GIR", "primaryColor": "#E30613", "secondaryColor": "#FFFFFF", "reputation": 62, "stadiumName": "Montilivi", "capacity": 14500, "balance": 45000, "transferBudget": 25000, "wageBudget": 30000 },
+    { "id": "levante", "leagueId": "laliga", "name": "Levante", "shortName": "LEV", "primaryColor": "#A01C2C", "secondaryColor": "#0059A8", "reputation": 52, "stadiumName": "Ciutat de València", "capacity": 25000, "balance": 25000, "transferBudget": 10000, "wageBudget": 15000 },
+    { "id": "mallorca", "leagueId": "laliga", "name": "Mallorca", "shortName": "MAL", "primaryColor": "#E20613", "secondaryColor": "#000000", "reputation": 58, "stadiumName": "Son Moix", "capacity": 23142, "balance": 40000, "transferBudget": 16000, "wageBudget": 24000 },
+    { "id": "osasuna", "leagueId": "laliga", "name": "Osasuna", "shortName": "OSA", "primaryColor": "#D7142B", "secondaryColor": "#0A1F6B", "reputation": 55, "stadiumName": "El Sadar", "capacity": 23576, "balance": 35000, "transferBudget": 14000, "wageBudget": 22000 },
+    { "id": "rayo-vallecano", "leagueId": "laliga", "name": "Rayo Vallecano", "shortName": "RAY", "primaryColor": "#D4202A", "secondaryColor": "#FFFFFF", "reputation": 54, "stadiumName": "Estadio de Vallecas", "capacity": 14708, "balance": 30000, "transferBudget": 12000, "wageBudget": 18000 },
+    { "id": "real-betis", "leagueId": "laliga", "name": "Real Betis", "shortName": "BET", "primaryColor": "#00954C", "secondaryColor": "#FFFFFF", "reputation": 75, "stadiumName": "Benito Villamarín", "capacity": 60720, "balance": 100000, "transferBudget": 45000, "wageBudget": 70000 },
+    { "id": "real-madrid", "leagueId": "laliga", "name": "Real Madrid", "shortName": "RMA", "primaryColor": "#FFFFFF", "secondaryColor": "#FEBE10", "reputation": 99, "stadiumName": "Santiago Bernabéu", "capacity": 81044, "balance": 250000, "transferBudget": 120000, "wageBudget": 300000 },
+    { "id": "real-oviedo", "leagueId": "laliga", "name": "Real Oviedo", "shortName": "OVI", "primaryColor": "#003D8F", "secondaryColor": "#FFFFFF", "reputation": 48, "stadiumName": "Carlos Tartiere", "capacity": 30500, "balance": 25000, "transferBudget": 10000, "wageBudget": 15000 },
+    { "id": "real-sociedad", "leagueId": "laliga", "name": "Real Sociedad", "shortName": "RSO", "primaryColor": "#0067B1", "secondaryColor": "#FFFFFF", "reputation": 80, "stadiumName": "Reale Arena", "capacity": 39500, "balance": 110000, "transferBudget": 50000, "wageBudget": 75000 },
+    { "id": "sevilla", "leagueId": "laliga", "name": "Sevilla", "shortName": "SEV", "primaryColor": "#D60000", "secondaryColor": "#FFFFFF", "reputation": 80, "stadiumName": "Ramón Sánchez-Pizjuán", "capacity": 43883, "balance": 120000, "transferBudget": 50000, "wageBudget": 80000 },
+    { "id": "valencia", "leagueId": "laliga", "name": "Valencia", "shortName": "VAL", "primaryColor": "#000000", "secondaryColor": "#F26B1D", "reputation": 76, "stadiumName": "Mestalla", "capacity": 47332, "balance": 110000, "transferBudget": 50000, "wageBudget": 85000 },
+    { "id": "villarreal", "leagueId": "laliga", "name": "Villarreal", "shortName": "VIL", "primaryColor": "#FFE600", "secondaryColor": "#005187", "reputation": 72, "stadiumName": "Estadio de la Cerámica", "capacity": 23500, "balance": 120000, "transferBudget": 50000, "wageBudget": 90000 },
+
+    { "id": "albacete", "leagueId": "laliga-hypermotion", "name": "Albacete", "shortName": "ALB", "primaryColor": "#FFFFFF", "secondaryColor": "#E30613", "reputation": 42, "stadiumName": "Carlos Belmonte", "capacity": 17000, "balance": 8000, "transferBudget": 2500, "wageBudget": 5000 },
+    { "id": "almeria", "leagueId": "laliga-hypermotion", "name": "Almería", "shortName": "ALM", "primaryColor": "#E30613", "secondaryColor": "#FFFFFF", "reputation": 52, "stadiumName": "Power Horse Stadium", "capacity": 15000, "balance": 12000, "transferBudget": 4000, "wageBudget": 7000 },
+    { "id": "andorra", "leagueId": "laliga-hypermotion", "name": "Andorra", "shortName": "AND", "primaryColor": "#0054A6", "secondaryColor": "#E30613", "reputation": 35, "stadiumName": "Estadi Nacional", "capacity": 3000, "balance": 3000, "transferBudget": 800, "wageBudget": 1800 },
+    { "id": "burgos", "leagueId": "laliga-hypermotion", "name": "Burgos", "shortName": "BUR", "primaryColor": "#FFFFFF", "secondaryColor": "#0047AB", "reputation": 40, "stadiumName": "El Plantío", "capacity": 12000, "balance": 5000, "transferBudget": 1500, "wageBudget": 3000 },
+    { "id": "cadiz", "leagueId": "laliga-hypermotion", "name": "Cádiz", "shortName": "CAD", "primaryColor": "#FFD200", "secondaryColor": "#0055A4", "reputation": 56, "stadiumName": "Nuevo Mirandilla", "capacity": 20724, "balance": 15000, "transferBudget": 6000, "wageBudget": 9000 },
+    { "id": "castellon", "leagueId": "laliga-hypermotion", "name": "Castellón", "shortName": "CAS", "primaryColor": "#003F8A", "secondaryColor": "#FFFFFF", "reputation": 36, "stadiumName": "Nou Castalia", "capacity": 15000, "balance": 6000, "transferBudget": 2000, "wageBudget": 3500 },
+    { "id": "ceuta", "leagueId": "laliga-hypermotion", "name": "Ceuta", "shortName": "CEU", "primaryColor": "#0061A0", "secondaryColor": "#FFFFFF", "reputation": 30, "stadiumName": "Alfonso Murube", "capacity": 6500, "balance": 2500, "transferBudget": 500, "wageBudget": 1500 },
+    { "id": "cordoba", "leagueId": "laliga-hypermotion", "name": "Córdoba", "shortName": "COR", "primaryColor": "#00843D", "secondaryColor": "#FFFFFF", "reputation": 42, "stadiumName": "El Arcángel", "capacity": 21822, "balance": 7000, "transferBudget": 2000, "wageBudget": 4000 },
+    { "id": "cultural-leonesa", "leagueId": "laliga-hypermotion", "name": "Cultural Leonesa", "shortName": "CUL", "primaryColor": "#FFFFFF", "secondaryColor": "#0047AB", "reputation": 32, "stadiumName": "Reino de León", "capacity": 13000, "balance": 4000, "transferBudget": 1200, "wageBudget": 2500 },
+    { "id": "deportivo", "leagueId": "laliga-hypermotion", "name": "Deportivo de La Coruña", "shortName": "DEP", "primaryColor": "#005DA7", "secondaryColor": "#FFFFFF", "reputation": 52, "stadiumName": "Riazor", "capacity": 32490, "balance": 9000, "transferBudget": 3000, "wageBudget": 5000 },
+    { "id": "eibar", "leagueId": "laliga-hypermotion", "name": "Eibar", "shortName": "EIB", "primaryColor": "#0048A1", "secondaryColor": "#C8102E", "reputation": 42, "stadiumName": "Ipurúa", "capacity": 6000, "balance": 6000, "transferBudget": 2000, "wageBudget": 3500 },
+    { "id": "granada", "leagueId": "laliga-hypermotion", "name": "Granada", "shortName": "GRA", "primaryColor": "#E30613", "secondaryColor": "#FFFFFF", "reputation": 52, "stadiumName": "Nuevo Los Cármenes", "capacity": 19336, "balance": 12000, "transferBudget": 4500, "wageBudget": 7000 },
+    { "id": "huesca", "leagueId": "laliga-hypermotion", "name": "Huesca", "shortName": "HUE", "primaryColor": "#0047AB", "secondaryColor": "#000000", "reputation": 36, "stadiumName": "El Alcoraz", "capacity": 5500, "balance": 4500, "transferBudget": 1500, "wageBudget": 2800 },
+    { "id": "las-palmas", "leagueId": "laliga-hypermotion", "name": "Las Palmas", "shortName": "LPA", "primaryColor": "#FFD400", "secondaryColor": "#0047AB", "reputation": 56, "stadiumName": "Estadio de Gran Canaria", "capacity": 32400, "balance": 16000, "transferBudget": 6000, "wageBudget": 9000 },
+    { "id": "leganes", "leagueId": "laliga-hypermotion", "name": "Leganés", "shortName": "LEG", "primaryColor": "#0057B7", "secondaryColor": "#FFFFFF", "reputation": 46, "stadiumName": "Butarque", "capacity": 12454, "balance": 8000, "transferBudget": 2500, "wageBudget": 4800 },
+    { "id": "malaga", "leagueId": "laliga-hypermotion", "name": "Málaga", "shortName": "MLG", "primaryColor": "#0067B1", "secondaryColor": "#FFFFFF", "reputation": 54, "stadiumName": "La Rosaleda", "capacity": 30044, "balance": 13000, "transferBudget": 5000, "wageBudget": 7500 },
+    { "id": "mirandes", "leagueId": "laliga-hypermotion", "name": "Mirandés", "shortName": "MIR", "primaryColor": "#E30613", "secondaryColor": "#FFFFFF", "reputation": 36, "stadiumName": "Anduva", "capacity": 5500, "balance": 4000, "transferBudget": 1200, "wageBudget": 2500 },
+    { "id": "racing-santander", "leagueId": "laliga-hypermotion", "name": "Racing Santander", "shortName": "RAC", "primaryColor": "#006F3C", "secondaryColor": "#FFFFFF", "reputation": 46, "stadiumName": "El Sardinero", "capacity": 22222, "balance": 7000, "transferBudget": 2500, "wageBudget": 4200 },
+    { "id": "real-sociedad-b", "leagueId": "laliga-hypermotion", "name": "Real Sociedad B", "shortName": "RSB", "primaryColor": "#0067B1", "secondaryColor": "#FFFFFF", "reputation": 40, "stadiumName": "Estadio de Zubieta", "capacity": 2500, "balance": 6000, "transferBudget": 2000, "wageBudget": 3500 },
+    { "id": "real-valladolid", "leagueId": "laliga-hypermotion", "name": "Real Valladolid", "shortName": "VLL", "primaryColor": "#5E2D86", "secondaryColor": "#FFFFFF", "reputation": 50, "stadiumName": "José Zorrilla", "capacity": 27890, "balance": 11000, "transferBudget": 4000, "wageBudget": 6500 },
+    { "id": "sporting-gijon", "leagueId": "laliga-hypermotion", "name": "Sporting de Gijón", "shortName": "SPG", "primaryColor": "#E30613", "secondaryColor": "#FFFFFF", "reputation": 52, "stadiumName": "El Molinón", "capacity": 29000, "balance": 12000, "transferBudget": 4500, "wageBudget": 7500 },
+    { "id": "real-zaragoza", "leagueId": "laliga-hypermotion", "name": "Real Zaragoza", "shortName": "ZAR", "primaryColor": "#FFFFFF", "secondaryColor": "#0061A0", "reputation": 52, "stadiumName": "La Romareda", "capacity": 34596, "balance": 13000, "transferBudget": 5000, "wageBudget": 8000 }
+  ]
+}
