@@ -1,51 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/providers.dart';
 import '../../app/router.dart';
-import '../../app/save_session.dart';
-import '../../data/database/save_storage.dart';
 
-class StartScreen extends ConsumerStatefulWidget {
+class StartScreen extends StatelessWidget {
   const StartScreen({super.key});
-
-  @override
-  ConsumerState<StartScreen> createState() => _StartScreenState();
-}
-
-class _StartScreenState extends ConsumerState<StartScreen> {
-  bool _busy = false;
-
-  void _showMessage(String text) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-  }
-
-  /// Dicek saat tombol ditekan (bukan saat layar dibuka), supaya selalu
-  /// membaca kondisi terbaru setelah karier baru dibuat.
-  Future<void> _continueCareer() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    try {
-      final slot = await SaveStorage.latestSlot();
-      if (slot == null) {
-        _showMessage('Belum ada karier yang tersimpan.');
-        return;
-      }
-      await activateSave(ref, slot);
-      final state = await ref.read(gameStateRepositoryProvider).load();
-      if (!mounted) return;
-      if (state == null) {
-        _showMessage('Save slot $slot rusak: data karier tidak ditemukan.');
-        return;
-      }
-      Navigator.of(context).pushNamed(AppRoutes.dashboard);
-    } catch (e) {
-      _showMessage('Gagal membuka karier: $e');
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,16 +36,16 @@ class _StartScreenState extends ConsumerState<StartScreen> {
                   const SizedBox(height: 48),
                   FilledButton(
                     onPressed:
-                        _busy
-                            ? null
-                            : () => Navigator.of(
-                              context,
-                            ).pushNamed(AppRoutes.newCareer),
+                        () => Navigator.of(
+                          context,
+                        ).pushNamed(AppRoutes.newCareer),
                     child: const Text('Karier Baru'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: _busy ? null : _continueCareer,
+                    onPressed:
+                        () =>
+                            Navigator.of(context).pushNamed(AppRoutes.loadGame),
                     child: const Text('Lanjutkan'),
                   ),
                 ],
