@@ -86,6 +86,50 @@ class PlayerDot {
   final double y;
 }
 
+/// Titik lintasan bola (ternormalisasi, sama dengan [PlayerDot]).
+class BallWaypoint {
+  const BallWaypoint(this.x, this.y, {this.owner = -1});
+
+  final double x;
+  final double y;
+
+  /// Indeks pemain yang menguasai bola di titik ini; -1 = di udara / lepas.
+  final int owner;
+}
+
+/// Hasil satu tick simulasi (1/6 menit permainan). Tick berjalan dengan
+/// langkah tetap, terpisah dari jam permainan dan frame rate tampilan.
+class TickFrame {
+  const TickFrame({
+    required this.tick,
+    required this.minute,
+    required this.from,
+    required this.to,
+    required this.ballFromX,
+    required this.ballFromY,
+    required this.ballToX,
+    required this.ballToY,
+    required this.ballPath,
+    required this.carrierIndex,
+    required this.events,
+  });
+
+  /// Nomor tick setelah frame ini selesai (1-based, dari 1 sampai total).
+  final int tick;
+
+  /// Menit permainan tempat tick ini berada (1-based).
+  final int minute;
+  final List<PlayerDot> from;
+  final List<PlayerDot> to;
+  final double ballFromX;
+  final double ballFromY;
+  final double ballToX;
+  final double ballToY;
+  final List<BallWaypoint> ballPath;
+  final int carrierIndex;
+  final List<MatchEvent> events;
+}
+
 /// Hasil satu menit simulasi: posisi awal & akhir untuk animasi, bola, dan
 /// peristiwa yang terjadi di menit tersebut.
 class MinuteFrame {
@@ -97,6 +141,7 @@ class MinuteFrame {
     required this.ballFromY,
     required this.ballToX,
     required this.ballToY,
+    required this.ballPath,
     required this.carrierIndex,
     required this.events,
   });
@@ -108,6 +153,8 @@ class MinuteFrame {
   final double ballFromY;
   final double ballToX;
   final double ballToY;
+  /// Alur bola berurutan selama menit ini (awal → setiap aksi → akhir).
+  final List<BallWaypoint> ballPath;
   final int carrierIndex; // indeks pemain yang menguasai bola di akhir menit
   final List<MatchEvent> events;
 }

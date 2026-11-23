@@ -76,15 +76,32 @@ class MatchSession {
   int _homeGoals = 0;
   int _awayGoals = 0;
   int _minute = 0;
+  int _tick = 0;
+  int _minuteActions = 1;
+  double _actionBudget = 0;
   int _carrier = 0;
   int? _lastPasser;
   double _ballX = 0.5;
   double _ballY = 0.5;
   List<MatchEvent> _minuteEvents = [];
+  final List<BallWaypoint> _ballPath = [];
+
+  /// Fase serangan tiap tim (+1 menyerang, -1 bertahan), dihaluskan per menit
+  /// agar garis tim bergeser perlahan dan tidak bolak-balik setiap operan.
+  final List<double> _phase = [0, 0];
+
+  /// Posisi acuan tiap pemain yang dihaluskan antar menit (inersia gerak).
+  static const double _refSmoothing = 0.068; // per tick (~0.35 per menit)
+  final List<double> _refX = List.filled(22, 0.5);
+  final List<double> _refY = List.filled(22, 0.5);
+  bool _refReady = false;
+
+  /// Peran tiap pemain pada menit sebelumnya (untuk histeresis peran).
+  List<_Role> _lastRole = List.filled(22, _Role.none);
   bool _inStep = false;
 
   int get minute => _minute;
-  bool get finished => _minute >= fullMinutes;
+  bool get finished => _tick >= totalTicks;
   int get homeGoals => _homeGoals;
   int get awayGoals => _awayGoals;
   List<MatchEvent> get events => List.unmodifiable(_events);
@@ -185,20 +202,40 @@ class MatchSession {
 
   // --- Simulasi --------------------------------------------------------------
 
-  /// Memajukan satu menit dan mengembalikan frame untuk animasi.
-  MinuteFrame step() {
+  /// Jumlah tick simulasi per menit permainan. Tick adalah langkah logika
+  /// tetap; tampilan dan jam permainan tidak terikat pada tick ini.
+  static const int ticksPerMinute = 6;
+  static const int totalTicks = fullMinutes * ticksPerMinute;
+
+  /// Jumlah tick yang sudah diselesaikan (0 sampai [totalTicks]).
+  int get tick => _tick;
+
+  /// Memajukan satu tick simulasi (1/6 menit) dan mengembalikan frame-nya.
+  TickFrame stepTick() {
     if (finished) throw StateError('Laga sudah selesai.');
-    final m = _minute + 1;
     final from = currentDots();
     final fromBallX = _ballX;
     final fromBallY = _ballY;
     _minuteEvents = [];
+    _ballPath
+      ..clear()
+      ..add(BallWaypoint(fromBallX, fromBallY));
 
-    final carrierHome = _carrier < 11;
-    final bias = _mentality[carrierHome ? 0 : 1].attackBias;
-    final actions = math.min(4, math.max(1, (1 + _rng.nextDouble() * 2.4 * bias).round()));
+    // Jumlah aksi per menit diundi sekali di awal menit (urutan acak tetap).
+    if (_tick % ticksPerMinute == 0) {
+      final carrierHome = _carrier < 11;
+      final bias = _mentality[carrierHome ? 0 : 1].attackBias;
+      _minuteActions = math.min(
+        4,
+        math.max(1, (1 + _rng.nextDouble() * 2.4 * bias).round()),
+      );
+    }
+
+    // Aksi dibagi rata ke setiap tick dalam menit.
     _inStep = true;
-    for (var i = 0; i < actions; i++) {
+    _actionBudget += _minuteActions / ticksPerMinute;
+    while (_actionBudget >= 1) {
+      _actionBudget -= 1;
       if (!_pitch[_carrier].active) {
         _carrier = _nearestActive(_carrier < 11, _ballX, _ballY);
       }
@@ -208,27 +245,57 @@ class MatchSession {
     _ballX = _pitch[_carrier].x;
     _ballY = _pitch[_carrier].y;
     _moveAll();
-    _minute = m;
+    _tick++;
+    _minute = _tick ~/ ticksPerMinute;
 
-    if (m == 45) _emit(MatchEventType.halfTime, 'Turun minum. Skor $_homeGoals-$_awayGoals.');
-    if (m == 90) {
-      _emit(
+    if (_tick == 45 * ticksPerMinute) {
+      _emitAt(45, MatchEventType.halfTime, 'Turun minum. Skor $_homeGoals-$_awayGoals.');
+    }
+    if (_tick == totalTicks) {
+      _emitAt(
+        fullMinutes,
         MatchEventType.fullTime,
         'Peluit akhir. Skor akhir $_homeGoals-$_awayGoals.',
       );
     }
     _inStep = false;
-    final to = currentDots();
-    return MinuteFrame(
-      minute: m,
+    return TickFrame(
+      tick: _tick,
+      minute: (_tick - 1) ~/ ticksPerMinute + 1,
       from: from,
-      to: to,
+      to: currentDots(),
       ballFromX: fromBallX,
       ballFromY: fromBallY,
       ballToX: _ballX,
       ballToY: _ballY,
+      ballPath: List.unmodifiable(_ballPath),
       carrierIndex: _carrier,
       events: List.unmodifiable(_minuteEvents),
+    );
+  }
+
+  /// Memajukan satu menit penuh (beberapa tick) dan menggabungkan frame-nya.
+  MinuteFrame step() {
+    final frames = <TickFrame>[];
+    for (var i = 0; i < ticksPerMinute && !finished; i++) {
+      frames.add(stepTick());
+    }
+    final path = <BallWaypoint>[];
+    for (var i = 0; i < frames.length; i++) {
+      // Titik awal tiap tick sama dengan titik akhir tick sebelumnya.
+      path.addAll(frames[i].ballPath.skip(i == 0 ? 0 : 1));
+    }
+    return MinuteFrame(
+      minute: frames.first.minute,
+      from: frames.first.from,
+      to: frames.last.to,
+      ballFromX: frames.first.ballFromX,
+      ballFromY: frames.first.ballFromY,
+      ballToX: frames.last.ballToX,
+      ballToY: frames.last.ballToY,
+      ballPath: List.unmodifiable(path),
+      carrierIndex: frames.last.carrierIndex,
+      events: [for (final f in frames) ...f.events],
     );
   }
 
@@ -257,7 +324,59 @@ class MatchSession {
 
   // --- Aksi bola -------------------------------------------------------------
 
+  /// Satu aksi (umpan/dribel/tembakan/...). Hanya mencatat lintasan bola untuk
+  /// animasi; tidak mengubah state atau urutan angka acak.
   void _runAction() {
+    _recordBall(_pitch[_carrier].x, _pitch[_carrier].y, owner: _carrier);
+    _doAction();
+    _recordBall(_pitch[_carrier].x, _pitch[_carrier].y, owner: _carrier);
+  }
+
+  void _recordBall(double x, double y, {int owner = -1}) {
+    if (!_inStep) return;
+    final last = _ballPath.last;
+    if (last.x == x && last.y == y && last.owner == owner) return;
+    _ballPath.add(BallWaypoint(x, y, owner: owner));
+  }
+
+  /// Sentuhan-sentuhan kecil saat menggiring: bola bergoyang ringan di kiri
+  /// dan kanan jalur pemain, lalu berhenti tepat di posisi pemain.
+  void _recordDribble(int c, double x0, double y0, double x1, double y1) {
+    const touches = 3;
+    for (var k = 1; k <= touches; k++) {
+      final t = k / touches;
+      final wobble = k == touches ? 0.0 : (k.isOdd ? 0.006 : -0.006);
+      _recordBall(
+        x0 + (x1 - x0) * t,
+        _clamp(y0 + (y1 - y0) * t + wobble, 0.02, 0.98),
+        owner: c,
+      );
+    }
+  }
+
+  /// Umpan melengkung ringan (lintasan visual; tidak mengubah state).
+  void _recordPass(int from, double x1, double y1) {
+    final x0 = _pitch[from].x;
+    final y0 = _pitch[from].y;
+    final dx = x1 - x0;
+    final dy = y1 - y0;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len < 1e-6) return;
+    final px = -dy / len;
+    final py = dx / len;
+    final bulge = math.min(0.02, len * 0.12);
+    for (var k = 1; k <= 3; k++) {
+      final t = k / 4;
+      final lift = math.sin(math.pi * t) * bulge;
+      _recordBall(
+        x0 + dx * t + px * lift,
+        y0 + dy * t + py * lift,
+        owner: -1,
+      );
+    }
+  }
+
+  void _doAction() {
     final c = _carrier;
     final s = _pitch[c];
     final home = s.isHome;
@@ -315,6 +434,7 @@ class MatchSession {
     );
     if (_rng.chance(success)) {
       _lastPasser = c;
+      _recordPass(c, _pitch[j].x, _pitch[j].y);
       if (_rng.chance(0.12) && (_pitch[j].x - s.x) * dir > 0.12) {
         _emitChance(s.isHome, 'Umpan terobosan dari ${s.player.lastName} '
             'ke ${_pitch[j].player.lastName}!', s.player.id);
@@ -346,6 +466,7 @@ class MatchSession {
     final success = _clamp(0.3 + crossing * 0.4 - pressure * 0.5, 0.1, 0.7);
     if (_rng.chance(success)) {
       _lastPasser = c;
+      _recordPass(c, _pitch[j].x, _pitch[j].y);
       _emitChance(home, 'Umpan silang ${s.player.lastName} ke '
           '${_pitch[j].player.lastName} di kotak penalti.', s.player.id);
       _carrier = j;
@@ -362,7 +483,10 @@ class MatchSession {
     final success = _clamp(0.45 + 0.4 * (dribble - pressure), 0.2, 0.9);
     if (_rng.chance(success)) {
       final dir = s.isHome ? 1.0 : -1.0;
+      final x0 = s.x;
+      final y0 = s.y;
       s.x = _clamp(s.x + dir * (0.05 + _rng.nextDouble() * 0.04), 0.02, 0.98);
+      _recordDribble(c, x0, y0, s.x, s.y);
       _ballX = s.x;
       _ballY = s.y;
     } else {
@@ -374,6 +498,8 @@ class MatchSession {
     final s = _pitch[c];
     final home = s.isHome;
     _counters[home ? 0 : 1].shots++;
+    // Lintasan visual: bola melesat ke garis gawang lawan.
+    _recordBall(home ? 1.0 : 0.0, _clamp(s.y, 0.42, 0.58));
 
     final fin = s.player.attributes[Attribute.finishing] / 20;
     final comp = s.player.attributes[Attribute.composure] / 20;
@@ -491,51 +617,230 @@ class MatchSession {
 
   // --- Posisi ----------------------------------------------------------------
 
+  static const double _maxTickMove = 0.017; // ~0.10 per menit
+  static const double _maxRoleTickMove = 0.008; // ~0.05 per menit
+
+  /// Posisi semua pemain untuk menit ini. Setiap pemain bergerak dari
+  /// formasinya: garis naik saat tim menyerang, turun saat bertahan, bergeser
+  /// ke sisi bola, lalu peran taktis (tekan, tutup ruang, dukung, lari ke
+  /// ruang kosong). Tiap menit hanya bisa bergerak terbatas.
   void _moveAll() {
     final carrierHome = _carrier < 11;
-    final chasers = _chasers();
+    // Fase mengikuti posisi bola di lapangan (sisi mana yang menguasai area),
+    // bukan siapa yang memegang bola saat ini. Dengan begitu garis tim tidak
+    // ikut berbalik setiap kali bola berpindah tangan.
+    for (final side in [0, 1]) {
+      final dir = side == 0 ? 1.0 : -1.0;
+      final field = math.max(-1.0, math.min(1.0, (_ballX - 0.5) * 2 * dir));
+      final possession = (carrierHome == (side == 0)) ? 0.3 : -0.3;
+      final target = math.max(-1.0, math.min(1.0, field + possession));
+      _phase[side] += (target - _phase[side]) * 0.037;
+    }
+    final roles = _assignRoles();
+    if (!_refReady) {
+      for (var i = 0; i < _pitch.length; i++) {
+        _refX[i] = _pitch[i].x;
+        _refY[i] = _pitch[i].y;
+      }
+      _refReady = true;
+    }
+
     for (var i = 0; i < _pitch.length; i++) {
       final s = _pitch[i];
       if (!s.active) continue;
-      final hasBall = s.isHome == carrierHome;
-      final dir = s.isHome ? 1.0 : -1.0;
-      final mentality = _mentality[s.isHome ? 0 : 1];
-      final push = (hasBall ? 1.0 : -1.0) * (0.03 + mentality.pushShift) * dir;
-
-      var tx = s.baseX + push;
-      var ty = s.baseY;
-      if (chasers.contains(i)) {
-        tx = tx + (_ballX - tx) * 0.35;
-        ty = ty + (_ballY - ty) * 0.35;
-      }
-      tx += (_rng.nextDouble() - 0.5) * 0.02;
-      ty += (_rng.nextDouble() - 0.5) * 0.02;
       if (i == _carrier) {
-        tx = _ballX;
-        ty = _ballY;
+        s.x = _ballX;
+        s.y = _ballY;
+        _refX[i] = _ballX;
+        _refY[i] = _ballY;
+        continue;
       }
-      s.x = _clamp(tx, 0.03, 0.97);
-      s.y = _clamp(ty, 0.03, 0.97);
+      final side = s.isHome ? 0 : 1;
+      final dir = s.isHome ? 1.0 : -1.0;
+      final mentality = _mentality[side];
+      final wideness = (s.baseY - 0.5).abs();
+      final lateralShare = math.min(1.0, math.max(0.4, 1 - wideness * 1.2));
+
+      // Bentuk dasar: garis tim ikut fase serangan dan sedikit ke sisi bola.
+      var tx = s.baseX + dir * _phase[side] * (0.04 + mentality.pushShift);
+      var ty = s.baseY + (_ballY - 0.5) * 0.3 * lateralShare;
+      // Variasi kecil deterministik agar formasi tidak terlihat kaku.
+      tx += math.sin(i * 12.9898) * 0.006;
+      ty += math.cos(i * 78.233) * 0.006;
+
+      final role = _roleTarget(i, roles[i]);
+      if (role != null) {
+        tx = role.x;
+        ty = role.y;
+      }
+      // Posisi acuan dihaluskan dulu (inersia seperti pemain sungguhan), lalu
+      // pemain mengejar acuan itu dengan batas gerak per menit.
+      _refX[i] += (_clamp(tx, 0.03, 0.97) - _refX[i]) * _refSmoothing;
+      _refY[i] += (_clamp(ty, 0.03, 0.97) - _refY[i]) * _refSmoothing;
+      final cap = role != null ? _maxRoleTickMove : _maxTickMove;
+      s.x = _approach(s.x, _refX[i], cap);
+      s.y = _approach(s.y, _refY[i], cap);
     }
   }
 
-  /// Dua pemain terdekat bola dari tiap tim ikut mengejar.
-  Set<int> _chasers() {
-    final result = <int>{};
-    for (final home in [true, false]) {
-      final idxs = [
-        for (var i = 0; i < _pitch.length; i++)
-          if (_pitch[i].isHome == home && _pitch[i].active) i,
-      ]..sort((a, b) => _dist2(a).compareTo(_dist2(b)));
-      result.addAll(idxs.take(2));
+  /// Peran taktis tiap pemain untuk satu menit, berdasarkan posisi bola.
+  List<_Role> _assignRoles() {
+    final roles = List.filled(_pitch.length, _Role.none);
+    final ci = _carrier;
+    final c = _pitch[ci];
+    if (!c.active) return roles;
+    final dirA = c.isHome ? 1.0 : -1.0;
+
+    double dist(int j) {
+      final dx = _pitch[j].x - c.x;
+      final dy = _pitch[j].y - c.y;
+      return dx * dx + dy * dy;
     }
-    return result;
+
+    // Tekanan: dua pemain bertahan dari pembawa bola (bukan kiper). Peran
+    // yang sudah dipegang tetap dipegang selama masih cukup dekat (histeresis),
+    // supaya penekan tidak berganti setiap kali bola bergeser.
+    final defenders = [
+      for (var j = 0; j < _pitch.length; j++)
+        if (_pitch[j].isHome != c.isHome && _pitch[j].active && !_isKeeper(j))
+          j,
+    ]..sort((a, b) => dist(a).compareTo(dist(b)));
+    final presser = _keepOrPick(
+      defenders,
+      _Role.presser,
+      roles,
+      keepDist: 0.28,
+      pickDist: 0.2,
+      dist: dist,
+    );
+    if (presser != null) roles[presser] = _Role.presser;
+    final cover = _keepOrPick(
+      defenders.where((j) => j != presser).toList(),
+      _Role.cover,
+      roles,
+      keepDist: 0.34,
+      pickDist: 0.26,
+      dist: dist,
+    );
+    if (cover != null) roles[cover] = _Role.cover;
+
+    // Dukungan: rekan di depan bola yang paling dekat.
+    final mates = [
+      for (var j = 0; j < _pitch.length; j++)
+        if (j != ci &&
+            _pitch[j].isHome == c.isHome &&
+            _pitch[j].active &&
+            !_isKeeper(j))
+          j,
+    ];
+    final ahead = [
+      for (final j in mates)
+        if ((_pitch[j].x - c.x) * dirA > 0.02) j,
+    ]..sort((a, b) => dist(a).compareTo(dist(b)));
+    final support = _keepOrPick(
+      ahead,
+      _Role.supportAhead,
+      roles,
+      keepDist: 0.4,
+      pickDist: 1.0,
+      dist: dist,
+    );
+    if (support != null) roles[support] = _Role.supportAhead;
+
+    // Dukungan di sayap berlawanan sisi bola.
+    final wide = [
+      for (final j in mates)
+        if (roles[j] == _Role.none && (_pitch[j].y - c.y).abs() > 0.25) j,
+    ]..sort((a, b) => dist(a).compareTo(dist(b)));
+    final wing = _keepOrPick(
+      wide,
+      _Role.supportWide,
+      roles,
+      keepDist: 0.5,
+      pickDist: 1.0,
+      dist: dist,
+    );
+    if (wing != null) roles[wing] = _Role.supportWide;
+
+    // Penyerang lain selalu mencari ruang (lari), tanpa ambang yang berbalik.
+    for (final j in mates) {
+      if (roles[j] == _Role.none && _roleOf(j) == SlotRole.fwd) {
+        roles[j] = _Role.runner;
+      }
+    }
+    _lastRole = roles;
+    return roles;
   }
 
-  double _dist2(int i) {
-    final dx = _pitch[i].x - _ballX;
-    final dy = _pitch[i].y - _ballY;
-    return dx * dx + dy * dy;
+  /// Pemain yang sudah memegang [role] di menit sebelumnya tetap dipilih bila
+  /// masih dalam [keepDist]; jika tidak, pemain terdekat dalam [pickDist].
+  int? _keepOrPick(
+    List<int> candidates,
+    _Role role,
+    List<_Role> roles, {
+    required double keepDist,
+    required double pickDist,
+    required double Function(int) dist,
+  }) {
+    for (final j in candidates) {
+      if (roles[j] == _Role.none &&
+          _lastRole[j] == role &&
+          dist(j) < keepDist * keepDist) {
+        return j;
+      }
+    }
+    for (final j in candidates) {
+      if (roles[j] == _Role.none && dist(j) < pickDist * pickDist) return j;
+    }
+    return null;
+  }
+
+  /// Titik tujuan untuk peran tertentu; null bila pemain mengikuti formasi.
+  ({double x, double y})? _roleTarget(int i, _Role role) {
+    if (role == _Role.none) return null;
+    final s = _pitch[i];
+    final c = _pitch[_carrier];
+    final dirA = c.isHome ? 1.0 : -1.0;
+    switch (role) {
+      case _Role.presser:
+        final dx = s.x - c.x;
+        final dy = s.y - c.y;
+        final d = math.sqrt(dx * dx + dy * dy);
+        if (d < 1e-6) return (x: c.x, y: c.y);
+        return (x: c.x + dx / d * 0.035, y: c.y + dy / d * 0.035);
+      case _Role.cover:
+        // Di antara bola dan gawang sendiri, sedikit ke arah tengah.
+        return (x: c.x - dirA * 0.09, y: 0.5 + (c.y - 0.5) * 0.5);
+      case _Role.supportAhead:
+        // Menawarkan opsi umpan di depan pembawa bola, menjauh dari garis.
+        return (x: c.x + dirA * 0.13, y: 0.5 + (c.y - 0.5) * 0.4);
+      case _Role.supportWide:
+        // Sayap berlawanan sisi bola: membuka lapangan.
+        return (x: c.x + dirA * 0.06, y: c.y < 0.5 ? 0.85 : 0.15);
+      case _Role.runner:
+        // Lari ke depan sebanding dengan fase serangan (kontinu, tanpa ambang).
+        final side = s.isHome ? 0 : 1;
+        return (
+          x: s.baseX + (s.isHome ? 1 : -1) * 0.10 * math.max(0, _phase[side]),
+          y: s.y,
+        );
+      case _Role.none:
+        return null;
+    }
+  }
+
+  bool _isKeeper(int j) => _roleOf(j) == SlotRole.gk;
+
+  SlotRole _roleOf(int j) {
+    final formation = (j < 11 ? home : away).formation;
+    return formation.slots[_pitch[j].slotIndex].role;
+  }
+
+  /// Bergerak menuju [target] dengan batas [maxStep] per menit.
+  static double _approach(double cur, double target, double maxStep) {
+    final d = target - cur;
+    final step = d.abs() > maxStep ? maxStep * d.sign : d;
+    return cur + step;
   }
 
   // --- Utilitas --------------------------------------------------------------
@@ -738,6 +1043,9 @@ class _Slot {
   int since;
   bool active = true;
 }
+
+/// Peran taktis pemain di satu menit (lihat [_assignRoles]).
+enum _Role { none, presser, cover, supportAhead, supportWide, runner }
 
 class _Counters {
   int possessionActions = 0;
