@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/game_actions.dart';
 import '../../app/providers.dart';
+import '../../core/utils/date_format.dart';
 import '../../core/utils/format_utils.dart';
 import '../../data/repositories/player_repository.dart';
 import '../../domain/enums/attribute.dart';
+import '../../domain/finance/money_label.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/player_attributes.dart';
+import '../../domain/transfer/transfer_window.dart';
 
 class PlayerDetailScreen extends ConsumerWidget {
   const PlayerDetailScreen({super.key, required this.playerId});
@@ -31,13 +35,13 @@ class PlayerDetailScreen extends ConsumerWidget {
   }
 }
 
-class _PlayerBody extends StatelessWidget {
+class _PlayerBody extends ConsumerWidget {
   const _PlayerBody({required this.detail});
 
   final PlayerDetail detail;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final p = detail.player;
     final c = detail.contract;
     final theme = Theme.of(context);
@@ -48,6 +52,17 @@ class _PlayerBody extends StatelessWidget {
         Text(p.fullName, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 4),
         Text('${p.position.label} · ${p.age} tahun · ${p.nationality}'),
+        Text('Klub: ${detail.clubName}'),
+        if (p.isTransferListed)
+          Text(
+            'Status: Daftar jual',
+            style: TextStyle(
+              color: theme.colorScheme.tertiary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        const SizedBox(height: 12),
+        _TransferActions(detail: detail),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -78,6 +93,143 @@ class _PlayerBody extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// Tombol aksi transfer: daftar jual (pemain sendiri) atau ajukan tawaran
+/// dan shortlist (pemain klub lain). Penawaran terkunci di luar jendela.
+class _TransferActions extends ConsumerWidget {
+  const _TransferActions({required this.detail});
+
+  final PlayerDetail detail;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(gameStateProvider).valueOrNull;
+    final ourId = state?.clubId;
+    final now = state?.currentDate ?? DateTime.utc(2025, 7, 1);
+    final p = detail.player;
+    final isOurs = p.clubId == ourId;
+    final window = TransferWindow.status(now);
+    final shortlisted =
+        (ref.watch(shortlistProvider).valueOrNull ?? const <int>{}).contains(
+          p.id,
+        );
+    final offers = ref.watch(clubOffersProvider).valueOrNull ?? const [];
+    final hasBid = offers.any(
+      (o) => o.playerId == p.id && o.fromClubId == ourId && o.isActive,
+    );
+
+    final buttons = <Widget>[
+      OutlinedButton.icon(
+        onPressed:
+            () => GameActions.run(
+              ref,
+              (e) => e.setShortlisted(p.id, !shortlisted),
+            ),
+        icon: Icon(shortlisted ? Icons.bookmark : Icons.bookmark_border),
+        label: Text(shortlisted ? 'Di Shortlist' : 'Shortlist'),
+      ),
+      if (isOurs)
+        FilledButton.tonalIcon(
+          onPressed:
+              () => GameActions.run(
+                ref,
+                (e) => e.setListed(p.id, !p.isTransferListed),
+              ),
+          icon: const Icon(Icons.sell_outlined),
+          label: Text(p.isTransferListed ? 'Batal Daftar Jual' : 'Daftar Jual'),
+        )
+      else
+        FilledButton.icon(
+          onPressed:
+              (!window.isOpen || hasBid)
+                  ? null
+                  : () => _bid(
+                    context,
+                    ref,
+                    TransferValuation.askingFee(
+                      player: p,
+                      contract: detail.contract,
+                      now: now,
+                    ),
+                  ),
+          icon: const Icon(Icons.gavel),
+          label: Text(hasBid ? 'Tawaran Diajukan' : 'Ajukan Tawaran'),
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(spacing: 8, runSpacing: 8, children: buttons),
+        const SizedBox(height: 6),
+        Text(
+          window.isOpen
+              ? 'Jendela transfer buka (tutup ${formatDate(window.closesOn!)}).'
+              : 'Jendela transfer tutup. Dibuka kembali '
+                  '${formatDate(window.nextOpensOn!)}.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _bid(BuildContext context, WidgetRef ref, int ask) async {
+    final controller = TextEditingController(text: '$ask');
+    final fee = await showDialog<int>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Ajukan tawaran'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Harga yang diminta klub: ${moneyLabel(ask)}'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Tawaran (€ ribu)',
+                    helperText: '1.000 = €1 juta',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                onPressed:
+                    () => Navigator.pop(ctx, int.tryParse(controller.text.trim())),
+                child: const Text('Kirim'),
+              ),
+            ],
+          ),
+    );
+    controller.dispose();
+    if (fee == null || !context.mounted) return;
+    try {
+      await GameActions.run(
+        ref,
+        (e) => e.placeBid(detail.player.id, fee),
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tawaran dikirim. Respons klub 1–2 hari.')),
+        );
+      }
+    } on StateError catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
   }
 }
 
