@@ -37,15 +37,16 @@ MatchSession _session(int seed) {
 }
 
 void main() {
-  test('jumlah tick tepat 6 per menit dan 540 untuk satu laga', () {
+  test('laga berakhir minimal 540 tick (90 menit) ditambah waktu tambahan', () {
     final s = _session(1);
     var ticks = 0;
     while (!s.finished) {
       s.stepTick();
       ticks++;
     }
-    expect(ticks, MatchSession.totalTicks);
-    expect(s.minute, MatchSession.fullMinutes);
+    expect(ticks, greaterThanOrEqualTo(MatchSession.totalTicks));
+    expect(ticks, s.tick);
+    expect(s.minute, greaterThanOrEqualTo(MatchSession.fullMinutes));
   });
 
   test('menjalankan per tick menghasilkan laga yang sama dengan per menit', () {

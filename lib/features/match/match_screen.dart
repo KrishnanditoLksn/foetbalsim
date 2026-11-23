@@ -10,6 +10,7 @@ import '../../core/utils/format_utils.dart';
 import '../../data/services/game_engine.dart';
 import '../../domain/enums/tactics.dart';
 import '../../domain/match/match_engine_2d.dart';
+import '../../domain/match/match_rules.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/match_models.dart';
 import 'pitch_2d_painter.dart';
@@ -38,6 +39,10 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
   double _clock = 0;
   TickFrame? _tickFrame;
   int _shownMinute = 0;
+
+  /// Banner peristiwa penting (offside, penalti, VAR, GLT, kartu merah).
+  String? _bannerText;
+  int _bannerTick = -100;
 
   MatchSession? _session;
   MatchSetup? _setup;
@@ -113,28 +118,31 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     // Jam permainan berjalan sendiri dengan waktu nyata × kecepatan. Tick
     // simulasi diambil dari jam, sehingga logika tidak bergantung pada
     // frame rate maupun pada animasi.
-    if (_playing) {
-      _clock += dt * _speed * _ticksPerSecond;
-      if (_clock >= MatchSession.totalTicks) {
-        _clock = MatchSession.totalTicks.toDouble();
-        _playing = false;
-      }
-    }
+    if (_playing) _clock += dt * _speed * _ticksPerSecond;
 
-    // Tick berikutnya harus sudah dihitung agar tampilan bisa berinterpolasi.
-    final needed = _clock.floor() + 1;
+    // Tick ke-k mengisi rentang jam [k-1, k). Jam tepat di batas tick cukup
+    // dengan tick sebelumnya, sehingga simulasi tidak berjalan saat jeda.
+    final needed = _clock.ceil();
     while (session.tick < needed && !session.finished) {
       final frame = session.stepTick();
       _tickFrame = frame;
-      // Tick ke-k mengisi rentang jam [k-1, k).
       _animator.setTick(
         from: frame.from,
         to: frame.to,
         path: frame.ballPath,
         carrier: frame.carrierIndex,
         tickStart: (frame.tick - 1).toDouble(),
+        offsideX: frame.offsideX,
       );
+      _noteBanner(frame.events, session.tick);
     }
+
+    // Jeda babak: berhenti tepat di akhir babak pertama.
+    if (session.isHalfTimeBreak && _playing) {
+      _playing = false;
+      _clock = session.tick.toDouble();
+    }
+    if (session.finished && _playing) _playing = false;
 
     if (_tickFrame != null) _animator.update(_clock);
 
@@ -158,7 +166,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     while (!session.finished) {
       session.stepTick();
     }
-    _clock = MatchSession.totalTicks.toDouble();
+    _clock = session.tick.toDouble();
     _tickFrame = null;
     _animator.snap(
       session.currentDots(),
@@ -194,9 +202,40 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     return null;
   }
 
+  /// Menyimpan banner untuk peristiwa penting (offside, penalti, VAR, dll.).
+  void _noteBanner(List<MatchEvent> events, int tick) {
+    const banners = {
+      MatchEventType.offside,
+      MatchEventType.penalty,
+      MatchEventType.dive,
+      MatchEventType.varReview,
+      MatchEventType.varResult,
+      MatchEventType.goalLineTech,
+      MatchEventType.red,
+    };
+    for (final e in events) {
+      if (banners.contains(e.type)) {
+        _bannerText = e.text;
+        _bannerTick = tick;
+      }
+    }
+  }
+
   Future<void> _openSubs() async {
     final session = _session;
     if (session == null || session.finished) return;
+    try {
+      session.openSubWindow(_ourHome);
+    } on StateError catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+      return;
+    }
+    // Kesempatan pergantian adalah kesempatan berhenti: jam ditahan.
+    final wasPlaying = _playing;
+    setState(() => _playing = false);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -208,6 +247,13 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             onSubstitute: _substitute,
           ),
     );
+    _resumeAfterSubs(wasPlaying);
+  }
+
+  void _resumeAfterSubs(bool wasPlaying) {
+    _session?.closeSubWindow();
+    if (!mounted) return;
+    setState(() => _playing = wasPlaying && !(_session?.finished ?? true));
   }
 
   Future<void> _finish() async {
@@ -338,9 +384,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           ),
         ),
         Text(
-          session.minute == 0 ? 'Belum mulai' : "${session.minute}'",
+          session.minute == 0 ? 'Belum mulai' : session.clockText,
           style: theme.textTheme.labelLarge,
         ),
+        if (session.isHalfTimeBreak)
+          _Banner(text: 'JEDA BABAK PERTAMA · Pergantian bebas', color: theme.colorScheme.secondaryContainer)
+        else if (_bannerText != null &&
+            session.tick - _bannerTick <= 4)
+          _Banner(text: _bannerText!, color: theme.colorScheme.tertiaryContainer),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: AspectRatio(
@@ -397,7 +448,10 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             OutlinedButton.icon(
               onPressed: session.finished ? null : _openSubs,
               icon: const Icon(Icons.swap_horiz),
-              label: Text('Ganti (${session.subsLeft(_ourHome)})'),
+              label: Text(
+                'Ganti · Subs ${session.subsUsed(_ourHome)}/${MatchSession.maxSubs}'
+                ' · Jendela ${session.windowsUsed(_ourHome)}/${MatchRules.maxSubWindows}',
+              ),
             ),
           ],
         ),
@@ -462,6 +516,31 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
 
 }
 
+/// Banner singkat di atas lapangan untuk peristiwa penting.
+class _Banner extends StatelessWidget {
+  const _Banner({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+    );
+  }
+}
+
 class _StatChip extends StatelessWidget {
   const _StatChip(this.label, this.value);
 
@@ -505,7 +584,7 @@ class _EventTile extends StatelessWidget {
     return ListTile(
       dense: true,
       leading: Text(
-        "${event.minute}'",
+        event.label,
         style: Theme.of(context).textTheme.labelLarge,
       ),
       title: Text(event.text, style: style),

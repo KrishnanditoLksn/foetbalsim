@@ -7,6 +7,7 @@ import '../models/game_models.dart';
 import '../models/match_models.dart';
 import '../season/quick_match_simulator.dart';
 import 'lineup_builder.dart';
+import 'match_rules.dart';
 
 /// Susunan satu tim sebelum laga: 11 starter berurutan sesuai slot formasi
 /// dan bangku cadangan.
@@ -58,7 +59,8 @@ class MatchSession {
   }
 
   static const int fullMinutes = 90;
-  static const int maxSubs = 5;
+  static const int maxSubs = MatchRules.maxSubstitutions;
+  static const int _halfTicks = 45 * ticksPerMinute;
 
   final MatchTeamSetup home;
   final MatchTeamSetup away;
@@ -100,8 +102,30 @@ class MatchSession {
   List<_Role> _lastRole = List.filled(22, _Role.none);
   bool _inStep = false;
 
+  // Aturan: babak, waktu tambahan, dan kesempatan pergantian.
+  bool _finished = false;
+  int? _halfTimeTick; // tick saat babak pertama berakhir (null = belum)
+  bool _halfTimeBreak = false; // jeda babak aktif (pergantian bebas)
+  final List<int> _extraTicks = [0, 0]; // waktu tambahan per babak
+  final List<bool> _advantageGiven = [false, false];
+  final List<int> _windowsUsed = [0, 0];
+  int _windowOwner = -1; // sisi yang sedang membuka kesempatan pergantian
+  double? _offsideX; // garis offside pada tick ini (untuk tampilan)
+
   int get minute => _minute;
-  bool get finished => _tick >= totalTicks;
+  bool get finished => _finished;
+
+  /// Jeda babak pertama: pertandingan berhenti sebentar, pergantian bebas.
+  bool get isHalfTimeBreak => _halfTimeBreak;
+
+  /// Kesempatan berhenti yang sudah dipakai tim (tidak termasuk jeda babak).
+  int windowsUsed(bool isHome) => _windowsUsed[isHome ? 0 : 1];
+
+  /// Penanda waktu untuk tampilan, mis. "45+2'" atau "90+1'".
+  String get clockText {
+    final (minute, extra) = _clockLabel();
+    return extra > 0 ? "$minute+$extra'" : "$minute'";
+  }
   int get homeGoals => _homeGoals;
   int get awayGoals => _awayGoals;
   List<MatchEvent> get events => List.unmodifiable(_events);
@@ -158,10 +182,34 @@ class MatchSession {
     );
   }
 
+  /// Membuka kesempatan berhenti untuk pergantian. Setiap tim punya
+  /// [MatchRules.maxSubWindows] kesempatan; jeda babak tidak memakai kuota.
+  void openSubWindow(bool isHome) {
+    if (finished) throw StateError('Laga sudah selesai.');
+    final side = isHome ? 0 : 1;
+    if (_windowOwner == side) return;
+    if (!_halfTimeBreak) {
+      if (_windowsUsed[side] >= MatchRules.maxSubWindows) {
+        throw StateError(
+          'Kesempatan pergantian (${MatchRules.maxSubWindows}) sudah habis.',
+        );
+      }
+      _windowsUsed[side]++;
+    }
+    _windowOwner = side;
+  }
+
+  /// Menutup kesempatan pergantian. Pertandingan lanjut.
+  void closeSubWindow() => _windowOwner = -1;
+
   /// Pergantian pemain: [outId] keluar dari lapangan, [inId] dari bangku.
+  /// Hanya bisa dilakukan saat kesempatan pergantian terbuka atau jeda babak.
   void substitute(bool isHome, int outId, int inId) {
     final side = isHome ? 0 : 1;
     if (finished) throw StateError('Laga sudah selesai.');
+    if (_windowOwner != side && !_halfTimeBreak) {
+      throw StateError('Buka kesempatan pergantian dulu.');
+    }
     if (_subsUsed[side] >= maxSubs) {
       throw StateError('Batas $maxSubs pergantian sudah habis.');
     }
@@ -189,6 +237,7 @@ class MatchSession {
     _pitch[idx] = replacement;
     bench.remove(inId);
     _subsUsed[side]++;
+    if (!_halfTimeBreak) _addStoppage(MatchRules.stoppageTicksPerSubstitution);
 
     _emit(
       MatchEventType.substitution,
@@ -217,6 +266,8 @@ class MatchSession {
     final fromBallX = _ballX;
     final fromBallY = _ballY;
     _minuteEvents = [];
+    _offsideX = null;
+    _halfTimeBreak = false;
     _ballPath
       ..clear()
       ..add(BallWaypoint(fromBallX, fromBallY));
@@ -247,17 +298,7 @@ class MatchSession {
     _moveAll();
     _tick++;
     _minute = _tick ~/ ticksPerMinute;
-
-    if (_tick == 45 * ticksPerMinute) {
-      _emitAt(45, MatchEventType.halfTime, 'Turun minum. Skor $_homeGoals-$_awayGoals.');
-    }
-    if (_tick == totalTicks) {
-      _emitAt(
-        fullMinutes,
-        MatchEventType.fullTime,
-        'Peluit akhir. Skor akhir $_homeGoals-$_awayGoals.',
-      );
-    }
+    _checkPeriodEnds();
     _inStep = false;
     return TickFrame(
       tick: _tick,
@@ -271,6 +312,7 @@ class MatchSession {
       ballPath: List.unmodifiable(_ballPath),
       carrierIndex: _carrier,
       events: List.unmodifiable(_minuteEvents),
+      offsideX: _offsideX,
     );
   }
 
@@ -302,10 +344,11 @@ class MatchSession {
   /// Hasil akhir untuk disimpan. Hanya valid setelah [finished].
   MatchResultData result({required int fixtureId}) {
     if (!finished) throw StateError('Laga belum selesai.');
+    final endMinute = _tick ~/ ticksPerMinute;
     final minutes = Map<int, int>.from(_minutesPlayed);
     for (final s in _pitch) {
       if (s.active) {
-        minutes[s.player.id] = (minutes[s.player.id] ?? 0) + fullMinutes - s.since;
+        minutes[s.player.id] = (minutes[s.player.id] ?? 0) + endMinute - s.since;
       }
     }
     return MatchResultData(
@@ -319,6 +362,7 @@ class MatchSession {
       minutesPlayed: minutes,
       homeScorerNames: List.unmodifiable(_homeScorers),
       awayScorerNames: List.unmodifiable(_awayScorers),
+      matchMinutes: endMinute,
     );
   }
 
@@ -400,6 +444,12 @@ class MatchSession {
       return;
     }
     final wide = (s.y - 0.5).abs() > 0.28;
+    // Di kotak penalti, pembawa bola sering mencoba melewati bek (dribel),
+    // sehingga tantangan dan penalti juga mungkin terjadi.
+    if (inBox && _rng.chance(0.3)) {
+      _dribble(c, pressure);
+      return;
+    }
     if (inFinal && wide && _rng.chance(0.3)) {
       _cross(c, pressure);
       return;
@@ -433,6 +483,11 @@ class MatchSession {
       0.97,
     );
     if (_rng.chance(success)) {
+      final line = _offsideLine(c, j);
+      if (line != null) {
+        _offside(j, line);
+        return;
+      }
       _lastPasser = c;
       _recordPass(c, _pitch[j].x, _pitch[j].y);
       if (_rng.chance(0.12) && (_pitch[j].x - s.x) * dir > 0.12) {
@@ -465,6 +520,11 @@ class MatchSession {
     final crossing = _norm(s.player, Attribute.crossing, Attribute.passing);
     final success = _clamp(0.3 + crossing * 0.4 - pressure * 0.5, 0.1, 0.7);
     if (_rng.chance(success)) {
+      final line = _offsideLine(c, j);
+      if (line != null) {
+        _offside(j, line);
+        return;
+      }
       _lastPasser = c;
       _recordPass(c, _pitch[j].x, _pitch[j].y);
       _emitChance(home, 'Umpan silang ${s.player.lastName} ke '
@@ -489,6 +549,16 @@ class MatchSession {
       _recordDribble(c, x0, y0, s.x, s.y);
       _ballX = s.x;
       _ballY = s.y;
+    } else if (_inBoxFor(c) && _opponents(c).isNotEmpty) {
+      // Dribel gagal di kotak: bek menjatuhkan penyerang (penalti), atau
+      // penyerang yang menjatuhkan diri (diving).
+      if (_rng.chance(0.35)) {
+        _foul(_nearest(_opponents(c), s.x, s.y), c);
+      } else if (_rng.chance(MatchRules.diveChance)) {
+        _dive(c);
+      } else {
+        _turnover(c);
+      }
     } else {
       _turnover(c);
     }
@@ -520,41 +590,76 @@ class MatchSession {
     }
 
     _counters[home ? 0 : 1].onTarget++;
-    final goalP = _clamp(0.16 + 0.25 * fin + 0.1 * comp - 0.25 * gkRate, 0.04, 0.55);
-    if (_rng.chance(goalP)) {
-      if (home) {
-        _homeGoals++;
-        _homeScorers.add(s.player.lastName);
-      } else {
-        _awayGoals++;
-        _awayScorers.add(s.player.lastName);
-      }
-      final assistIdx = _lastPasser;
-      final assistId =
-          (assistIdx != null && assistIdx != c &&
-                  _pitch[assistIdx].isHome == home)
-              ? _pitch[assistIdx].player.id
-              : null;
+
+    // Bola membentur mistar/tiang: Goal-Line Technology memastikan apakah
+    // bola sudah melewati garis gawang sepenuhnya.
+    if (_rng.chance(MatchRules.postHitChance)) {
       _emit(
-        MatchEventType.goal,
-        'GOOL! ${s.player.fullName}'
-        '${assistId == null ? '' : ' (assist: ${_nameOf(assistId)})'} — '
-        '$_homeGoals-$_awayGoals.',
+        MatchEventType.shotOff,
+        'Tembakan ${s.player.lastName} membentur mistar!',
         isHome: home,
         playerId: s.player.id,
-        assistId: assistId,
       );
-      // Kick-off oleh tim yang kebobolan.
-      _carrier = home ? 17 : 6;
-      _lastPasser = null;
+      final crossed = _rng.chance(0.5);
+      _emit(
+        MatchEventType.goalLineTech,
+        crossed ? 'GOAL-LINE TECH: GOL' : 'GOAL-LINE TECH: BELUM MELEWATI GARIS',
+        isHome: home,
+      );
+      if (crossed) {
+        _goal(c);
+      } else {
+        _save(c, gkIdx, 'Bola memantul, ditangkap ${gk.player.lastName}.');
+      }
       return;
     }
 
+    final goalP = _clamp(0.16 + 0.25 * fin + 0.1 * comp - 0.25 * gkRate, 0.04, 0.55);
+    if (_rng.chance(goalP)) {
+      _goal(c);
+    } else {
+      _save(c, gkIdx, 'Penyelamatan ${gk.player.lastName}! Tembakan ${s.player.lastName} ditepis.');
+    }
+  }
+
+  /// Gol untuk tim pemilik [c]. Kick-off dilakukan tim yang kebobolan.
+  void _goal(int c) {
+    final s = _pitch[c];
+    final home = s.isHome;
+    if (home) {
+      _homeGoals++;
+      _homeScorers.add(s.player.lastName);
+    } else {
+      _awayGoals++;
+      _awayScorers.add(s.player.lastName);
+    }
+    final assistIdx = _lastPasser;
+    final assistId =
+        (assistIdx != null && assistIdx != c && _pitch[assistIdx].isHome == home)
+            ? _pitch[assistIdx].player.id
+            : null;
+    _emit(
+      MatchEventType.goal,
+      'GOOL! ${s.player.fullName}'
+      '${assistId == null ? '' : ' (assist: ${_nameOf(assistId)})'} — '
+      '$_homeGoals-$_awayGoals.',
+      isHome: home,
+      playerId: s.player.id,
+      assistId: assistId,
+    );
+    _addStoppage(MatchRules.stoppageTicksPerGoal);
+    _carrier = home ? 17 : 6;
+    _lastPasser = null;
+  }
+
+  /// Tembakan ditepis oleh penjaga gawang [gkIdx]; bola dikuasai penjaga.
+  void _save(int c, int gkIdx, String text) {
+    final home = _pitch[c].isHome;
+    final gk = _pitch[gkIdx];
     _counters[home ? 1 : 0].saves++;
     _emit(
       MatchEventType.save,
-      'Penyelamatan ${gk.player.lastName}! Tembakan ${s.player.lastName} '
-      'ditepis.',
+      text,
       isHome: !home,
       playerId: gk.player.id,
     );
@@ -562,21 +667,55 @@ class MatchSession {
     _lastPasser = null;
   }
 
+  /// Penalti untuk tim [attacker]. VAR dapat meninjau keputusan ini.
+  void _penalty(int attacker) {
+    final a = _pitch[attacker];
+    final home = a.isHome;
+    if (!_varReview('penalti untuk ${a.player.lastName}')) return;
+
+    _emit(
+      MatchEventType.penalty,
+      'PENALTI! ${a.player.lastName} maju ke titik penalti.',
+      isHome: home,
+      playerId: a.player.id,
+    );
+    _counters[home ? 0 : 1].shots++;
+    _counters[home ? 0 : 1].onTarget++;
+    final gkIdx = _keeperIndex(!home);
+    final gk = _pitch[gkIdx];
+    final taker = (a.player.attributes[Attribute.finishing] +
+            a.player.attributes[Attribute.composure] +
+            a.player.attributes[Attribute.technique]) /
+        60;
+    final keeper = _norm(gk.player, Attribute.reflexes, Attribute.oneOnOnes);
+    final goalP = _clamp(0.72 + 0.18 * taker - 0.15 * keeper, 0.55, 0.92);
+    if (_rng.chance(goalP)) {
+      _goal(attacker);
+    } else {
+      _save(attacker, gkIdx, 'Penalti ditepis ${gk.player.lastName}!');
+    }
+  }
+
   /// Bola berpindah ke lawan terdekat. Kadang terjadi pelanggaran.
   void _turnover(int c) {
     final s = _pitch[c];
     final defenders = _opponents(c);
     if (defenders.isEmpty) return;
-    if (_rng.chance(0.07)) {
+    // Pelanggaran lebih sering terjadi saat lawan merebut bola di kotak penalti.
+    final foulChance = _inBoxFor(c) ? 0.3 : 0.07;
+    if (_rng.chance(foulChance)) {
       final defender = _nearest(defenders, s.x, s.y);
-      _foul(defender);
-      return; // tendangan bebas: penguasa bola tetap
+      _foul(defender, c);
+      return;
     }
     _carrier = _nearest(defenders, s.x, s.y);
     _lastPasser = null;
   }
 
-  void _foul(int defender) {
+  /// Pelanggaran oleh [defender] terhadap penyerang [attacker]. Di kotak
+  /// penalti menjadi penalti; pada peluang emas juga kartu merah langsung.
+  /// Di luar kotak, penguasa bola tetap (tendangan bebas).
+  void _foul(int defender, int attacker) {
     final d = _pitch[defender];
     final home = d.isHome;
     _counters[home ? 0 : 1].fouls++;
@@ -586,33 +725,198 @@ class MatchSession {
       isHome: home,
       playerId: d.player.id,
     );
+
+    final attackerGoalX = _pitch[attacker].isHome ? 1.0 : 0.0;
+    final oneOnOne = (attackerGoalX - _pitch[attacker].x).abs() < 0.1;
+    if (_inBoxFor(attacker) && oneOnOne && _rng.chance(MatchRules.dogsoChance)) {
+      // DOGSO: menggagalkan peluang emas → kartu merah langsung + penalti.
+      if (_varReview('kartu merah langsung untuk ${d.player.lastName}')) {
+        _sendOff(
+          defender,
+          'Kartu merah langsung! ${d.player.lastName} menggagalkan peluang emas.',
+        );
+      } else {
+        _card(defender);
+      }
+      _penalty(attacker);
+      return;
+    }
+    if (_inBoxFor(attacker)) {
+      _penalty(attacker);
+    }
+
     final yellowP = 0.18 + d.player.attributes[Attribute.aggression] / 50;
     if (!_rng.chance(yellowP)) return;
+    _card(defender);
+  }
 
-    final prior = _yellows[d.player.id] ?? 0;
+  /// Kartu untuk pemain [idx]: kuning, atau merah bila sudah kuning.
+  void _card(int idx) {
+    final p = _pitch[idx];
+    final home = p.isHome;
+    final prior = _yellows[p.player.id] ?? 0;
     if (prior == 0) {
-      _yellows[d.player.id] = 1;
+      _yellows[p.player.id] = 1;
       _counters[home ? 0 : 1].yellow++;
       _emit(
         MatchEventType.yellow,
-        'Kartu kuning untuk ${d.player.lastName}.',
+        'Kartu kuning untuk ${p.player.lastName}.',
         isHome: home,
-        playerId: d.player.id,
+        playerId: p.player.id,
       );
-    } else {
-      _counters[home ? 0 : 1].red++;
-      _emit(
-        MatchEventType.red,
-        'Kartu merah! ${d.player.lastName} diusir dari lapangan.',
-        isHome: home,
-        playerId: d.player.id,
-      );
-      _closeMinutes(d);
-      d.active = false;
-      if (_carrier == defender) {
-        _carrier = _nearestActive(!home, d.x, d.y);
-      }
+      return;
     }
+    if (!_varReview('kartu merah untuk ${p.player.lastName}')) return;
+    _sendOff(idx, 'Kartu merah! ${p.player.lastName} diusir (dua kuning).');
+  }
+
+  /// Mengeluarkan pemain [idx] dari lapangan.
+  void _sendOff(int idx, String text) {
+    final p = _pitch[idx];
+    final home = p.isHome;
+    _counters[home ? 0 : 1].red++;
+    _emit(
+      MatchEventType.red,
+      text,
+      isHome: home,
+      playerId: p.player.id,
+    );
+    _closeMinutes(p);
+    p.active = false;
+    if (_carrier == idx) {
+      _carrier = _nearestActive(!home, p.x, p.y);
+    }
+  }
+
+  /// Pemain menjatuhkan diri di kotak penalti: kartu kuning untuk pelakunya
+  /// dan bola diberikan ke lawan (tanpa penalti).
+  void _dive(int c) {
+    final s = _pitch[c];
+    _emit(
+      MatchEventType.dive,
+      'Dia menjatuhkan diri di kotak penalti!',
+      isHome: s.isHome,
+      playerId: s.player.id,
+    );
+    final defenders = _opponents(c);
+    _card(c);
+    if (defenders.isNotEmpty) {
+      _carrier = _nearest(defenders, s.x, s.y);
+      _lastPasser = null;
+    }
+  }
+
+  /// Offside saat umpan dilepaskan dari [c] ke penerima [j]. Garis offside
+  /// adalah pemain bertahan kedua terakhir. Null bila onside.
+  double? _offsideLine(int c, int j) {
+    final s = _pitch[c];
+    final dirA = s.isHome ? 1.0 : -1.0;
+    final recv = _pitch[j];
+    // Pemain bertahan lawan, diurutkan dari yang terdekat gawangnya sendiri.
+    final defenderX = [
+      for (var k = 0; k < _pitch.length; k++)
+        if (_pitch[k].active && _pitch[k].isHome != s.isHome) _pitch[k].x,
+    ]..sort((a, b) => (b * dirA).compareTo(a * dirA));
+    if (defenderX.isEmpty) return null;
+    final line = defenderX.length > 1 ? defenderX[1] : defenderX[0];
+    final beyondLine = (recv.x - line) * dirA > 0;
+    final beyondBall = (recv.x - s.x) * dirA > 0;
+    final inOpponentHalf = (recv.x - 0.5) * dirA > 0;
+    return beyondLine && beyondBall && inOpponentHalf ? line : null;
+  }
+
+  /// Penerima umpan berada offside: tendangan bebas tidak langsung untuk
+  /// tim bertahan, dan garis offside ditampilkan pada tick ini.
+  void _offside(int j, double line) {
+    final recv = _pitch[j];
+    _emit(
+      MatchEventType.offside,
+      'OFFSIDE! ${recv.player.lastName} berada di posisi offside.',
+      isHome: recv.isHome,
+      playerId: recv.player.id,
+    );
+    _offsideX = line;
+    final defenders = _opponents(j);
+    if (defenders.isNotEmpty) {
+      _carrier = _nearest(defenders, recv.x, recv.y);
+    }
+    _lastPasser = null;
+  }
+
+  /// Peninjauan VAR untuk penalti atau kartu merah. Mengembalikan true bila
+  /// keputusan wasit dipertahankan (atau tidak ditinjau sama sekali).
+  bool _varReview(String subject) {
+    if (!_rng.chance(MatchRules.varReviewChance)) return true;
+    _emit(MatchEventType.varReview, 'PENINJAUAN VAR: $subject.');
+    _addStoppage(MatchRules.stoppageTicksPerVarReview);
+    final overturned = _rng.chance(MatchRules.varOverturnChance);
+    _emit(
+      MatchEventType.varResult,
+      overturned ? 'VAR: keputusan dibatalkan.' : 'VAR: keputusan dipertahankan.',
+    );
+    return !overturned;
+  }
+
+  bool _inBoxFor(int c) {
+    final s = _pitch[c];
+    final goalX = s.isHome ? 1.0 : 0.0;
+    return (goalX - s.x).abs() <= 0.17 && s.y > 0.2 && s.y < 0.8;
+  }
+
+  // --- Waktu tambahan & babak -------------------------------------------------
+
+  /// Menambah waktu tambahan pada babak yang sedang berjalan.
+  void _addStoppage(int ticks) {
+    _extraTicks[_halfTimeTick == null ? 0 : 1] += ticks;
+  }
+
+  /// Label menit untuk tick saat ini: (menit, menit tambahan).
+  (int, int) _clockLabel() {
+    final t = _tick;
+    final h = _halfTimeTick;
+    if (h == null) {
+      if (t < _halfTicks) return (t ~/ ticksPerMinute + 1, 0);
+      return (45, (t - _halfTicks) ~/ ticksPerMinute + 1);
+    }
+    final s = t - h;
+    if (s < _halfTicks) return (46 + s ~/ ticksPerMinute, 0);
+    return (90, (s - _halfTicks) ~/ ticksPerMinute + 1);
+  }
+
+  /// Mengatur akhir babak. Jika waktu tambahan habis, babak pertama berakhir
+  /// dengan jeda; babak kedua berakhir dengan peluit akhir.
+  void _checkPeriodEnds() {
+    if (_halfTimeTick == null) {
+      if (_tick < _halfTicks + _extraTicks[0]) return;
+      if (_advantageAvailable(0)) return;
+      _halfTimeTick = _tick;
+      _halfTimeBreak = true;
+      _emitAt(
+        45,
+        MatchEventType.halfTime,
+        'Turun minum. Skor $_homeGoals-$_awayGoals.',
+        extra: (_extraTicks[0] + ticksPerMinute - 1) ~/ ticksPerMinute,
+      );
+      return;
+    }
+    if (_tick < _halfTimeTick! + _halfTicks + _extraTicks[1]) return;
+    if (_advantageAvailable(1)) return;
+    _finished = true;
+    _emitAt(
+      fullMinutes,
+      MatchEventType.fullTime,
+      'Peluit akhir. Skor akhir $_homeGoals-$_awayGoals.',
+      extra: (_extraTicks[1] + ticksPerMinute - 1) ~/ ticksPerMinute,
+    );
+  }
+
+  /// Keunggulan: bila bola sedang di kotak penalti saat babak hendak
+  /// berakhir, wasit menambah satu waktu singkat (sekali per babak).
+  bool _advantageAvailable(int half) {
+    if (_advantageGiven[half] || !_inBoxFor(_carrier)) return false;
+    _advantageGiven[half] = true;
+    _extraTicks[half] += MatchRules.advantageTicks;
+    return true;
   }
 
   // --- Posisi ----------------------------------------------------------------
@@ -961,8 +1265,11 @@ class MatchSession {
     bool? isHome,
     int? playerId,
     int? assistId,
-  }) => _emitAt(_inStep ? _minute + 1 : _minute, type, text,
-      isHome: isHome, playerId: playerId, assistId: assistId);
+  }) {
+    final (minute, extra) = _clockLabel();
+    _emitAt(minute, type, text,
+        isHome: isHome, playerId: playerId, assistId: assistId, extra: extra);
+  }
 
   void _emitAt(
     int minute,
@@ -971,6 +1278,7 @@ class MatchSession {
     bool? isHome,
     int? playerId,
     int? assistId,
+    int extra = 0,
   }) {
     final e = MatchEvent(
       minute: minute,
@@ -979,6 +1287,7 @@ class MatchSession {
       isHome: isHome,
       playerId: playerId,
       assistId: assistId,
+      extra: extra,
     );
     _events.add(e);
     _minuteEvents.add(e);

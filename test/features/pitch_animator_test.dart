@@ -64,7 +64,7 @@ void main() {
 
   group('Bola', () {
     test('umpan di udara mulai dan berhenti dengan lembut (ease-in-out)', () {
-      // Panjang 0,5 → durasi 1,7 tick. Pada 10% durasi, bola harus lebih
+      // Panjang 0,5 → durasi 2,4 tick (dibatasi). Pada 10% durasi, bola harus lebih
       // dekat ke titik awal daripada gerak linier.
       final a = PitchAnimator()
         ..setTick(
@@ -74,14 +74,14 @@ void main() {
           carrier: -1,
           tickStart: 0,
         );
-      a.update(0.17); // ≈ 10% dari 1,7 tick
+      a.update(0.24); // ≈ 10% dari 2,4 tick
       final linear = 0.1 + 0.5 * 0.1;
       expect(a.ballX, lessThan(linear - 0.005));
 
-      a.update(0.85); // ≈ 50%: tepat di tengah
+      a.update(1.2); // ≈ 50%: tepat di tengah
       expect(a.ballX, closeTo(0.35, 0.01));
 
-      a.update(1.7);
+      a.update(2.4);
       expect(a.ballX, closeTo(0.6, 1e-9));
     });
 
@@ -97,8 +97,8 @@ void main() {
           carrier: 0,
           tickStart: 0,
         );
-      // Durasi gulir 0,5 tick; pada 0,25 tick bola di tengah (linier).
-      a.update(0.25);
+      // Durasi gulir 0,9 tick; pada 0,45 tick bola di tengah (setengah linier).
+      a.update(0.45);
       expect(a.ballX, closeTo(0.35, 1e-9));
       final p0 = a.poses.firstWhere((p) => p.dot.index == 0);
       expect(p0.x, closeTo(a.ballX, 1e-9));
@@ -137,7 +137,7 @@ void main() {
         );
         a.update(k + 1.0);
       }
-      expect(a.ballLag, lessThan(2.5));
+      expect(a.ballLag, lessThan(4.0));
     });
   });
 
@@ -209,6 +209,6 @@ void main() {
         }
       }
     }
-    expect(anim.ballLag, lessThan(3.0));
+    expect(anim.ballLag, lessThan(3.5));
   });
 }

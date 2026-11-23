@@ -461,7 +461,7 @@ class GameEngine {
         r.fixtureId,
         entry.key,
       );
-      final loss = (full * entry.value / 90).round();
+      final loss = (full * entry.value / r.matchMinutes).round();
       await (_db.update(_db.players)..where((t) => t.id.equals(p.id))).write(
         PlayersCompanion(condition: Value(math.max(0, p.condition - loss))),
       );

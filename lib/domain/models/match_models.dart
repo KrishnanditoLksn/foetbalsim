@@ -44,6 +44,12 @@ enum MatchEventType {
   red,
   substitution,
   mentality,
+  offside,
+  penalty,
+  dive,
+  varReview,
+  varResult,
+  goalLineTech,
 }
 
 /// Satu baris komentar laga.
@@ -55,6 +61,7 @@ class MatchEvent {
     this.isHome,
     this.playerId,
     this.assistId,
+    this.extra = 0,
   });
 
   final int minute;
@@ -63,6 +70,12 @@ class MatchEvent {
   final bool? isHome; // null untuk peristiwa netral (kick-off, dll.)
   final int? playerId;
   final int? assistId;
+
+  /// Menit tambahan (injury time): 0 = menit biasa, 2 = "45+2'".
+  final int extra;
+
+  /// Label menit untuk tampilan, mis. "45+2'" atau "23'".
+  String get label => extra > 0 ? "$minute+$extra'" : "$minute'";
 }
 
 /// Posisi satu pemain di lapangan. Koordinat ternormalisasi 0–1:
@@ -112,10 +125,14 @@ class TickFrame {
     required this.ballPath,
     required this.carrierIndex,
     required this.events,
+    this.offsideX,
   });
 
   /// Nomor tick setelah frame ini selesai (1-based, dari 1 sampai total).
   final int tick;
+
+  /// Posisi garis offside (koordinat x) bila offside terjadi pada tick ini.
+  final double? offsideX;
 
   /// Menit permainan tempat tick ini berada (1-based).
   final int minute;
@@ -208,7 +225,11 @@ class MatchResultData {
     required this.minutesPlayed,
     required this.homeScorerNames,
     required this.awayScorerNames,
+    required this.matchMinutes,
   });
+
+  /// Panjang laga sebenarnya dalam menit (termasuk waktu tambahan).
+  final int matchMinutes;
 
   final int fixtureId;
   final String homeClubId;

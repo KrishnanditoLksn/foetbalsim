@@ -223,6 +223,19 @@ class LivePitchPainter extends CustomPainter {
     ];
     Pitch2DPainter.drawDots(canvas, size, dots);
     Pitch2DPainter.drawBall(canvas, size, animator.ballX, animator.ballY);
+
+    // Garis offside sesaat: tipis, kuning, sepanjang lapangan.
+    final offside = animator.offsideX;
+    if (offside != null) {
+      final x = offside * size.width;
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.height),
+        Paint()
+          ..strokeWidth = math.max(1.0, size.width * 0.003)
+          ..color = const Color(0xCCFFEB3B),
+      );
+    }
   }
 
   @override

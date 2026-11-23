@@ -47,11 +47,11 @@ class _BallRun {
 /// [update]; frame rate layar tidak memengaruhi logika.
 class PitchAnimator extends ChangeNotifier {
   // Durasi run dalam satuan tick (1 tick = 1/6 menit permainan).
-  static const double _minAirTicks = 0.6;
-  static const double _maxAirTicks = 1.8;
-  static const double _minDribbleTicks = 0.35;
-  static const double _maxDribbleTicks = 0.9;
-  static const double _maxBacklogTicks = 1.0;
+  static const double _minAirTicks = 1.2;
+  static const double _maxAirTicks = 2.4;
+  static const double _minDribbleTicks = 0.6;
+  static const double _maxDribbleTicks = 1.4;
+  static const double _maxBacklogTicks = 1.5;
 
   List<PlayerDot> _from = const [];
   List<PlayerDot> _to = const [];
@@ -63,6 +63,9 @@ class PitchAnimator extends ChangeNotifier {
   double ballX = 0.5;
   double ballY = 0.5;
   int carrier = -1;
+
+  /// Garis offside pada tick ini (null bila tidak ada offside).
+  double? offsideX;
   List<PlayerPose> _poses = const [];
 
   /// Semua pemain di lapangan, diurutkan per indeks (stabil).
@@ -99,11 +102,13 @@ class PitchAnimator extends ChangeNotifier {
     required List<BallWaypoint> path,
     required int carrier,
     required double tickStart,
+    double? offsideX,
   }) {
     _from = from;
     _to = to;
     _tickStart = tickStart;
     this.carrier = carrier;
+    this.offsideX = offsideX;
     _enqueue(path, tickStart);
   }
 
@@ -157,7 +162,7 @@ class PitchAnimator extends ChangeNotifier {
     // tidak tertinggal jauh dari simulasi.
     final backlog = _endTime - tickStart;
     final scale = backlog > _maxBacklogTicks
-        ? math.max(0.4, _maxBacklogTicks / backlog)
+        ? math.max(0.3, _maxBacklogTicks / backlog)
         : 1.0;
 
     var t = math.max(_endTime.isFinite ? _endTime : tickStart, tickStart);
@@ -171,9 +176,9 @@ class PitchAnimator extends ChangeNotifier {
       if (cum.last < 1e-9) continue;
       final base = g.owner >= 0
           ? math.min(_maxDribbleTicks,
-              math.max(_minDribbleTicks, cum.last * 5))
+              math.max(_minDribbleTicks, cum.last * 9))
           : math.min(_maxAirTicks,
-              math.max(_minAirTicks, 0.6 + cum.last * 2.2));
+              math.max(_minAirTicks, 1.2 + cum.last * 4.0));
       final duration = base * scale;
       _runs.add(
         _BallRun(
@@ -225,7 +230,10 @@ class PitchAnimator extends ChangeNotifier {
       return run.points.last.withOwner(run.owner);
     }
     final s = (t - run.start) / run.duration;
-    final e = run.eased ? s * s * (3 - 2 * s) : s;
+    // Udara: ease-in-out penuh (tendang pelan, cepat di tengah, pelan saat
+    // diterima). Menggiring: setengah linier agar sentuhan menggelinding.
+    final smooth = s * s * (3 - 2 * s);
+    final e = run.eased ? smooth : 0.5 * s + 0.5 * smooth;
     final target = e * run.length;
     for (var i = 1; i < run.points.length; i++) {
       if (target <= run.cum[i] || i == run.points.length - 1) {

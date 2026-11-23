@@ -114,13 +114,14 @@ void main() {
     final redCards = r.stats.home.red + r.stats.away.red;
     if (redCards == 0) {
       for (final p in starters) {
-        expect(r.minutesPlayed[p.id], 90, reason: p.fullName);
+        expect(r.minutesPlayed[p.id], r.matchMinutes, reason: p.fullName);
       }
     }
   });
 
   test('pergantian: masuk dari bangku, keluar dari lapangan, maks 5', () {
     final s = newSession(seed: 9);
+    s.openSubWindow(true);
     for (var i = 0; i < 30; i++) {
       s.step();
     }
@@ -150,8 +151,8 @@ void main() {
     );
     playOut(s);
     final r = s.result(fixtureId: 13);
-    // Pemain pengganti tercatat main sebagian menit, bukan 90.
-    expect(r.minutesPlayed.values.every((m) => m >= 0 && m <= 90), isTrue);
+    // Menit bermain tidak melebihi panjang laga (termasuk waktu tambahan).
+    expect(r.minutesPlayed.values.every((m) => m >= 0 && m <= r.matchMinutes), isTrue);
   });
 
   test('ubah mentalitas tercatat di komentar dan laga tetap berjalan', () {
