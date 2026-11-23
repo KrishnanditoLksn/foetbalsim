@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import '../../domain/enums/inbox.dart';
 import '../../domain/enums/position.dart';
 import '../../domain/enums/squad_status.dart';
+import '../../domain/enums/tactics.dart';
+import '../../domain/enums/transfer.dart';
 
 @DataClassName('NationRow')
 class Nations extends Table {
@@ -91,6 +93,8 @@ class Players extends Table {
   IntColumn get condition => integer()();
   IntColumn get morale => integer()();
   IntColumn get marketValue => integer()(); // €K
+  BoolColumn get isTransferListed =>
+      boolean().withDefault(const Constant(false))(); // v3
 
   @override
   Set<Column> get primaryKey => {id};
@@ -150,4 +154,53 @@ class InboxMessages extends Table {
   TextColumn get payload => text().nullable()();
   BoolColumn get resolved => boolean().withDefault(const Constant(false))();
   TextColumn get choice => text().nullable()();
+}
+
+/// Taktik per klub (v3). Daftar id disimpan sebagai teks "1,2,3".
+@DataClassName('ClubTacticRow')
+class ClubTactics extends Table {
+  TextColumn get clubId => text()();
+  TextColumn get formation => textEnum<Formation>()();
+  TextColumn get mentality => textEnum<Mentality>()();
+  TextColumn get starterIds => text().withDefault(const Constant(''))();
+  TextColumn get subIds => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column> get primaryKey => {clubId};
+}
+
+/// Tawaran transfer (v3). fromClubId = penawar, toClubId = penjual.
+@DataClassName('TransferOfferRow')
+class TransferOffers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer()();
+  TextColumn get fromClubId => text()();
+  TextColumn get toClubId => text()();
+  IntColumn get fee => integer()(); // €K
+  TextColumn get status => textEnum<TransferOfferStatus>()();
+  DateTimeColumn get createdDate => dateTime()();
+  DateTimeColumn get responseDate => dateTime().nullable()();
+}
+
+/// Riwayat transfer (v3).
+@DataClassName('TransferHistoryRow')
+class TransferHistory extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get date => dateTime()();
+  IntColumn get playerId => integer()();
+  TextColumn get playerName => text()();
+  TextColumn get fromClubId => text()();
+  TextColumn get toClubId => text()();
+  IntColumn get fee => integer()(); // €K
+  TextColumn get type => textEnum<TransferType>()();
+}
+
+/// Daftar pantau pemain (v3).
+@DataClassName('ShortlistRow')
+class Shortlist extends Table {
+  IntColumn get playerId => integer()();
+  DateTimeColumn get addedDate => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {playerId};
 }

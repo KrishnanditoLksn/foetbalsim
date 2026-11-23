@@ -4,7 +4,8 @@ enum InboxCategory {
   scouting('Scouting'),
   finance('Keuangan'),
   contract('Kontrak'),
-  season('Musim');
+  season('Musim'),
+  transfer('Transfer');
 
   const InboxCategory(this.label);
   final String label;
@@ -12,4 +13,10 @@ enum InboxCategory {
 
 /// Jenis tindakan yang diminta dari pemain. Pesan dengan tindakan selain
 /// [none] yang belum diselesaikan menghentikan CONTINUE.
-enum InboxActionType { none, acceptTarget, contractDecision }
+enum InboxActionType {
+  none,
+  acceptTarget,
+  contractDecision,
+  incomingTransferOffer,
+  contractNegotiation,
+}

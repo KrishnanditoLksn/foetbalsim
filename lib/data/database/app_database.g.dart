@@ -11,34 +11,21 @@ class $NationsTable extends Nations with TableInfo<$NationsTable, NationRow> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _codeMeta = const VerificationMeta('code');
   @override
   late final GeneratedColumn<String> code = GeneratedColumn<String>(
-    'code',
-    aliasedName,
-    false,
-    additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 3,
-      maxTextLength: 3,
-    ),
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 3),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [id, name, code];
   @override
@@ -47,10 +34,8 @@ class $NationsTable extends Nations with TableInfo<$NationsTable, NationRow> {
   String get actualTableName => $name;
   static const String $name = 'nations';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<NationRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<NationRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -60,17 +45,13 @@ class $NationsTable extends Nations with TableInfo<$NationsTable, NationRow> {
     }
     if (data.containsKey('name')) {
       context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('code')) {
       context.handle(
-        _codeMeta,
-        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
-      );
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
     } else if (isInserting) {
       context.missing(_codeMeta);
     }
@@ -83,21 +64,12 @@ class $NationsTable extends Nations with TableInfo<$NationsTable, NationRow> {
   NationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return NationRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      code:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}code'],
-          )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
     );
   }
 
@@ -129,10 +101,8 @@ class NationRow extends DataClass implements Insertable<NationRow> {
     );
   }
 
-  factory NationRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory NationRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return NationRow(
       id: serializer.fromJson<String>(json['id']),
@@ -151,10 +121,10 @@ class NationRow extends DataClass implements Insertable<NationRow> {
   }
 
   NationRow copyWith({String? id, String? name, String? code}) => NationRow(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    code: code ?? this.code,
-  );
+        id: id ?? this.id,
+        name: name ?? this.name,
+        code: code ?? this.code,
+      );
   NationRow copyWithCompanion(NationsCompanion data) {
     return NationRow(
       id: data.id.present ? data.id.value : this.id,
@@ -200,9 +170,9 @@ class NationsCompanion extends UpdateCompanion<NationRow> {
     required String name,
     required String code,
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       name = Value(name),
-       code = Value(code);
+  })  : id = Value(id),
+        name = Value(name),
+        code = Value(code);
   static Insertable<NationRow> custom({
     Expression<String>? id,
     Expression<String>? name,
@@ -217,12 +187,11 @@ class NationsCompanion extends UpdateCompanion<NationRow> {
     });
   }
 
-  NationsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? name,
-    Value<String>? code,
-    Value<int>? rowid,
-  }) {
+  NationsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? code,
+      Value<int>? rowid}) {
     return NationsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -269,107 +238,69 @@ class $LeaguesTable extends Leagues with TableInfo<$LeaguesTable, LeagueRow> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nationIdMeta = const VerificationMeta(
-    'nationId',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nationIdMeta =
+      const VerificationMeta('nationId');
   @override
   late final GeneratedColumn<String> nationId = GeneratedColumn<String>(
-    'nation_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'nation_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _tierMeta = const VerificationMeta('tier');
   @override
   late final GeneratedColumn<int> tier = GeneratedColumn<int>(
-    'tier',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _jumlahTimMeta = const VerificationMeta(
-    'jumlahTim',
-  );
+      'tier', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _jumlahTimMeta =
+      const VerificationMeta('jumlahTim');
   @override
   late final GeneratedColumn<int> jumlahTim = GeneratedColumn<int>(
-    'jumlah_tim',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _slotPromosiMeta = const VerificationMeta(
-    'slotPromosi',
-  );
+      'jumlah_tim', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _slotPromosiMeta =
+      const VerificationMeta('slotPromosi');
   @override
   late final GeneratedColumn<int> slotPromosi = GeneratedColumn<int>(
-    'slot_promosi',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _slotDegradasiMeta = const VerificationMeta(
-    'slotDegradasi',
-  );
+      'slot_promosi', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _slotDegradasiMeta =
+      const VerificationMeta('slotDegradasi');
   @override
   late final GeneratedColumn<int> slotDegradasi = GeneratedColumn<int>(
-    'slot_degradasi',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _slotPlayoffMeta = const VerificationMeta(
-    'slotPlayoff',
-  );
+      'slot_degradasi', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _slotPlayoffMeta =
+      const VerificationMeta('slotPlayoff');
   @override
   late final GeneratedColumn<int> slotPlayoff = GeneratedColumn<int>(
-    'slot_playoff',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
+      'slot_playoff', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    nationId,
-    name,
-    tier,
-    jumlahTim,
-    slotPromosi,
-    slotDegradasi,
-    slotPlayoff,
-  ];
+        id,
+        nationId,
+        name,
+        tier,
+        jumlahTim,
+        slotPromosi,
+        slotDegradasi,
+        slotPlayoff
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'leagues';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<LeagueRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<LeagueRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -378,67 +309,50 @@ class $LeaguesTable extends Leagues with TableInfo<$LeaguesTable, LeagueRow> {
       context.missing(_idMeta);
     }
     if (data.containsKey('nation_id')) {
-      context.handle(
-        _nationIdMeta,
-        nationId.isAcceptableOrUnknown(data['nation_id']!, _nationIdMeta),
-      );
+      context.handle(_nationIdMeta,
+          nationId.isAcceptableOrUnknown(data['nation_id']!, _nationIdMeta));
     } else if (isInserting) {
       context.missing(_nationIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('tier')) {
       context.handle(
-        _tierMeta,
-        tier.isAcceptableOrUnknown(data['tier']!, _tierMeta),
-      );
+          _tierMeta, tier.isAcceptableOrUnknown(data['tier']!, _tierMeta));
     } else if (isInserting) {
       context.missing(_tierMeta);
     }
     if (data.containsKey('jumlah_tim')) {
-      context.handle(
-        _jumlahTimMeta,
-        jumlahTim.isAcceptableOrUnknown(data['jumlah_tim']!, _jumlahTimMeta),
-      );
+      context.handle(_jumlahTimMeta,
+          jumlahTim.isAcceptableOrUnknown(data['jumlah_tim']!, _jumlahTimMeta));
     } else if (isInserting) {
       context.missing(_jumlahTimMeta);
     }
     if (data.containsKey('slot_promosi')) {
       context.handle(
-        _slotPromosiMeta,
-        slotPromosi.isAcceptableOrUnknown(
-          data['slot_promosi']!,
           _slotPromosiMeta,
-        ),
-      );
+          slotPromosi.isAcceptableOrUnknown(
+              data['slot_promosi']!, _slotPromosiMeta));
     } else if (isInserting) {
       context.missing(_slotPromosiMeta);
     }
     if (data.containsKey('slot_degradasi')) {
       context.handle(
-        _slotDegradasiMeta,
-        slotDegradasi.isAcceptableOrUnknown(
-          data['slot_degradasi']!,
           _slotDegradasiMeta,
-        ),
-      );
+          slotDegradasi.isAcceptableOrUnknown(
+              data['slot_degradasi']!, _slotDegradasiMeta));
     } else if (isInserting) {
       context.missing(_slotDegradasiMeta);
     }
     if (data.containsKey('slot_playoff')) {
       context.handle(
-        _slotPlayoffMeta,
-        slotPlayoff.isAcceptableOrUnknown(
-          data['slot_playoff']!,
           _slotPlayoffMeta,
-        ),
-      );
+          slotPlayoff.isAcceptableOrUnknown(
+              data['slot_playoff']!, _slotPlayoffMeta));
     }
     return context;
   }
@@ -449,46 +363,22 @@ class $LeaguesTable extends Leagues with TableInfo<$LeaguesTable, LeagueRow> {
   LeagueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LeagueRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      nationId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}nation_id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      tier:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}tier'],
-          )!,
-      jumlahTim:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}jumlah_tim'],
-          )!,
-      slotPromosi:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}slot_promosi'],
-          )!,
-      slotDegradasi:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}slot_degradasi'],
-          )!,
-      slotPlayoff:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}slot_playoff'],
-          )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      nationId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}nation_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      tier: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}tier'])!,
+      jumlahTim: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}jumlah_tim'])!,
+      slotPromosi: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}slot_promosi'])!,
+      slotDegradasi: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}slot_degradasi'])!,
+      slotPlayoff: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}slot_playoff'])!,
     );
   }
 
@@ -507,16 +397,15 @@ class LeagueRow extends DataClass implements Insertable<LeagueRow> {
   final int slotPromosi;
   final int slotDegradasi;
   final int slotPlayoff;
-  const LeagueRow({
-    required this.id,
-    required this.nationId,
-    required this.name,
-    required this.tier,
-    required this.jumlahTim,
-    required this.slotPromosi,
-    required this.slotDegradasi,
-    required this.slotPlayoff,
-  });
+  const LeagueRow(
+      {required this.id,
+      required this.nationId,
+      required this.name,
+      required this.tier,
+      required this.jumlahTim,
+      required this.slotPromosi,
+      required this.slotDegradasi,
+      required this.slotPlayoff});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -544,10 +433,8 @@ class LeagueRow extends DataClass implements Insertable<LeagueRow> {
     );
   }
 
-  factory LeagueRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory LeagueRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LeagueRow(
       id: serializer.fromJson<String>(json['id']),
@@ -575,25 +462,25 @@ class LeagueRow extends DataClass implements Insertable<LeagueRow> {
     };
   }
 
-  LeagueRow copyWith({
-    String? id,
-    String? nationId,
-    String? name,
-    int? tier,
-    int? jumlahTim,
-    int? slotPromosi,
-    int? slotDegradasi,
-    int? slotPlayoff,
-  }) => LeagueRow(
-    id: id ?? this.id,
-    nationId: nationId ?? this.nationId,
-    name: name ?? this.name,
-    tier: tier ?? this.tier,
-    jumlahTim: jumlahTim ?? this.jumlahTim,
-    slotPromosi: slotPromosi ?? this.slotPromosi,
-    slotDegradasi: slotDegradasi ?? this.slotDegradasi,
-    slotPlayoff: slotPlayoff ?? this.slotPlayoff,
-  );
+  LeagueRow copyWith(
+          {String? id,
+          String? nationId,
+          String? name,
+          int? tier,
+          int? jumlahTim,
+          int? slotPromosi,
+          int? slotDegradasi,
+          int? slotPlayoff}) =>
+      LeagueRow(
+        id: id ?? this.id,
+        nationId: nationId ?? this.nationId,
+        name: name ?? this.name,
+        tier: tier ?? this.tier,
+        jumlahTim: jumlahTim ?? this.jumlahTim,
+        slotPromosi: slotPromosi ?? this.slotPromosi,
+        slotDegradasi: slotDegradasi ?? this.slotDegradasi,
+        slotPlayoff: slotPlayoff ?? this.slotPlayoff,
+      );
   LeagueRow copyWithCompanion(LeaguesCompanion data) {
     return LeagueRow(
       id: data.id.present ? data.id.value : this.id,
@@ -603,10 +490,9 @@ class LeagueRow extends DataClass implements Insertable<LeagueRow> {
       jumlahTim: data.jumlahTim.present ? data.jumlahTim.value : this.jumlahTim,
       slotPromosi:
           data.slotPromosi.present ? data.slotPromosi.value : this.slotPromosi,
-      slotDegradasi:
-          data.slotDegradasi.present
-              ? data.slotDegradasi.value
-              : this.slotDegradasi,
+      slotDegradasi: data.slotDegradasi.present
+          ? data.slotDegradasi.value
+          : this.slotDegradasi,
       slotPlayoff:
           data.slotPlayoff.present ? data.slotPlayoff.value : this.slotPlayoff,
     );
@@ -628,16 +514,8 @@ class LeagueRow extends DataClass implements Insertable<LeagueRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    nationId,
-    name,
-    tier,
-    jumlahTim,
-    slotPromosi,
-    slotDegradasi,
-    slotPlayoff,
-  );
+  int get hashCode => Object.hash(id, nationId, name, tier, jumlahTim,
+      slotPromosi, slotDegradasi, slotPlayoff);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -683,13 +561,13 @@ class LeaguesCompanion extends UpdateCompanion<LeagueRow> {
     required int slotDegradasi,
     this.slotPlayoff = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       nationId = Value(nationId),
-       name = Value(name),
-       tier = Value(tier),
-       jumlahTim = Value(jumlahTim),
-       slotPromosi = Value(slotPromosi),
-       slotDegradasi = Value(slotDegradasi);
+  })  : id = Value(id),
+        nationId = Value(nationId),
+        name = Value(name),
+        tier = Value(tier),
+        jumlahTim = Value(jumlahTim),
+        slotPromosi = Value(slotPromosi),
+        slotDegradasi = Value(slotDegradasi);
   static Insertable<LeagueRow> custom({
     Expression<String>? id,
     Expression<String>? nationId,
@@ -714,17 +592,16 @@ class LeaguesCompanion extends UpdateCompanion<LeagueRow> {
     });
   }
 
-  LeaguesCompanion copyWith({
-    Value<String>? id,
-    Value<String>? nationId,
-    Value<String>? name,
-    Value<int>? tier,
-    Value<int>? jumlahTim,
-    Value<int>? slotPromosi,
-    Value<int>? slotDegradasi,
-    Value<int>? slotPlayoff,
-    Value<int>? rowid,
-  }) {
+  LeaguesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? nationId,
+      Value<String>? name,
+      Value<int>? tier,
+      Value<int>? jumlahTim,
+      Value<int>? slotPromosi,
+      Value<int>? slotDegradasi,
+      Value<int>? slotPlayoff,
+      Value<int>? rowid}) {
     return LeaguesCompanion(
       id: id ?? this.id,
       nationId: nationId ?? this.nationId,
@@ -796,160 +673,99 @@ class $ClubsTable extends Clubs with TableInfo<$ClubsTable, ClubRow> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _leagueIdMeta = const VerificationMeta(
-    'leagueId',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _leagueIdMeta =
+      const VerificationMeta('leagueId');
   @override
   late final GeneratedColumn<String> leagueId = GeneratedColumn<String>(
-    'league_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'league_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _shortNameMeta = const VerificationMeta(
-    'shortName',
-  );
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _shortNameMeta =
+      const VerificationMeta('shortName');
   @override
   late final GeneratedColumn<String> shortName = GeneratedColumn<String>(
-    'short_name',
-    aliasedName,
-    false,
-    additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 3,
-      maxTextLength: 3,
-    ),
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _primaryColorMeta = const VerificationMeta(
-    'primaryColor',
-  );
+      'short_name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 3),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _primaryColorMeta =
+      const VerificationMeta('primaryColor');
   @override
   late final GeneratedColumn<String> primaryColor = GeneratedColumn<String>(
-    'primary_color',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _secondaryColorMeta = const VerificationMeta(
-    'secondaryColor',
-  );
+      'primary_color', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _secondaryColorMeta =
+      const VerificationMeta('secondaryColor');
   @override
   late final GeneratedColumn<String> secondaryColor = GeneratedColumn<String>(
-    'secondary_color',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _reputationMeta = const VerificationMeta(
-    'reputation',
-  );
+      'secondary_color', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _reputationMeta =
+      const VerificationMeta('reputation');
   @override
   late final GeneratedColumn<int> reputation = GeneratedColumn<int>(
-    'reputation',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _stadiumNameMeta = const VerificationMeta(
-    'stadiumName',
-  );
+      'reputation', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _stadiumNameMeta =
+      const VerificationMeta('stadiumName');
   @override
   late final GeneratedColumn<String> stadiumName = GeneratedColumn<String>(
-    'stadium_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _capacityMeta = const VerificationMeta(
-    'capacity',
-  );
+      'stadium_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _capacityMeta =
+      const VerificationMeta('capacity');
   @override
   late final GeneratedColumn<int> capacity = GeneratedColumn<int>(
-    'capacity',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _balanceMeta = const VerificationMeta(
-    'balance',
-  );
+      'capacity', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _balanceMeta =
+      const VerificationMeta('balance');
   @override
   late final GeneratedColumn<int> balance = GeneratedColumn<int>(
-    'balance',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _transferBudgetMeta = const VerificationMeta(
-    'transferBudget',
-  );
+      'balance', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _transferBudgetMeta =
+      const VerificationMeta('transferBudget');
   @override
   late final GeneratedColumn<int> transferBudget = GeneratedColumn<int>(
-    'transfer_budget',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _wageBudgetMeta = const VerificationMeta(
-    'wageBudget',
-  );
+      'transfer_budget', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _wageBudgetMeta =
+      const VerificationMeta('wageBudget');
   @override
   late final GeneratedColumn<int> wageBudget = GeneratedColumn<int>(
-    'wage_budget',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'wage_budget', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    leagueId,
-    name,
-    shortName,
-    primaryColor,
-    secondaryColor,
-    reputation,
-    stadiumName,
-    capacity,
-    balance,
-    transferBudget,
-    wageBudget,
-  ];
+        id,
+        leagueId,
+        name,
+        shortName,
+        primaryColor,
+        secondaryColor,
+        reputation,
+        stadiumName,
+        capacity,
+        balance,
+        transferBudget,
+        wageBudget
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'clubs';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ClubRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ClubRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -958,102 +774,80 @@ class $ClubsTable extends Clubs with TableInfo<$ClubsTable, ClubRow> {
       context.missing(_idMeta);
     }
     if (data.containsKey('league_id')) {
-      context.handle(
-        _leagueIdMeta,
-        leagueId.isAcceptableOrUnknown(data['league_id']!, _leagueIdMeta),
-      );
+      context.handle(_leagueIdMeta,
+          leagueId.isAcceptableOrUnknown(data['league_id']!, _leagueIdMeta));
     } else if (isInserting) {
       context.missing(_leagueIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('short_name')) {
-      context.handle(
-        _shortNameMeta,
-        shortName.isAcceptableOrUnknown(data['short_name']!, _shortNameMeta),
-      );
+      context.handle(_shortNameMeta,
+          shortName.isAcceptableOrUnknown(data['short_name']!, _shortNameMeta));
     } else if (isInserting) {
       context.missing(_shortNameMeta);
     }
     if (data.containsKey('primary_color')) {
       context.handle(
-        _primaryColorMeta,
-        primaryColor.isAcceptableOrUnknown(
-          data['primary_color']!,
           _primaryColorMeta,
-        ),
-      );
+          primaryColor.isAcceptableOrUnknown(
+              data['primary_color']!, _primaryColorMeta));
     } else if (isInserting) {
       context.missing(_primaryColorMeta);
     }
     if (data.containsKey('secondary_color')) {
       context.handle(
-        _secondaryColorMeta,
-        secondaryColor.isAcceptableOrUnknown(
-          data['secondary_color']!,
           _secondaryColorMeta,
-        ),
-      );
+          secondaryColor.isAcceptableOrUnknown(
+              data['secondary_color']!, _secondaryColorMeta));
     } else if (isInserting) {
       context.missing(_secondaryColorMeta);
     }
     if (data.containsKey('reputation')) {
       context.handle(
-        _reputationMeta,
-        reputation.isAcceptableOrUnknown(data['reputation']!, _reputationMeta),
-      );
+          _reputationMeta,
+          reputation.isAcceptableOrUnknown(
+              data['reputation']!, _reputationMeta));
     } else if (isInserting) {
       context.missing(_reputationMeta);
     }
     if (data.containsKey('stadium_name')) {
       context.handle(
-        _stadiumNameMeta,
-        stadiumName.isAcceptableOrUnknown(
-          data['stadium_name']!,
           _stadiumNameMeta,
-        ),
-      );
+          stadiumName.isAcceptableOrUnknown(
+              data['stadium_name']!, _stadiumNameMeta));
     } else if (isInserting) {
       context.missing(_stadiumNameMeta);
     }
     if (data.containsKey('capacity')) {
-      context.handle(
-        _capacityMeta,
-        capacity.isAcceptableOrUnknown(data['capacity']!, _capacityMeta),
-      );
+      context.handle(_capacityMeta,
+          capacity.isAcceptableOrUnknown(data['capacity']!, _capacityMeta));
     } else if (isInserting) {
       context.missing(_capacityMeta);
     }
     if (data.containsKey('balance')) {
-      context.handle(
-        _balanceMeta,
-        balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta),
-      );
+      context.handle(_balanceMeta,
+          balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta));
     } else if (isInserting) {
       context.missing(_balanceMeta);
     }
     if (data.containsKey('transfer_budget')) {
       context.handle(
-        _transferBudgetMeta,
-        transferBudget.isAcceptableOrUnknown(
-          data['transfer_budget']!,
           _transferBudgetMeta,
-        ),
-      );
+          transferBudget.isAcceptableOrUnknown(
+              data['transfer_budget']!, _transferBudgetMeta));
     } else if (isInserting) {
       context.missing(_transferBudgetMeta);
     }
     if (data.containsKey('wage_budget')) {
       context.handle(
-        _wageBudgetMeta,
-        wageBudget.isAcceptableOrUnknown(data['wage_budget']!, _wageBudgetMeta),
-      );
+          _wageBudgetMeta,
+          wageBudget.isAcceptableOrUnknown(
+              data['wage_budget']!, _wageBudgetMeta));
     } else if (isInserting) {
       context.missing(_wageBudgetMeta);
     }
@@ -1066,66 +860,30 @@ class $ClubsTable extends Clubs with TableInfo<$ClubsTable, ClubRow> {
   ClubRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ClubRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      leagueId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}league_id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      shortName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}short_name'],
-          )!,
-      primaryColor:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}primary_color'],
-          )!,
-      secondaryColor:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}secondary_color'],
-          )!,
-      reputation:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}reputation'],
-          )!,
-      stadiumName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}stadium_name'],
-          )!,
-      capacity:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}capacity'],
-          )!,
-      balance:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}balance'],
-          )!,
-      transferBudget:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}transfer_budget'],
-          )!,
-      wageBudget:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}wage_budget'],
-          )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      leagueId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}league_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      shortName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}short_name'])!,
+      primaryColor: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}primary_color'])!,
+      secondaryColor: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}secondary_color'])!,
+      reputation: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reputation'])!,
+      stadiumName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}stadium_name'])!,
+      capacity: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}capacity'])!,
+      balance: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}balance'])!,
+      transferBudget: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}transfer_budget'])!,
+      wageBudget: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}wage_budget'])!,
     );
   }
 
@@ -1148,20 +906,19 @@ class ClubRow extends DataClass implements Insertable<ClubRow> {
   final int balance;
   final int transferBudget;
   final int wageBudget;
-  const ClubRow({
-    required this.id,
-    required this.leagueId,
-    required this.name,
-    required this.shortName,
-    required this.primaryColor,
-    required this.secondaryColor,
-    required this.reputation,
-    required this.stadiumName,
-    required this.capacity,
-    required this.balance,
-    required this.transferBudget,
-    required this.wageBudget,
-  });
+  const ClubRow(
+      {required this.id,
+      required this.leagueId,
+      required this.name,
+      required this.shortName,
+      required this.primaryColor,
+      required this.secondaryColor,
+      required this.reputation,
+      required this.stadiumName,
+      required this.capacity,
+      required this.balance,
+      required this.transferBudget,
+      required this.wageBudget});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1197,10 +954,8 @@ class ClubRow extends DataClass implements Insertable<ClubRow> {
     );
   }
 
-  factory ClubRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ClubRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ClubRow(
       id: serializer.fromJson<String>(json['id']),
@@ -1236,57 +991,54 @@ class ClubRow extends DataClass implements Insertable<ClubRow> {
     };
   }
 
-  ClubRow copyWith({
-    String? id,
-    String? leagueId,
-    String? name,
-    String? shortName,
-    String? primaryColor,
-    String? secondaryColor,
-    int? reputation,
-    String? stadiumName,
-    int? capacity,
-    int? balance,
-    int? transferBudget,
-    int? wageBudget,
-  }) => ClubRow(
-    id: id ?? this.id,
-    leagueId: leagueId ?? this.leagueId,
-    name: name ?? this.name,
-    shortName: shortName ?? this.shortName,
-    primaryColor: primaryColor ?? this.primaryColor,
-    secondaryColor: secondaryColor ?? this.secondaryColor,
-    reputation: reputation ?? this.reputation,
-    stadiumName: stadiumName ?? this.stadiumName,
-    capacity: capacity ?? this.capacity,
-    balance: balance ?? this.balance,
-    transferBudget: transferBudget ?? this.transferBudget,
-    wageBudget: wageBudget ?? this.wageBudget,
-  );
+  ClubRow copyWith(
+          {String? id,
+          String? leagueId,
+          String? name,
+          String? shortName,
+          String? primaryColor,
+          String? secondaryColor,
+          int? reputation,
+          String? stadiumName,
+          int? capacity,
+          int? balance,
+          int? transferBudget,
+          int? wageBudget}) =>
+      ClubRow(
+        id: id ?? this.id,
+        leagueId: leagueId ?? this.leagueId,
+        name: name ?? this.name,
+        shortName: shortName ?? this.shortName,
+        primaryColor: primaryColor ?? this.primaryColor,
+        secondaryColor: secondaryColor ?? this.secondaryColor,
+        reputation: reputation ?? this.reputation,
+        stadiumName: stadiumName ?? this.stadiumName,
+        capacity: capacity ?? this.capacity,
+        balance: balance ?? this.balance,
+        transferBudget: transferBudget ?? this.transferBudget,
+        wageBudget: wageBudget ?? this.wageBudget,
+      );
   ClubRow copyWithCompanion(ClubsCompanion data) {
     return ClubRow(
       id: data.id.present ? data.id.value : this.id,
       leagueId: data.leagueId.present ? data.leagueId.value : this.leagueId,
       name: data.name.present ? data.name.value : this.name,
       shortName: data.shortName.present ? data.shortName.value : this.shortName,
-      primaryColor:
-          data.primaryColor.present
-              ? data.primaryColor.value
-              : this.primaryColor,
-      secondaryColor:
-          data.secondaryColor.present
-              ? data.secondaryColor.value
-              : this.secondaryColor,
+      primaryColor: data.primaryColor.present
+          ? data.primaryColor.value
+          : this.primaryColor,
+      secondaryColor: data.secondaryColor.present
+          ? data.secondaryColor.value
+          : this.secondaryColor,
       reputation:
           data.reputation.present ? data.reputation.value : this.reputation,
       stadiumName:
           data.stadiumName.present ? data.stadiumName.value : this.stadiumName,
       capacity: data.capacity.present ? data.capacity.value : this.capacity,
       balance: data.balance.present ? data.balance.value : this.balance,
-      transferBudget:
-          data.transferBudget.present
-              ? data.transferBudget.value
-              : this.transferBudget,
+      transferBudget: data.transferBudget.present
+          ? data.transferBudget.value
+          : this.transferBudget,
       wageBudget:
           data.wageBudget.present ? data.wageBudget.value : this.wageBudget,
     );
@@ -1313,19 +1065,18 @@ class ClubRow extends DataClass implements Insertable<ClubRow> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    leagueId,
-    name,
-    shortName,
-    primaryColor,
-    secondaryColor,
-    reputation,
-    stadiumName,
-    capacity,
-    balance,
-    transferBudget,
-    wageBudget,
-  );
+      id,
+      leagueId,
+      name,
+      shortName,
+      primaryColor,
+      secondaryColor,
+      reputation,
+      stadiumName,
+      capacity,
+      balance,
+      transferBudget,
+      wageBudget);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1387,18 +1138,18 @@ class ClubsCompanion extends UpdateCompanion<ClubRow> {
     required int transferBudget,
     required int wageBudget,
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       leagueId = Value(leagueId),
-       name = Value(name),
-       shortName = Value(shortName),
-       primaryColor = Value(primaryColor),
-       secondaryColor = Value(secondaryColor),
-       reputation = Value(reputation),
-       stadiumName = Value(stadiumName),
-       capacity = Value(capacity),
-       balance = Value(balance),
-       transferBudget = Value(transferBudget),
-       wageBudget = Value(wageBudget);
+  })  : id = Value(id),
+        leagueId = Value(leagueId),
+        name = Value(name),
+        shortName = Value(shortName),
+        primaryColor = Value(primaryColor),
+        secondaryColor = Value(secondaryColor),
+        reputation = Value(reputation),
+        stadiumName = Value(stadiumName),
+        capacity = Value(capacity),
+        balance = Value(balance),
+        transferBudget = Value(transferBudget),
+        wageBudget = Value(wageBudget);
   static Insertable<ClubRow> custom({
     Expression<String>? id,
     Expression<String>? leagueId,
@@ -1431,21 +1182,20 @@ class ClubsCompanion extends UpdateCompanion<ClubRow> {
     });
   }
 
-  ClubsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? leagueId,
-    Value<String>? name,
-    Value<String>? shortName,
-    Value<String>? primaryColor,
-    Value<String>? secondaryColor,
-    Value<int>? reputation,
-    Value<String>? stadiumName,
-    Value<int>? capacity,
-    Value<int>? balance,
-    Value<int>? transferBudget,
-    Value<int>? wageBudget,
-    Value<int>? rowid,
-  }) {
+  ClubsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? leagueId,
+      Value<String>? name,
+      Value<String>? shortName,
+      Value<String>? primaryColor,
+      Value<String>? secondaryColor,
+      Value<int>? reputation,
+      Value<String>? stadiumName,
+      Value<int>? capacity,
+      Value<int>? balance,
+      Value<int>? transferBudget,
+      Value<int>? wageBudget,
+      Value<int>? rowid}) {
     return ClubsCompanion(
       id: id ?? this.id,
       leagueId: leagueId ?? this.leagueId,
@@ -1537,715 +1287,494 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, PlayerRow> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _clubIdMeta = const VerificationMeta('clubId');
   @override
   late final GeneratedColumn<String> clubId = GeneratedColumn<String>(
-    'club_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _firstNameMeta = const VerificationMeta(
-    'firstName',
-  );
+      'club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _firstNameMeta =
+      const VerificationMeta('firstName');
   @override
   late final GeneratedColumn<String> firstName = GeneratedColumn<String>(
-    'first_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _lastNameMeta = const VerificationMeta(
-    'lastName',
-  );
+      'first_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _lastNameMeta =
+      const VerificationMeta('lastName');
   @override
   late final GeneratedColumn<String> lastName = GeneratedColumn<String>(
-    'last_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'last_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _ageMeta = const VerificationMeta('age');
   @override
   late final GeneratedColumn<int> age = GeneratedColumn<int>(
-    'age',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nationalityMeta = const VerificationMeta(
-    'nationality',
-  );
+      'age', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _nationalityMeta =
+      const VerificationMeta('nationality');
   @override
   late final GeneratedColumn<String> nationality = GeneratedColumn<String>(
-    'nationality',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
-    'position',
-  );
+      'nationality', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _positionMeta =
+      const VerificationMeta('position');
   @override
   late final GeneratedColumnWithTypeConverter<Position, String> position =
-      GeneratedColumn<String>(
-        'position',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<Position>($PlayersTable.$converterposition);
-  static const VerificationMeta _finishingMeta = const VerificationMeta(
-    'finishing',
-  );
+      GeneratedColumn<String>('position', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<Position>($PlayersTable.$converterposition);
+  static const VerificationMeta _finishingMeta =
+      const VerificationMeta('finishing');
   @override
   late final GeneratedColumn<int> finishing = GeneratedColumn<int>(
-    'finishing',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _passingMeta = const VerificationMeta(
-    'passing',
-  );
+      'finishing', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _passingMeta =
+      const VerificationMeta('passing');
   @override
   late final GeneratedColumn<int> passing = GeneratedColumn<int>(
-    'passing',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _dribblingMeta = const VerificationMeta(
-    'dribbling',
-  );
+      'passing', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _dribblingMeta =
+      const VerificationMeta('dribbling');
   @override
   late final GeneratedColumn<int> dribbling = GeneratedColumn<int>(
-    'dribbling',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _firstTouchMeta = const VerificationMeta(
-    'firstTouch',
-  );
+      'dribbling', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _firstTouchMeta =
+      const VerificationMeta('firstTouch');
   @override
   late final GeneratedColumn<int> firstTouch = GeneratedColumn<int>(
-    'first_touch',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _crossingMeta = const VerificationMeta(
-    'crossing',
-  );
+      'first_touch', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _crossingMeta =
+      const VerificationMeta('crossing');
   @override
   late final GeneratedColumn<int> crossing = GeneratedColumn<int>(
-    'crossing',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _tacklingMeta = const VerificationMeta(
-    'tackling',
-  );
+      'crossing', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _tacklingMeta =
+      const VerificationMeta('tackling');
   @override
   late final GeneratedColumn<int> tackling = GeneratedColumn<int>(
-    'tackling',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _headingMeta = const VerificationMeta(
-    'heading',
-  );
+      'tackling', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _headingMeta =
+      const VerificationMeta('heading');
   @override
   late final GeneratedColumn<int> heading = GeneratedColumn<int>(
-    'heading',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _techniqueMeta = const VerificationMeta(
-    'technique',
-  );
+      'heading', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _techniqueMeta =
+      const VerificationMeta('technique');
   @override
   late final GeneratedColumn<int> technique = GeneratedColumn<int>(
-    'technique',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _decisionsMeta = const VerificationMeta(
-    'decisions',
-  );
+      'technique', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _decisionsMeta =
+      const VerificationMeta('decisions');
   @override
   late final GeneratedColumn<int> decisions = GeneratedColumn<int>(
-    'decisions',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _positioningMeta = const VerificationMeta(
-    'positioning',
-  );
+      'decisions', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _positioningMeta =
+      const VerificationMeta('positioning');
   @override
   late final GeneratedColumn<int> positioning = GeneratedColumn<int>(
-    'positioning',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'positioning', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _visionMeta = const VerificationMeta('vision');
   @override
   late final GeneratedColumn<int> vision = GeneratedColumn<int>(
-    'vision',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _composureMeta = const VerificationMeta(
-    'composure',
-  );
+      'vision', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _composureMeta =
+      const VerificationMeta('composure');
   @override
   late final GeneratedColumn<int> composure = GeneratedColumn<int>(
-    'composure',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _workRateMeta = const VerificationMeta(
-    'workRate',
-  );
+      'composure', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _workRateMeta =
+      const VerificationMeta('workRate');
   @override
   late final GeneratedColumn<int> workRate = GeneratedColumn<int>(
-    'work_rate',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _aggressionMeta = const VerificationMeta(
-    'aggression',
-  );
+      'work_rate', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _aggressionMeta =
+      const VerificationMeta('aggression');
   @override
   late final GeneratedColumn<int> aggression = GeneratedColumn<int>(
-    'aggression',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'aggression', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _paceMeta = const VerificationMeta('pace');
   @override
   late final GeneratedColumn<int> pace = GeneratedColumn<int>(
-    'pace',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _accelerationMeta = const VerificationMeta(
-    'acceleration',
-  );
+      'pace', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _accelerationMeta =
+      const VerificationMeta('acceleration');
   @override
   late final GeneratedColumn<int> acceleration = GeneratedColumn<int>(
-    'acceleration',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _staminaMeta = const VerificationMeta(
-    'stamina',
-  );
+      'acceleration', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _staminaMeta =
+      const VerificationMeta('stamina');
   @override
   late final GeneratedColumn<int> stamina = GeneratedColumn<int>(
-    'stamina',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _strengthMeta = const VerificationMeta(
-    'strength',
-  );
+      'stamina', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _strengthMeta =
+      const VerificationMeta('strength');
   @override
   late final GeneratedColumn<int> strength = GeneratedColumn<int>(
-    'strength',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _agilityMeta = const VerificationMeta(
-    'agility',
-  );
+      'strength', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _agilityMeta =
+      const VerificationMeta('agility');
   @override
   late final GeneratedColumn<int> agility = GeneratedColumn<int>(
-    'agility',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _handlingMeta = const VerificationMeta(
-    'handling',
-  );
+      'agility', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _handlingMeta =
+      const VerificationMeta('handling');
   @override
   late final GeneratedColumn<int> handling = GeneratedColumn<int>(
-    'handling',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _reflexesMeta = const VerificationMeta(
-    'reflexes',
-  );
+      'handling', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _reflexesMeta =
+      const VerificationMeta('reflexes');
   @override
   late final GeneratedColumn<int> reflexes = GeneratedColumn<int>(
-    'reflexes',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _oneOnOnesMeta = const VerificationMeta(
-    'oneOnOnes',
-  );
+      'reflexes', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _oneOnOnesMeta =
+      const VerificationMeta('oneOnOnes');
   @override
   late final GeneratedColumn<int> oneOnOnes = GeneratedColumn<int>(
-    'one_on_ones',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _aerialReachMeta = const VerificationMeta(
-    'aerialReach',
-  );
+      'one_on_ones', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _aerialReachMeta =
+      const VerificationMeta('aerialReach');
   @override
   late final GeneratedColumn<int> aerialReach = GeneratedColumn<int>(
-    'aerial_reach',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _potentialAbilityMeta = const VerificationMeta(
-    'potentialAbility',
-  );
+      'aerial_reach', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _potentialAbilityMeta =
+      const VerificationMeta('potentialAbility');
   @override
   late final GeneratedColumn<int> potentialAbility = GeneratedColumn<int>(
-    'potential_ability',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _currentAbilityMeta = const VerificationMeta(
-    'currentAbility',
-  );
+      'potential_ability', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _currentAbilityMeta =
+      const VerificationMeta('currentAbility');
   @override
   late final GeneratedColumn<int> currentAbility = GeneratedColumn<int>(
-    'current_ability',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _conditionMeta = const VerificationMeta(
-    'condition',
-  );
+      'current_ability', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _conditionMeta =
+      const VerificationMeta('condition');
   @override
   late final GeneratedColumn<int> condition = GeneratedColumn<int>(
-    'condition',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'condition', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _moraleMeta = const VerificationMeta('morale');
   @override
   late final GeneratedColumn<int> morale = GeneratedColumn<int>(
-    'morale',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _marketValueMeta = const VerificationMeta(
-    'marketValue',
-  );
+      'morale', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _marketValueMeta =
+      const VerificationMeta('marketValue');
   @override
   late final GeneratedColumn<int> marketValue = GeneratedColumn<int>(
-    'market_value',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'market_value', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _isTransferListedMeta =
+      const VerificationMeta('isTransferListed');
+  @override
+  late final GeneratedColumn<bool> isTransferListed = GeneratedColumn<bool>(
+      'is_transfer_listed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_transfer_listed" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    clubId,
-    firstName,
-    lastName,
-    age,
-    nationality,
-    position,
-    finishing,
-    passing,
-    dribbling,
-    firstTouch,
-    crossing,
-    tackling,
-    heading,
-    technique,
-    decisions,
-    positioning,
-    vision,
-    composure,
-    workRate,
-    aggression,
-    pace,
-    acceleration,
-    stamina,
-    strength,
-    agility,
-    handling,
-    reflexes,
-    oneOnOnes,
-    aerialReach,
-    potentialAbility,
-    currentAbility,
-    condition,
-    morale,
-    marketValue,
-  ];
+        id,
+        clubId,
+        firstName,
+        lastName,
+        age,
+        nationality,
+        position,
+        finishing,
+        passing,
+        dribbling,
+        firstTouch,
+        crossing,
+        tackling,
+        heading,
+        technique,
+        decisions,
+        positioning,
+        vision,
+        composure,
+        workRate,
+        aggression,
+        pace,
+        acceleration,
+        stamina,
+        strength,
+        agility,
+        handling,
+        reflexes,
+        oneOnOnes,
+        aerialReach,
+        potentialAbility,
+        currentAbility,
+        condition,
+        morale,
+        marketValue,
+        isTransferListed
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'players';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<PlayerRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<PlayerRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('club_id')) {
-      context.handle(
-        _clubIdMeta,
-        clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta),
-      );
+      context.handle(_clubIdMeta,
+          clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta));
     } else if (isInserting) {
       context.missing(_clubIdMeta);
     }
     if (data.containsKey('first_name')) {
-      context.handle(
-        _firstNameMeta,
-        firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta),
-      );
+      context.handle(_firstNameMeta,
+          firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta));
     } else if (isInserting) {
       context.missing(_firstNameMeta);
     }
     if (data.containsKey('last_name')) {
-      context.handle(
-        _lastNameMeta,
-        lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta),
-      );
+      context.handle(_lastNameMeta,
+          lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta));
     } else if (isInserting) {
       context.missing(_lastNameMeta);
     }
     if (data.containsKey('age')) {
       context.handle(
-        _ageMeta,
-        age.isAcceptableOrUnknown(data['age']!, _ageMeta),
-      );
+          _ageMeta, age.isAcceptableOrUnknown(data['age']!, _ageMeta));
     } else if (isInserting) {
       context.missing(_ageMeta);
     }
     if (data.containsKey('nationality')) {
       context.handle(
-        _nationalityMeta,
-        nationality.isAcceptableOrUnknown(
-          data['nationality']!,
           _nationalityMeta,
-        ),
-      );
+          nationality.isAcceptableOrUnknown(
+              data['nationality']!, _nationalityMeta));
     } else if (isInserting) {
       context.missing(_nationalityMeta);
     }
     context.handle(_positionMeta, const VerificationResult.success());
     if (data.containsKey('finishing')) {
-      context.handle(
-        _finishingMeta,
-        finishing.isAcceptableOrUnknown(data['finishing']!, _finishingMeta),
-      );
+      context.handle(_finishingMeta,
+          finishing.isAcceptableOrUnknown(data['finishing']!, _finishingMeta));
     } else if (isInserting) {
       context.missing(_finishingMeta);
     }
     if (data.containsKey('passing')) {
-      context.handle(
-        _passingMeta,
-        passing.isAcceptableOrUnknown(data['passing']!, _passingMeta),
-      );
+      context.handle(_passingMeta,
+          passing.isAcceptableOrUnknown(data['passing']!, _passingMeta));
     } else if (isInserting) {
       context.missing(_passingMeta);
     }
     if (data.containsKey('dribbling')) {
-      context.handle(
-        _dribblingMeta,
-        dribbling.isAcceptableOrUnknown(data['dribbling']!, _dribblingMeta),
-      );
+      context.handle(_dribblingMeta,
+          dribbling.isAcceptableOrUnknown(data['dribbling']!, _dribblingMeta));
     } else if (isInserting) {
       context.missing(_dribblingMeta);
     }
     if (data.containsKey('first_touch')) {
       context.handle(
-        _firstTouchMeta,
-        firstTouch.isAcceptableOrUnknown(data['first_touch']!, _firstTouchMeta),
-      );
+          _firstTouchMeta,
+          firstTouch.isAcceptableOrUnknown(
+              data['first_touch']!, _firstTouchMeta));
     } else if (isInserting) {
       context.missing(_firstTouchMeta);
     }
     if (data.containsKey('crossing')) {
-      context.handle(
-        _crossingMeta,
-        crossing.isAcceptableOrUnknown(data['crossing']!, _crossingMeta),
-      );
+      context.handle(_crossingMeta,
+          crossing.isAcceptableOrUnknown(data['crossing']!, _crossingMeta));
     } else if (isInserting) {
       context.missing(_crossingMeta);
     }
     if (data.containsKey('tackling')) {
-      context.handle(
-        _tacklingMeta,
-        tackling.isAcceptableOrUnknown(data['tackling']!, _tacklingMeta),
-      );
+      context.handle(_tacklingMeta,
+          tackling.isAcceptableOrUnknown(data['tackling']!, _tacklingMeta));
     } else if (isInserting) {
       context.missing(_tacklingMeta);
     }
     if (data.containsKey('heading')) {
-      context.handle(
-        _headingMeta,
-        heading.isAcceptableOrUnknown(data['heading']!, _headingMeta),
-      );
+      context.handle(_headingMeta,
+          heading.isAcceptableOrUnknown(data['heading']!, _headingMeta));
     } else if (isInserting) {
       context.missing(_headingMeta);
     }
     if (data.containsKey('technique')) {
-      context.handle(
-        _techniqueMeta,
-        technique.isAcceptableOrUnknown(data['technique']!, _techniqueMeta),
-      );
+      context.handle(_techniqueMeta,
+          technique.isAcceptableOrUnknown(data['technique']!, _techniqueMeta));
     } else if (isInserting) {
       context.missing(_techniqueMeta);
     }
     if (data.containsKey('decisions')) {
-      context.handle(
-        _decisionsMeta,
-        decisions.isAcceptableOrUnknown(data['decisions']!, _decisionsMeta),
-      );
+      context.handle(_decisionsMeta,
+          decisions.isAcceptableOrUnknown(data['decisions']!, _decisionsMeta));
     } else if (isInserting) {
       context.missing(_decisionsMeta);
     }
     if (data.containsKey('positioning')) {
       context.handle(
-        _positioningMeta,
-        positioning.isAcceptableOrUnknown(
-          data['positioning']!,
           _positioningMeta,
-        ),
-      );
+          positioning.isAcceptableOrUnknown(
+              data['positioning']!, _positioningMeta));
     } else if (isInserting) {
       context.missing(_positioningMeta);
     }
     if (data.containsKey('vision')) {
-      context.handle(
-        _visionMeta,
-        vision.isAcceptableOrUnknown(data['vision']!, _visionMeta),
-      );
+      context.handle(_visionMeta,
+          vision.isAcceptableOrUnknown(data['vision']!, _visionMeta));
     } else if (isInserting) {
       context.missing(_visionMeta);
     }
     if (data.containsKey('composure')) {
-      context.handle(
-        _composureMeta,
-        composure.isAcceptableOrUnknown(data['composure']!, _composureMeta),
-      );
+      context.handle(_composureMeta,
+          composure.isAcceptableOrUnknown(data['composure']!, _composureMeta));
     } else if (isInserting) {
       context.missing(_composureMeta);
     }
     if (data.containsKey('work_rate')) {
-      context.handle(
-        _workRateMeta,
-        workRate.isAcceptableOrUnknown(data['work_rate']!, _workRateMeta),
-      );
+      context.handle(_workRateMeta,
+          workRate.isAcceptableOrUnknown(data['work_rate']!, _workRateMeta));
     } else if (isInserting) {
       context.missing(_workRateMeta);
     }
     if (data.containsKey('aggression')) {
       context.handle(
-        _aggressionMeta,
-        aggression.isAcceptableOrUnknown(data['aggression']!, _aggressionMeta),
-      );
+          _aggressionMeta,
+          aggression.isAcceptableOrUnknown(
+              data['aggression']!, _aggressionMeta));
     } else if (isInserting) {
       context.missing(_aggressionMeta);
     }
     if (data.containsKey('pace')) {
       context.handle(
-        _paceMeta,
-        pace.isAcceptableOrUnknown(data['pace']!, _paceMeta),
-      );
+          _paceMeta, pace.isAcceptableOrUnknown(data['pace']!, _paceMeta));
     } else if (isInserting) {
       context.missing(_paceMeta);
     }
     if (data.containsKey('acceleration')) {
       context.handle(
-        _accelerationMeta,
-        acceleration.isAcceptableOrUnknown(
-          data['acceleration']!,
           _accelerationMeta,
-        ),
-      );
+          acceleration.isAcceptableOrUnknown(
+              data['acceleration']!, _accelerationMeta));
     } else if (isInserting) {
       context.missing(_accelerationMeta);
     }
     if (data.containsKey('stamina')) {
-      context.handle(
-        _staminaMeta,
-        stamina.isAcceptableOrUnknown(data['stamina']!, _staminaMeta),
-      );
+      context.handle(_staminaMeta,
+          stamina.isAcceptableOrUnknown(data['stamina']!, _staminaMeta));
     } else if (isInserting) {
       context.missing(_staminaMeta);
     }
     if (data.containsKey('strength')) {
-      context.handle(
-        _strengthMeta,
-        strength.isAcceptableOrUnknown(data['strength']!, _strengthMeta),
-      );
+      context.handle(_strengthMeta,
+          strength.isAcceptableOrUnknown(data['strength']!, _strengthMeta));
     } else if (isInserting) {
       context.missing(_strengthMeta);
     }
     if (data.containsKey('agility')) {
-      context.handle(
-        _agilityMeta,
-        agility.isAcceptableOrUnknown(data['agility']!, _agilityMeta),
-      );
+      context.handle(_agilityMeta,
+          agility.isAcceptableOrUnknown(data['agility']!, _agilityMeta));
     } else if (isInserting) {
       context.missing(_agilityMeta);
     }
     if (data.containsKey('handling')) {
-      context.handle(
-        _handlingMeta,
-        handling.isAcceptableOrUnknown(data['handling']!, _handlingMeta),
-      );
+      context.handle(_handlingMeta,
+          handling.isAcceptableOrUnknown(data['handling']!, _handlingMeta));
     } else if (isInserting) {
       context.missing(_handlingMeta);
     }
     if (data.containsKey('reflexes')) {
-      context.handle(
-        _reflexesMeta,
-        reflexes.isAcceptableOrUnknown(data['reflexes']!, _reflexesMeta),
-      );
+      context.handle(_reflexesMeta,
+          reflexes.isAcceptableOrUnknown(data['reflexes']!, _reflexesMeta));
     } else if (isInserting) {
       context.missing(_reflexesMeta);
     }
     if (data.containsKey('one_on_ones')) {
       context.handle(
-        _oneOnOnesMeta,
-        oneOnOnes.isAcceptableOrUnknown(data['one_on_ones']!, _oneOnOnesMeta),
-      );
+          _oneOnOnesMeta,
+          oneOnOnes.isAcceptableOrUnknown(
+              data['one_on_ones']!, _oneOnOnesMeta));
     } else if (isInserting) {
       context.missing(_oneOnOnesMeta);
     }
     if (data.containsKey('aerial_reach')) {
       context.handle(
-        _aerialReachMeta,
-        aerialReach.isAcceptableOrUnknown(
-          data['aerial_reach']!,
           _aerialReachMeta,
-        ),
-      );
+          aerialReach.isAcceptableOrUnknown(
+              data['aerial_reach']!, _aerialReachMeta));
     } else if (isInserting) {
       context.missing(_aerialReachMeta);
     }
     if (data.containsKey('potential_ability')) {
       context.handle(
-        _potentialAbilityMeta,
-        potentialAbility.isAcceptableOrUnknown(
-          data['potential_ability']!,
           _potentialAbilityMeta,
-        ),
-      );
+          potentialAbility.isAcceptableOrUnknown(
+              data['potential_ability']!, _potentialAbilityMeta));
     } else if (isInserting) {
       context.missing(_potentialAbilityMeta);
     }
     if (data.containsKey('current_ability')) {
       context.handle(
-        _currentAbilityMeta,
-        currentAbility.isAcceptableOrUnknown(
-          data['current_ability']!,
           _currentAbilityMeta,
-        ),
-      );
+          currentAbility.isAcceptableOrUnknown(
+              data['current_ability']!, _currentAbilityMeta));
     } else if (isInserting) {
       context.missing(_currentAbilityMeta);
     }
     if (data.containsKey('condition')) {
-      context.handle(
-        _conditionMeta,
-        condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta),
-      );
+      context.handle(_conditionMeta,
+          condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta));
     } else if (isInserting) {
       context.missing(_conditionMeta);
     }
     if (data.containsKey('morale')) {
-      context.handle(
-        _moraleMeta,
-        morale.isAcceptableOrUnknown(data['morale']!, _moraleMeta),
-      );
+      context.handle(_moraleMeta,
+          morale.isAcceptableOrUnknown(data['morale']!, _moraleMeta));
     } else if (isInserting) {
       context.missing(_moraleMeta);
     }
     if (data.containsKey('market_value')) {
       context.handle(
-        _marketValueMeta,
-        marketValue.isAcceptableOrUnknown(
-          data['market_value']!,
           _marketValueMeta,
-        ),
-      );
+          marketValue.isAcceptableOrUnknown(
+              data['market_value']!, _marketValueMeta));
     } else if (isInserting) {
       context.missing(_marketValueMeta);
+    }
+    if (data.containsKey('is_transfer_listed')) {
+      context.handle(
+          _isTransferListedMeta,
+          isTransferListed.isAcceptableOrUnknown(
+              data['is_transfer_listed']!, _isTransferListedMeta));
     }
     return context;
   }
@@ -2256,182 +1785,79 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, PlayerRow> {
   PlayerRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PlayerRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      clubId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}club_id'],
-          )!,
-      firstName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}first_name'],
-          )!,
-      lastName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}last_name'],
-          )!,
-      age:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}age'],
-          )!,
-      nationality:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}nationality'],
-          )!,
-      position: $PlayersTable.$converterposition.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}position'],
-        )!,
-      ),
-      finishing:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}finishing'],
-          )!,
-      passing:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}passing'],
-          )!,
-      dribbling:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dribbling'],
-          )!,
-      firstTouch:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}first_touch'],
-          )!,
-      crossing:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}crossing'],
-          )!,
-      tackling:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}tackling'],
-          )!,
-      heading:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}heading'],
-          )!,
-      technique:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}technique'],
-          )!,
-      decisions:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}decisions'],
-          )!,
-      positioning:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}positioning'],
-          )!,
-      vision:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}vision'],
-          )!,
-      composure:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}composure'],
-          )!,
-      workRate:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}work_rate'],
-          )!,
-      aggression:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}aggression'],
-          )!,
-      pace:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}pace'],
-          )!,
-      acceleration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}acceleration'],
-          )!,
-      stamina:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}stamina'],
-          )!,
-      strength:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}strength'],
-          )!,
-      agility:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}agility'],
-          )!,
-      handling:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}handling'],
-          )!,
-      reflexes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}reflexes'],
-          )!,
-      oneOnOnes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}one_on_ones'],
-          )!,
-      aerialReach:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}aerial_reach'],
-          )!,
-      potentialAbility:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}potential_ability'],
-          )!,
-      currentAbility:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}current_ability'],
-          )!,
-      condition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}condition'],
-          )!,
-      morale:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}morale'],
-          )!,
-      marketValue:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}market_value'],
-          )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      clubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}club_id'])!,
+      firstName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}first_name'])!,
+      lastName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_name'])!,
+      age: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}age'])!,
+      nationality: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}nationality'])!,
+      position: $PlayersTable.$converterposition.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}position'])!),
+      finishing: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}finishing'])!,
+      passing: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}passing'])!,
+      dribbling: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dribbling'])!,
+      firstTouch: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}first_touch'])!,
+      crossing: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}crossing'])!,
+      tackling: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}tackling'])!,
+      heading: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}heading'])!,
+      technique: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}technique'])!,
+      decisions: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}decisions'])!,
+      positioning: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}positioning'])!,
+      vision: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}vision'])!,
+      composure: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}composure'])!,
+      workRate: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}work_rate'])!,
+      aggression: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}aggression'])!,
+      pace: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}pace'])!,
+      acceleration: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}acceleration'])!,
+      stamina: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}stamina'])!,
+      strength: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}strength'])!,
+      agility: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}agility'])!,
+      handling: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}handling'])!,
+      reflexes: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reflexes'])!,
+      oneOnOnes: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}one_on_ones'])!,
+      aerialReach: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}aerial_reach'])!,
+      potentialAbility: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}potential_ability'])!,
+      currentAbility: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}current_ability'])!,
+      condition: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}condition'])!,
+      morale: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}morale'])!,
+      marketValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}market_value'])!,
+      isTransferListed: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}is_transfer_listed'])!,
     );
   }
 
@@ -2480,43 +1906,44 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
   final int condition;
   final int morale;
   final int marketValue;
-  const PlayerRow({
-    required this.id,
-    required this.clubId,
-    required this.firstName,
-    required this.lastName,
-    required this.age,
-    required this.nationality,
-    required this.position,
-    required this.finishing,
-    required this.passing,
-    required this.dribbling,
-    required this.firstTouch,
-    required this.crossing,
-    required this.tackling,
-    required this.heading,
-    required this.technique,
-    required this.decisions,
-    required this.positioning,
-    required this.vision,
-    required this.composure,
-    required this.workRate,
-    required this.aggression,
-    required this.pace,
-    required this.acceleration,
-    required this.stamina,
-    required this.strength,
-    required this.agility,
-    required this.handling,
-    required this.reflexes,
-    required this.oneOnOnes,
-    required this.aerialReach,
-    required this.potentialAbility,
-    required this.currentAbility,
-    required this.condition,
-    required this.morale,
-    required this.marketValue,
-  });
+  final bool isTransferListed;
+  const PlayerRow(
+      {required this.id,
+      required this.clubId,
+      required this.firstName,
+      required this.lastName,
+      required this.age,
+      required this.nationality,
+      required this.position,
+      required this.finishing,
+      required this.passing,
+      required this.dribbling,
+      required this.firstTouch,
+      required this.crossing,
+      required this.tackling,
+      required this.heading,
+      required this.technique,
+      required this.decisions,
+      required this.positioning,
+      required this.vision,
+      required this.composure,
+      required this.workRate,
+      required this.aggression,
+      required this.pace,
+      required this.acceleration,
+      required this.stamina,
+      required this.strength,
+      required this.agility,
+      required this.handling,
+      required this.reflexes,
+      required this.oneOnOnes,
+      required this.aerialReach,
+      required this.potentialAbility,
+      required this.currentAbility,
+      required this.condition,
+      required this.morale,
+      required this.marketValue,
+      required this.isTransferListed});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2527,9 +1954,8 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
     map['age'] = Variable<int>(age);
     map['nationality'] = Variable<String>(nationality);
     {
-      map['position'] = Variable<String>(
-        $PlayersTable.$converterposition.toSql(position),
-      );
+      map['position'] =
+          Variable<String>($PlayersTable.$converterposition.toSql(position));
     }
     map['finishing'] = Variable<int>(finishing);
     map['passing'] = Variable<int>(passing);
@@ -2559,6 +1985,7 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
     map['condition'] = Variable<int>(condition);
     map['morale'] = Variable<int>(morale);
     map['market_value'] = Variable<int>(marketValue);
+    map['is_transfer_listed'] = Variable<bool>(isTransferListed);
     return map;
   }
 
@@ -2599,13 +2026,12 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       condition: Value(condition),
       morale: Value(morale),
       marketValue: Value(marketValue),
+      isTransferListed: Value(isTransferListed),
     );
   }
 
-  factory PlayerRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory PlayerRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PlayerRow(
       id: serializer.fromJson<int>(json['id']),
@@ -2614,9 +2040,8 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       lastName: serializer.fromJson<String>(json['lastName']),
       age: serializer.fromJson<int>(json['age']),
       nationality: serializer.fromJson<String>(json['nationality']),
-      position: $PlayersTable.$converterposition.fromJson(
-        serializer.fromJson<String>(json['position']),
-      ),
+      position: $PlayersTable.$converterposition
+          .fromJson(serializer.fromJson<String>(json['position'])),
       finishing: serializer.fromJson<int>(json['finishing']),
       passing: serializer.fromJson<int>(json['passing']),
       dribbling: serializer.fromJson<int>(json['dribbling']),
@@ -2645,6 +2070,7 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       condition: serializer.fromJson<int>(json['condition']),
       morale: serializer.fromJson<int>(json['morale']),
       marketValue: serializer.fromJson<int>(json['marketValue']),
+      isTransferListed: serializer.fromJson<bool>(json['isTransferListed']),
     );
   }
   @override
@@ -2657,9 +2083,8 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       'lastName': serializer.toJson<String>(lastName),
       'age': serializer.toJson<int>(age),
       'nationality': serializer.toJson<String>(nationality),
-      'position': serializer.toJson<String>(
-        $PlayersTable.$converterposition.toJson(position),
-      ),
+      'position': serializer
+          .toJson<String>($PlayersTable.$converterposition.toJson(position)),
       'finishing': serializer.toJson<int>(finishing),
       'passing': serializer.toJson<int>(passing),
       'dribbling': serializer.toJson<int>(dribbling),
@@ -2688,82 +2113,85 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       'condition': serializer.toJson<int>(condition),
       'morale': serializer.toJson<int>(morale),
       'marketValue': serializer.toJson<int>(marketValue),
+      'isTransferListed': serializer.toJson<bool>(isTransferListed),
     };
   }
 
-  PlayerRow copyWith({
-    int? id,
-    String? clubId,
-    String? firstName,
-    String? lastName,
-    int? age,
-    String? nationality,
-    Position? position,
-    int? finishing,
-    int? passing,
-    int? dribbling,
-    int? firstTouch,
-    int? crossing,
-    int? tackling,
-    int? heading,
-    int? technique,
-    int? decisions,
-    int? positioning,
-    int? vision,
-    int? composure,
-    int? workRate,
-    int? aggression,
-    int? pace,
-    int? acceleration,
-    int? stamina,
-    int? strength,
-    int? agility,
-    int? handling,
-    int? reflexes,
-    int? oneOnOnes,
-    int? aerialReach,
-    int? potentialAbility,
-    int? currentAbility,
-    int? condition,
-    int? morale,
-    int? marketValue,
-  }) => PlayerRow(
-    id: id ?? this.id,
-    clubId: clubId ?? this.clubId,
-    firstName: firstName ?? this.firstName,
-    lastName: lastName ?? this.lastName,
-    age: age ?? this.age,
-    nationality: nationality ?? this.nationality,
-    position: position ?? this.position,
-    finishing: finishing ?? this.finishing,
-    passing: passing ?? this.passing,
-    dribbling: dribbling ?? this.dribbling,
-    firstTouch: firstTouch ?? this.firstTouch,
-    crossing: crossing ?? this.crossing,
-    tackling: tackling ?? this.tackling,
-    heading: heading ?? this.heading,
-    technique: technique ?? this.technique,
-    decisions: decisions ?? this.decisions,
-    positioning: positioning ?? this.positioning,
-    vision: vision ?? this.vision,
-    composure: composure ?? this.composure,
-    workRate: workRate ?? this.workRate,
-    aggression: aggression ?? this.aggression,
-    pace: pace ?? this.pace,
-    acceleration: acceleration ?? this.acceleration,
-    stamina: stamina ?? this.stamina,
-    strength: strength ?? this.strength,
-    agility: agility ?? this.agility,
-    handling: handling ?? this.handling,
-    reflexes: reflexes ?? this.reflexes,
-    oneOnOnes: oneOnOnes ?? this.oneOnOnes,
-    aerialReach: aerialReach ?? this.aerialReach,
-    potentialAbility: potentialAbility ?? this.potentialAbility,
-    currentAbility: currentAbility ?? this.currentAbility,
-    condition: condition ?? this.condition,
-    morale: morale ?? this.morale,
-    marketValue: marketValue ?? this.marketValue,
-  );
+  PlayerRow copyWith(
+          {int? id,
+          String? clubId,
+          String? firstName,
+          String? lastName,
+          int? age,
+          String? nationality,
+          Position? position,
+          int? finishing,
+          int? passing,
+          int? dribbling,
+          int? firstTouch,
+          int? crossing,
+          int? tackling,
+          int? heading,
+          int? technique,
+          int? decisions,
+          int? positioning,
+          int? vision,
+          int? composure,
+          int? workRate,
+          int? aggression,
+          int? pace,
+          int? acceleration,
+          int? stamina,
+          int? strength,
+          int? agility,
+          int? handling,
+          int? reflexes,
+          int? oneOnOnes,
+          int? aerialReach,
+          int? potentialAbility,
+          int? currentAbility,
+          int? condition,
+          int? morale,
+          int? marketValue,
+          bool? isTransferListed}) =>
+      PlayerRow(
+        id: id ?? this.id,
+        clubId: clubId ?? this.clubId,
+        firstName: firstName ?? this.firstName,
+        lastName: lastName ?? this.lastName,
+        age: age ?? this.age,
+        nationality: nationality ?? this.nationality,
+        position: position ?? this.position,
+        finishing: finishing ?? this.finishing,
+        passing: passing ?? this.passing,
+        dribbling: dribbling ?? this.dribbling,
+        firstTouch: firstTouch ?? this.firstTouch,
+        crossing: crossing ?? this.crossing,
+        tackling: tackling ?? this.tackling,
+        heading: heading ?? this.heading,
+        technique: technique ?? this.technique,
+        decisions: decisions ?? this.decisions,
+        positioning: positioning ?? this.positioning,
+        vision: vision ?? this.vision,
+        composure: composure ?? this.composure,
+        workRate: workRate ?? this.workRate,
+        aggression: aggression ?? this.aggression,
+        pace: pace ?? this.pace,
+        acceleration: acceleration ?? this.acceleration,
+        stamina: stamina ?? this.stamina,
+        strength: strength ?? this.strength,
+        agility: agility ?? this.agility,
+        handling: handling ?? this.handling,
+        reflexes: reflexes ?? this.reflexes,
+        oneOnOnes: oneOnOnes ?? this.oneOnOnes,
+        aerialReach: aerialReach ?? this.aerialReach,
+        potentialAbility: potentialAbility ?? this.potentialAbility,
+        currentAbility: currentAbility ?? this.currentAbility,
+        condition: condition ?? this.condition,
+        morale: morale ?? this.morale,
+        marketValue: marketValue ?? this.marketValue,
+        isTransferListed: isTransferListed ?? this.isTransferListed,
+      );
   PlayerRow copyWithCompanion(PlayersCompanion data) {
     return PlayerRow(
       id: data.id.present ? data.id.value : this.id,
@@ -2792,10 +2220,9 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       aggression:
           data.aggression.present ? data.aggression.value : this.aggression,
       pace: data.pace.present ? data.pace.value : this.pace,
-      acceleration:
-          data.acceleration.present
-              ? data.acceleration.value
-              : this.acceleration,
+      acceleration: data.acceleration.present
+          ? data.acceleration.value
+          : this.acceleration,
       stamina: data.stamina.present ? data.stamina.value : this.stamina,
       strength: data.strength.present ? data.strength.value : this.strength,
       agility: data.agility.present ? data.agility.value : this.agility,
@@ -2804,18 +2231,19 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
       oneOnOnes: data.oneOnOnes.present ? data.oneOnOnes.value : this.oneOnOnes,
       aerialReach:
           data.aerialReach.present ? data.aerialReach.value : this.aerialReach,
-      potentialAbility:
-          data.potentialAbility.present
-              ? data.potentialAbility.value
-              : this.potentialAbility,
-      currentAbility:
-          data.currentAbility.present
-              ? data.currentAbility.value
-              : this.currentAbility,
+      potentialAbility: data.potentialAbility.present
+          ? data.potentialAbility.value
+          : this.potentialAbility,
+      currentAbility: data.currentAbility.present
+          ? data.currentAbility.value
+          : this.currentAbility,
       condition: data.condition.present ? data.condition.value : this.condition,
       morale: data.morale.present ? data.morale.value : this.morale,
       marketValue:
           data.marketValue.present ? data.marketValue.value : this.marketValue,
+      isTransferListed: data.isTransferListed.present
+          ? data.isTransferListed.value
+          : this.isTransferListed,
     );
   }
 
@@ -2856,49 +2284,51 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
           ..write('currentAbility: $currentAbility, ')
           ..write('condition: $condition, ')
           ..write('morale: $morale, ')
-          ..write('marketValue: $marketValue')
+          ..write('marketValue: $marketValue, ')
+          ..write('isTransferListed: $isTransferListed')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hashAll([
-    id,
-    clubId,
-    firstName,
-    lastName,
-    age,
-    nationality,
-    position,
-    finishing,
-    passing,
-    dribbling,
-    firstTouch,
-    crossing,
-    tackling,
-    heading,
-    technique,
-    decisions,
-    positioning,
-    vision,
-    composure,
-    workRate,
-    aggression,
-    pace,
-    acceleration,
-    stamina,
-    strength,
-    agility,
-    handling,
-    reflexes,
-    oneOnOnes,
-    aerialReach,
-    potentialAbility,
-    currentAbility,
-    condition,
-    morale,
-    marketValue,
-  ]);
+        id,
+        clubId,
+        firstName,
+        lastName,
+        age,
+        nationality,
+        position,
+        finishing,
+        passing,
+        dribbling,
+        firstTouch,
+        crossing,
+        tackling,
+        heading,
+        technique,
+        decisions,
+        positioning,
+        vision,
+        composure,
+        workRate,
+        aggression,
+        pace,
+        acceleration,
+        stamina,
+        strength,
+        agility,
+        handling,
+        reflexes,
+        oneOnOnes,
+        aerialReach,
+        potentialAbility,
+        currentAbility,
+        condition,
+        morale,
+        marketValue,
+        isTransferListed
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2937,7 +2367,8 @@ class PlayerRow extends DataClass implements Insertable<PlayerRow> {
           other.currentAbility == this.currentAbility &&
           other.condition == this.condition &&
           other.morale == this.morale &&
-          other.marketValue == this.marketValue);
+          other.marketValue == this.marketValue &&
+          other.isTransferListed == this.isTransferListed);
 }
 
 class PlayersCompanion extends UpdateCompanion<PlayerRow> {
@@ -2976,6 +2407,7 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
   final Value<int> condition;
   final Value<int> morale;
   final Value<int> marketValue;
+  final Value<bool> isTransferListed;
   const PlayersCompanion({
     this.id = const Value.absent(),
     this.clubId = const Value.absent(),
@@ -3012,6 +2444,7 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
     this.condition = const Value.absent(),
     this.morale = const Value.absent(),
     this.marketValue = const Value.absent(),
+    this.isTransferListed = const Value.absent(),
   });
   PlayersCompanion.insert({
     this.id = const Value.absent(),
@@ -3049,40 +2482,41 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
     required int condition,
     required int morale,
     required int marketValue,
-  }) : clubId = Value(clubId),
-       firstName = Value(firstName),
-       lastName = Value(lastName),
-       age = Value(age),
-       nationality = Value(nationality),
-       position = Value(position),
-       finishing = Value(finishing),
-       passing = Value(passing),
-       dribbling = Value(dribbling),
-       firstTouch = Value(firstTouch),
-       crossing = Value(crossing),
-       tackling = Value(tackling),
-       heading = Value(heading),
-       technique = Value(technique),
-       decisions = Value(decisions),
-       positioning = Value(positioning),
-       vision = Value(vision),
-       composure = Value(composure),
-       workRate = Value(workRate),
-       aggression = Value(aggression),
-       pace = Value(pace),
-       acceleration = Value(acceleration),
-       stamina = Value(stamina),
-       strength = Value(strength),
-       agility = Value(agility),
-       handling = Value(handling),
-       reflexes = Value(reflexes),
-       oneOnOnes = Value(oneOnOnes),
-       aerialReach = Value(aerialReach),
-       potentialAbility = Value(potentialAbility),
-       currentAbility = Value(currentAbility),
-       condition = Value(condition),
-       morale = Value(morale),
-       marketValue = Value(marketValue);
+    this.isTransferListed = const Value.absent(),
+  })  : clubId = Value(clubId),
+        firstName = Value(firstName),
+        lastName = Value(lastName),
+        age = Value(age),
+        nationality = Value(nationality),
+        position = Value(position),
+        finishing = Value(finishing),
+        passing = Value(passing),
+        dribbling = Value(dribbling),
+        firstTouch = Value(firstTouch),
+        crossing = Value(crossing),
+        tackling = Value(tackling),
+        heading = Value(heading),
+        technique = Value(technique),
+        decisions = Value(decisions),
+        positioning = Value(positioning),
+        vision = Value(vision),
+        composure = Value(composure),
+        workRate = Value(workRate),
+        aggression = Value(aggression),
+        pace = Value(pace),
+        acceleration = Value(acceleration),
+        stamina = Value(stamina),
+        strength = Value(strength),
+        agility = Value(agility),
+        handling = Value(handling),
+        reflexes = Value(reflexes),
+        oneOnOnes = Value(oneOnOnes),
+        aerialReach = Value(aerialReach),
+        potentialAbility = Value(potentialAbility),
+        currentAbility = Value(currentAbility),
+        condition = Value(condition),
+        morale = Value(morale),
+        marketValue = Value(marketValue);
   static Insertable<PlayerRow> custom({
     Expression<int>? id,
     Expression<String>? clubId,
@@ -3119,6 +2553,7 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
     Expression<int>? condition,
     Expression<int>? morale,
     Expression<int>? marketValue,
+    Expression<bool>? isTransferListed,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3156,46 +2591,47 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
       if (condition != null) 'condition': condition,
       if (morale != null) 'morale': morale,
       if (marketValue != null) 'market_value': marketValue,
+      if (isTransferListed != null) 'is_transfer_listed': isTransferListed,
     });
   }
 
-  PlayersCompanion copyWith({
-    Value<int>? id,
-    Value<String>? clubId,
-    Value<String>? firstName,
-    Value<String>? lastName,
-    Value<int>? age,
-    Value<String>? nationality,
-    Value<Position>? position,
-    Value<int>? finishing,
-    Value<int>? passing,
-    Value<int>? dribbling,
-    Value<int>? firstTouch,
-    Value<int>? crossing,
-    Value<int>? tackling,
-    Value<int>? heading,
-    Value<int>? technique,
-    Value<int>? decisions,
-    Value<int>? positioning,
-    Value<int>? vision,
-    Value<int>? composure,
-    Value<int>? workRate,
-    Value<int>? aggression,
-    Value<int>? pace,
-    Value<int>? acceleration,
-    Value<int>? stamina,
-    Value<int>? strength,
-    Value<int>? agility,
-    Value<int>? handling,
-    Value<int>? reflexes,
-    Value<int>? oneOnOnes,
-    Value<int>? aerialReach,
-    Value<int>? potentialAbility,
-    Value<int>? currentAbility,
-    Value<int>? condition,
-    Value<int>? morale,
-    Value<int>? marketValue,
-  }) {
+  PlayersCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? clubId,
+      Value<String>? firstName,
+      Value<String>? lastName,
+      Value<int>? age,
+      Value<String>? nationality,
+      Value<Position>? position,
+      Value<int>? finishing,
+      Value<int>? passing,
+      Value<int>? dribbling,
+      Value<int>? firstTouch,
+      Value<int>? crossing,
+      Value<int>? tackling,
+      Value<int>? heading,
+      Value<int>? technique,
+      Value<int>? decisions,
+      Value<int>? positioning,
+      Value<int>? vision,
+      Value<int>? composure,
+      Value<int>? workRate,
+      Value<int>? aggression,
+      Value<int>? pace,
+      Value<int>? acceleration,
+      Value<int>? stamina,
+      Value<int>? strength,
+      Value<int>? agility,
+      Value<int>? handling,
+      Value<int>? reflexes,
+      Value<int>? oneOnOnes,
+      Value<int>? aerialReach,
+      Value<int>? potentialAbility,
+      Value<int>? currentAbility,
+      Value<int>? condition,
+      Value<int>? morale,
+      Value<int>? marketValue,
+      Value<bool>? isTransferListed}) {
     return PlayersCompanion(
       id: id ?? this.id,
       clubId: clubId ?? this.clubId,
@@ -3232,6 +2668,7 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
       condition: condition ?? this.condition,
       morale: morale ?? this.morale,
       marketValue: marketValue ?? this.marketValue,
+      isTransferListed: isTransferListed ?? this.isTransferListed,
     );
   }
 
@@ -3258,8 +2695,7 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
     }
     if (position.present) {
       map['position'] = Variable<String>(
-        $PlayersTable.$converterposition.toSql(position.value),
-      );
+          $PlayersTable.$converterposition.toSql(position.value));
     }
     if (finishing.present) {
       map['finishing'] = Variable<int>(finishing.value);
@@ -3345,6 +2781,9 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
     if (marketValue.present) {
       map['market_value'] = Variable<int>(marketValue.value);
     }
+    if (isTransferListed.present) {
+      map['is_transfer_listed'] = Variable<bool>(isTransferListed.value);
+    }
     return map;
   }
 
@@ -3385,7 +2824,8 @@ class PlayersCompanion extends UpdateCompanion<PlayerRow> {
           ..write('currentAbility: $currentAbility, ')
           ..write('condition: $condition, ')
           ..write('morale: $morale, ')
-          ..write('marketValue: $marketValue')
+          ..write('marketValue: $marketValue, ')
+          ..write('isTransferListed: $isTransferListed')
           ..write(')'))
         .toString();
   }
@@ -3397,105 +2837,67 @@ class $ContractsTable extends Contracts
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ContractsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _playerIdMeta = const VerificationMeta(
-    'playerId',
-  );
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
   @override
   late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-    'player_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _clubIdMeta = const VerificationMeta('clubId');
   @override
   late final GeneratedColumn<String> clubId = GeneratedColumn<String>(
-    'club_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _wageMeta = const VerificationMeta('wage');
   @override
   late final GeneratedColumn<int> wage = GeneratedColumn<int>(
-    'wage',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _endDateMeta = const VerificationMeta(
-    'endDate',
-  );
+      'wage', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _endDateMeta =
+      const VerificationMeta('endDate');
   @override
   late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
-    'end_date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _squadStatusMeta = const VerificationMeta(
-    'squadStatus',
-  );
+      'end_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _squadStatusMeta =
+      const VerificationMeta('squadStatus');
   @override
   late final GeneratedColumnWithTypeConverter<SquadStatus, String> squadStatus =
-      GeneratedColumn<String>(
-        'squad_status',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SquadStatus>($ContractsTable.$convertersquadStatus);
+      GeneratedColumn<String>('squad_status', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<SquadStatus>($ContractsTable.$convertersquadStatus);
   @override
-  List<GeneratedColumn> get $columns => [
-    playerId,
-    clubId,
-    wage,
-    endDate,
-    squadStatus,
-  ];
+  List<GeneratedColumn> get $columns =>
+      [playerId, clubId, wage, endDate, squadStatus];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'contracts';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ContractRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ContractRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('player_id')) {
-      context.handle(
-        _playerIdMeta,
-        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
-      );
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
     }
     if (data.containsKey('club_id')) {
-      context.handle(
-        _clubIdMeta,
-        clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta),
-      );
+      context.handle(_clubIdMeta,
+          clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta));
     } else if (isInserting) {
       context.missing(_clubIdMeta);
     }
     if (data.containsKey('wage')) {
       context.handle(
-        _wageMeta,
-        wage.isAcceptableOrUnknown(data['wage']!, _wageMeta),
-      );
+          _wageMeta, wage.isAcceptableOrUnknown(data['wage']!, _wageMeta));
     } else if (isInserting) {
       context.missing(_wageMeta);
     }
     if (data.containsKey('end_date')) {
-      context.handle(
-        _endDateMeta,
-        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
-      );
+      context.handle(_endDateMeta,
+          endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
     } else if (isInserting) {
       context.missing(_endDateMeta);
     }
@@ -3509,32 +2911,17 @@ class $ContractsTable extends Contracts
   ContractRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContractRow(
-      playerId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}player_id'],
-          )!,
-      clubId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}club_id'],
-          )!,
-      wage:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}wage'],
-          )!,
-      endDate:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}end_date'],
-          )!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      clubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}club_id'])!,
+      wage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}wage'])!,
+      endDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date'])!,
       squadStatus: $ContractsTable.$convertersquadStatus.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}squad_status'],
-        )!,
-      ),
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}squad_status'])!),
     );
   }
 
@@ -3553,13 +2940,12 @@ class ContractRow extends DataClass implements Insertable<ContractRow> {
   final int wage;
   final DateTime endDate;
   final SquadStatus squadStatus;
-  const ContractRow({
-    required this.playerId,
-    required this.clubId,
-    required this.wage,
-    required this.endDate,
-    required this.squadStatus,
-  });
+  const ContractRow(
+      {required this.playerId,
+      required this.clubId,
+      required this.wage,
+      required this.endDate,
+      required this.squadStatus});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3569,8 +2955,7 @@ class ContractRow extends DataClass implements Insertable<ContractRow> {
     map['end_date'] = Variable<DateTime>(endDate);
     {
       map['squad_status'] = Variable<String>(
-        $ContractsTable.$convertersquadStatus.toSql(squadStatus),
-      );
+          $ContractsTable.$convertersquadStatus.toSql(squadStatus));
     }
     return map;
   }
@@ -3585,19 +2970,16 @@ class ContractRow extends DataClass implements Insertable<ContractRow> {
     );
   }
 
-  factory ContractRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ContractRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContractRow(
       playerId: serializer.fromJson<int>(json['playerId']),
       clubId: serializer.fromJson<String>(json['clubId']),
       wage: serializer.fromJson<int>(json['wage']),
       endDate: serializer.fromJson<DateTime>(json['endDate']),
-      squadStatus: $ContractsTable.$convertersquadStatus.fromJson(
-        serializer.fromJson<String>(json['squadStatus']),
-      ),
+      squadStatus: $ContractsTable.$convertersquadStatus
+          .fromJson(serializer.fromJson<String>(json['squadStatus'])),
     );
   }
   @override
@@ -3609,24 +2991,23 @@ class ContractRow extends DataClass implements Insertable<ContractRow> {
       'wage': serializer.toJson<int>(wage),
       'endDate': serializer.toJson<DateTime>(endDate),
       'squadStatus': serializer.toJson<String>(
-        $ContractsTable.$convertersquadStatus.toJson(squadStatus),
-      ),
+          $ContractsTable.$convertersquadStatus.toJson(squadStatus)),
     };
   }
 
-  ContractRow copyWith({
-    int? playerId,
-    String? clubId,
-    int? wage,
-    DateTime? endDate,
-    SquadStatus? squadStatus,
-  }) => ContractRow(
-    playerId: playerId ?? this.playerId,
-    clubId: clubId ?? this.clubId,
-    wage: wage ?? this.wage,
-    endDate: endDate ?? this.endDate,
-    squadStatus: squadStatus ?? this.squadStatus,
-  );
+  ContractRow copyWith(
+          {int? playerId,
+          String? clubId,
+          int? wage,
+          DateTime? endDate,
+          SquadStatus? squadStatus}) =>
+      ContractRow(
+        playerId: playerId ?? this.playerId,
+        clubId: clubId ?? this.clubId,
+        wage: wage ?? this.wage,
+        endDate: endDate ?? this.endDate,
+        squadStatus: squadStatus ?? this.squadStatus,
+      );
   ContractRow copyWithCompanion(ContractsCompanion data) {
     return ContractRow(
       playerId: data.playerId.present ? data.playerId.value : this.playerId,
@@ -3682,10 +3063,10 @@ class ContractsCompanion extends UpdateCompanion<ContractRow> {
     required int wage,
     required DateTime endDate,
     required SquadStatus squadStatus,
-  }) : clubId = Value(clubId),
-       wage = Value(wage),
-       endDate = Value(endDate),
-       squadStatus = Value(squadStatus);
+  })  : clubId = Value(clubId),
+        wage = Value(wage),
+        endDate = Value(endDate),
+        squadStatus = Value(squadStatus);
   static Insertable<ContractRow> custom({
     Expression<int>? playerId,
     Expression<String>? clubId,
@@ -3702,13 +3083,12 @@ class ContractsCompanion extends UpdateCompanion<ContractRow> {
     });
   }
 
-  ContractsCompanion copyWith({
-    Value<int>? playerId,
-    Value<String>? clubId,
-    Value<int>? wage,
-    Value<DateTime>? endDate,
-    Value<SquadStatus>? squadStatus,
-  }) {
+  ContractsCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? clubId,
+      Value<int>? wage,
+      Value<DateTime>? endDate,
+      Value<SquadStatus>? squadStatus}) {
     return ContractsCompanion(
       playerId: playerId ?? this.playerId,
       clubId: clubId ?? this.clubId,
@@ -3735,8 +3115,7 @@ class ContractsCompanion extends UpdateCompanion<ContractRow> {
     }
     if (squadStatus.present) {
       map['squad_status'] = Variable<String>(
-        $ContractsTable.$convertersquadStatus.toSql(squadStatus.value),
-      );
+          $ContractsTable.$convertersquadStatus.toSql(squadStatus.value));
     }
     return map;
   }
@@ -3763,71 +3142,43 @@ class $GameStatesTable extends GameStates
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(1),
-  );
-  static const VerificationMeta _currentDateMeta = const VerificationMeta(
-    'currentDate',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _currentDateMeta =
+      const VerificationMeta('currentDate');
   @override
   late final GeneratedColumn<DateTime> currentDate = GeneratedColumn<DateTime>(
-    'current_date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _managerNameMeta = const VerificationMeta(
-    'managerName',
-  );
+      'current_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _managerNameMeta =
+      const VerificationMeta('managerName');
   @override
   late final GeneratedColumn<String> managerName = GeneratedColumn<String>(
-    'manager_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'manager_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _clubIdMeta = const VerificationMeta('clubId');
   @override
   late final GeneratedColumn<String> clubId = GeneratedColumn<String>(
-    'club_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+      'club_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _seedMeta = const VerificationMeta('seed');
   @override
   late final GeneratedColumn<int> seed = GeneratedColumn<int>(
-    'seed',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'seed', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    currentDate,
-    managerName,
-    clubId,
-    seed,
-  ];
+  List<GeneratedColumn> get $columns =>
+      [id, currentDate, managerName, clubId, seed];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'game_states';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<GameStateRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<GameStateRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -3835,37 +3186,27 @@ class $GameStatesTable extends GameStates
     }
     if (data.containsKey('current_date')) {
       context.handle(
-        _currentDateMeta,
-        currentDate.isAcceptableOrUnknown(
-          data['current_date']!,
           _currentDateMeta,
-        ),
-      );
+          currentDate.isAcceptableOrUnknown(
+              data['current_date']!, _currentDateMeta));
     } else if (isInserting) {
       context.missing(_currentDateMeta);
     }
     if (data.containsKey('manager_name')) {
       context.handle(
-        _managerNameMeta,
-        managerName.isAcceptableOrUnknown(
-          data['manager_name']!,
           _managerNameMeta,
-        ),
-      );
+          managerName.isAcceptableOrUnknown(
+              data['manager_name']!, _managerNameMeta));
     } else if (isInserting) {
       context.missing(_managerNameMeta);
     }
     if (data.containsKey('club_id')) {
-      context.handle(
-        _clubIdMeta,
-        clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta),
-      );
+      context.handle(_clubIdMeta,
+          clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta));
     }
     if (data.containsKey('seed')) {
       context.handle(
-        _seedMeta,
-        seed.isAcceptableOrUnknown(data['seed']!, _seedMeta),
-      );
+          _seedMeta, seed.isAcceptableOrUnknown(data['seed']!, _seedMeta));
     } else if (isInserting) {
       context.missing(_seedMeta);
     }
@@ -3878,30 +3219,16 @@ class $GameStatesTable extends GameStates
   GameStateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GameStateRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      currentDate:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}current_date'],
-          )!,
-      managerName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}manager_name'],
-          )!,
-      clubId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}club_id'],
-      ),
-      seed:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}seed'],
-          )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      currentDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}current_date'])!,
+      managerName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}manager_name'])!,
+      clubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}club_id']),
+      seed: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}seed'])!,
     );
   }
 
@@ -3917,13 +3244,12 @@ class GameStateRow extends DataClass implements Insertable<GameStateRow> {
   final String managerName;
   final String? clubId;
   final int seed;
-  const GameStateRow({
-    required this.id,
-    required this.currentDate,
-    required this.managerName,
-    this.clubId,
-    required this.seed,
-  });
+  const GameStateRow(
+      {required this.id,
+      required this.currentDate,
+      required this.managerName,
+      this.clubId,
+      required this.seed});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3948,10 +3274,8 @@ class GameStateRow extends DataClass implements Insertable<GameStateRow> {
     );
   }
 
-  factory GameStateRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory GameStateRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GameStateRow(
       id: serializer.fromJson<int>(json['id']),
@@ -3973,19 +3297,19 @@ class GameStateRow extends DataClass implements Insertable<GameStateRow> {
     };
   }
 
-  GameStateRow copyWith({
-    int? id,
-    DateTime? currentDate,
-    String? managerName,
-    Value<String?> clubId = const Value.absent(),
-    int? seed,
-  }) => GameStateRow(
-    id: id ?? this.id,
-    currentDate: currentDate ?? this.currentDate,
-    managerName: managerName ?? this.managerName,
-    clubId: clubId.present ? clubId.value : this.clubId,
-    seed: seed ?? this.seed,
-  );
+  GameStateRow copyWith(
+          {int? id,
+          DateTime? currentDate,
+          String? managerName,
+          Value<String?> clubId = const Value.absent(),
+          int? seed}) =>
+      GameStateRow(
+        id: id ?? this.id,
+        currentDate: currentDate ?? this.currentDate,
+        managerName: managerName ?? this.managerName,
+        clubId: clubId.present ? clubId.value : this.clubId,
+        seed: seed ?? this.seed,
+      );
   GameStateRow copyWithCompanion(GameStatesCompanion data) {
     return GameStateRow(
       id: data.id.present ? data.id.value : this.id,
@@ -4042,9 +3366,9 @@ class GameStatesCompanion extends UpdateCompanion<GameStateRow> {
     required String managerName,
     this.clubId = const Value.absent(),
     required int seed,
-  }) : currentDate = Value(currentDate),
-       managerName = Value(managerName),
-       seed = Value(seed);
+  })  : currentDate = Value(currentDate),
+        managerName = Value(managerName),
+        seed = Value(seed);
   static Insertable<GameStateRow> custom({
     Expression<int>? id,
     Expression<DateTime>? currentDate,
@@ -4061,13 +3385,12 @@ class GameStatesCompanion extends UpdateCompanion<GameStateRow> {
     });
   }
 
-  GameStatesCompanion copyWith({
-    Value<int>? id,
-    Value<DateTime>? currentDate,
-    Value<String>? managerName,
-    Value<String?>? clubId,
-    Value<int>? seed,
-  }) {
+  GameStatesCompanion copyWith(
+      {Value<int>? id,
+      Value<DateTime>? currentDate,
+      Value<String>? managerName,
+      Value<String?>? clubId,
+      Value<int>? seed}) {
     return GameStatesCompanion(
       id: id ?? this.id,
       currentDate: currentDate ?? this.currentDate,
@@ -4120,168 +3443,105 @@ class $FixturesTable extends Fixtures
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _leagueIdMeta = const VerificationMeta(
-    'leagueId',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _leagueIdMeta =
+      const VerificationMeta('leagueId');
   @override
   late final GeneratedColumn<String> leagueId = GeneratedColumn<String>(
-    'league_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'league_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _roundMeta = const VerificationMeta('round');
   @override
   late final GeneratedColumn<int> round = GeneratedColumn<int>(
-    'round',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'round', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
-    'date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _homeClubIdMeta = const VerificationMeta(
-    'homeClubId',
-  );
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _homeClubIdMeta =
+      const VerificationMeta('homeClubId');
   @override
   late final GeneratedColumn<String> homeClubId = GeneratedColumn<String>(
-    'home_club_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _awayClubIdMeta = const VerificationMeta(
-    'awayClubId',
-  );
+      'home_club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _awayClubIdMeta =
+      const VerificationMeta('awayClubId');
   @override
   late final GeneratedColumn<String> awayClubId = GeneratedColumn<String>(
-    'away_club_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _homeGoalsMeta = const VerificationMeta(
-    'homeGoals',
-  );
+      'away_club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _homeGoalsMeta =
+      const VerificationMeta('homeGoals');
   @override
   late final GeneratedColumn<int> homeGoals = GeneratedColumn<int>(
-    'home_goals',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _awayGoalsMeta = const VerificationMeta(
-    'awayGoals',
-  );
+      'home_goals', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _awayGoalsMeta =
+      const VerificationMeta('awayGoals');
   @override
   late final GeneratedColumn<int> awayGoals = GeneratedColumn<int>(
-    'away_goals',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'away_goals', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    leagueId,
-    round,
-    date,
-    homeClubId,
-    awayClubId,
-    homeGoals,
-    awayGoals,
-  ];
+  List<GeneratedColumn> get $columns =>
+      [id, leagueId, round, date, homeClubId, awayClubId, homeGoals, awayGoals];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'fixtures';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<FixtureRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<FixtureRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('league_id')) {
-      context.handle(
-        _leagueIdMeta,
-        leagueId.isAcceptableOrUnknown(data['league_id']!, _leagueIdMeta),
-      );
+      context.handle(_leagueIdMeta,
+          leagueId.isAcceptableOrUnknown(data['league_id']!, _leagueIdMeta));
     } else if (isInserting) {
       context.missing(_leagueIdMeta);
     }
     if (data.containsKey('round')) {
       context.handle(
-        _roundMeta,
-        round.isAcceptableOrUnknown(data['round']!, _roundMeta),
-      );
+          _roundMeta, round.isAcceptableOrUnknown(data['round']!, _roundMeta));
     } else if (isInserting) {
       context.missing(_roundMeta);
     }
     if (data.containsKey('date')) {
       context.handle(
-        _dateMeta,
-        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
-      );
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
     if (data.containsKey('home_club_id')) {
       context.handle(
-        _homeClubIdMeta,
-        homeClubId.isAcceptableOrUnknown(
-          data['home_club_id']!,
           _homeClubIdMeta,
-        ),
-      );
+          homeClubId.isAcceptableOrUnknown(
+              data['home_club_id']!, _homeClubIdMeta));
     } else if (isInserting) {
       context.missing(_homeClubIdMeta);
     }
     if (data.containsKey('away_club_id')) {
       context.handle(
-        _awayClubIdMeta,
-        awayClubId.isAcceptableOrUnknown(
-          data['away_club_id']!,
           _awayClubIdMeta,
-        ),
-      );
+          awayClubId.isAcceptableOrUnknown(
+              data['away_club_id']!, _awayClubIdMeta));
     } else if (isInserting) {
       context.missing(_awayClubIdMeta);
     }
     if (data.containsKey('home_goals')) {
-      context.handle(
-        _homeGoalsMeta,
-        homeGoals.isAcceptableOrUnknown(data['home_goals']!, _homeGoalsMeta),
-      );
+      context.handle(_homeGoalsMeta,
+          homeGoals.isAcceptableOrUnknown(data['home_goals']!, _homeGoalsMeta));
     }
     if (data.containsKey('away_goals')) {
-      context.handle(
-        _awayGoalsMeta,
-        awayGoals.isAcceptableOrUnknown(data['away_goals']!, _awayGoalsMeta),
-      );
+      context.handle(_awayGoalsMeta,
+          awayGoals.isAcceptableOrUnknown(data['away_goals']!, _awayGoalsMeta));
     }
     return context;
   }
@@ -4292,44 +3552,22 @@ class $FixturesTable extends Fixtures
   FixtureRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return FixtureRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      leagueId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}league_id'],
-          )!,
-      round:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}round'],
-          )!,
-      date:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}date'],
-          )!,
-      homeClubId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}home_club_id'],
-          )!,
-      awayClubId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}away_club_id'],
-          )!,
-      homeGoals: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}home_goals'],
-      ),
-      awayGoals: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}away_goals'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      leagueId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}league_id'])!,
+      round: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}round'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      homeClubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}home_club_id'])!,
+      awayClubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}away_club_id'])!,
+      homeGoals: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}home_goals']),
+      awayGoals: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}away_goals']),
     );
   }
 
@@ -4348,16 +3586,15 @@ class FixtureRow extends DataClass implements Insertable<FixtureRow> {
   final String awayClubId;
   final int? homeGoals;
   final int? awayGoals;
-  const FixtureRow({
-    required this.id,
-    required this.leagueId,
-    required this.round,
-    required this.date,
-    required this.homeClubId,
-    required this.awayClubId,
-    this.homeGoals,
-    this.awayGoals,
-  });
+  const FixtureRow(
+      {required this.id,
+      required this.leagueId,
+      required this.round,
+      required this.date,
+      required this.homeClubId,
+      required this.awayClubId,
+      this.homeGoals,
+      this.awayGoals});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4384,21 +3621,17 @@ class FixtureRow extends DataClass implements Insertable<FixtureRow> {
       date: Value(date),
       homeClubId: Value(homeClubId),
       awayClubId: Value(awayClubId),
-      homeGoals:
-          homeGoals == null && nullToAbsent
-              ? const Value.absent()
-              : Value(homeGoals),
-      awayGoals:
-          awayGoals == null && nullToAbsent
-              ? const Value.absent()
-              : Value(awayGoals),
+      homeGoals: homeGoals == null && nullToAbsent
+          ? const Value.absent()
+          : Value(homeGoals),
+      awayGoals: awayGoals == null && nullToAbsent
+          ? const Value.absent()
+          : Value(awayGoals),
     );
   }
 
-  factory FixtureRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory FixtureRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FixtureRow(
       id: serializer.fromJson<int>(json['id']),
@@ -4426,25 +3659,25 @@ class FixtureRow extends DataClass implements Insertable<FixtureRow> {
     };
   }
 
-  FixtureRow copyWith({
-    int? id,
-    String? leagueId,
-    int? round,
-    DateTime? date,
-    String? homeClubId,
-    String? awayClubId,
-    Value<int?> homeGoals = const Value.absent(),
-    Value<int?> awayGoals = const Value.absent(),
-  }) => FixtureRow(
-    id: id ?? this.id,
-    leagueId: leagueId ?? this.leagueId,
-    round: round ?? this.round,
-    date: date ?? this.date,
-    homeClubId: homeClubId ?? this.homeClubId,
-    awayClubId: awayClubId ?? this.awayClubId,
-    homeGoals: homeGoals.present ? homeGoals.value : this.homeGoals,
-    awayGoals: awayGoals.present ? awayGoals.value : this.awayGoals,
-  );
+  FixtureRow copyWith(
+          {int? id,
+          String? leagueId,
+          int? round,
+          DateTime? date,
+          String? homeClubId,
+          String? awayClubId,
+          Value<int?> homeGoals = const Value.absent(),
+          Value<int?> awayGoals = const Value.absent()}) =>
+      FixtureRow(
+        id: id ?? this.id,
+        leagueId: leagueId ?? this.leagueId,
+        round: round ?? this.round,
+        date: date ?? this.date,
+        homeClubId: homeClubId ?? this.homeClubId,
+        awayClubId: awayClubId ?? this.awayClubId,
+        homeGoals: homeGoals.present ? homeGoals.value : this.homeGoals,
+        awayGoals: awayGoals.present ? awayGoals.value : this.awayGoals,
+      );
   FixtureRow copyWithCompanion(FixturesCompanion data) {
     return FixtureRow(
       id: data.id.present ? data.id.value : this.id,
@@ -4477,15 +3710,7 @@ class FixtureRow extends DataClass implements Insertable<FixtureRow> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    leagueId,
-    round,
-    date,
-    homeClubId,
-    awayClubId,
-    homeGoals,
-    awayGoals,
-  );
+      id, leagueId, round, date, homeClubId, awayClubId, homeGoals, awayGoals);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4528,11 +3753,11 @@ class FixturesCompanion extends UpdateCompanion<FixtureRow> {
     required String awayClubId,
     this.homeGoals = const Value.absent(),
     this.awayGoals = const Value.absent(),
-  }) : leagueId = Value(leagueId),
-       round = Value(round),
-       date = Value(date),
-       homeClubId = Value(homeClubId),
-       awayClubId = Value(awayClubId);
+  })  : leagueId = Value(leagueId),
+        round = Value(round),
+        date = Value(date),
+        homeClubId = Value(homeClubId),
+        awayClubId = Value(awayClubId);
   static Insertable<FixtureRow> custom({
     Expression<int>? id,
     Expression<String>? leagueId,
@@ -4555,16 +3780,15 @@ class FixturesCompanion extends UpdateCompanion<FixtureRow> {
     });
   }
 
-  FixturesCompanion copyWith({
-    Value<int>? id,
-    Value<String>? leagueId,
-    Value<int>? round,
-    Value<DateTime>? date,
-    Value<String>? homeClubId,
-    Value<String>? awayClubId,
-    Value<int?>? homeGoals,
-    Value<int?>? awayGoals,
-  }) {
+  FixturesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? leagueId,
+      Value<int>? round,
+      Value<DateTime>? date,
+      Value<String>? homeClubId,
+      Value<String>? awayClubId,
+      Value<int?>? homeGoals,
+      Value<int?>? awayGoals}) {
     return FixturesCompanion(
       id: id ?? this.id,
       leagueId: leagueId ?? this.leagueId,
@@ -4632,138 +3856,93 @@ class $InboxMessagesTable extends InboxMessages
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
-    'date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _categoryMeta = const VerificationMeta(
-    'category',
-  );
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _categoryMeta =
+      const VerificationMeta('category');
   @override
   late final GeneratedColumnWithTypeConverter<InboxCategory, String> category =
-      GeneratedColumn<String>(
-        'category',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<InboxCategory>($InboxMessagesTable.$convertercategory);
+      GeneratedColumn<String>('category', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<InboxCategory>($InboxMessagesTable.$convertercategory);
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
-    'title',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _bodyMeta = const VerificationMeta('body');
   @override
   late final GeneratedColumn<String> body = GeneratedColumn<String>(
-    'body',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'body', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _isReadMeta = const VerificationMeta('isRead');
   @override
   late final GeneratedColumn<bool> isRead = GeneratedColumn<bool>(
-    'is_read',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_read" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _actionTypeMeta = const VerificationMeta(
-    'actionType',
-  );
+      'is_read', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_read" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _actionTypeMeta =
+      const VerificationMeta('actionType');
   @override
   late final GeneratedColumnWithTypeConverter<InboxActionType, String>
-  actionType = GeneratedColumn<String>(
-    'action_type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  ).withConverter<InboxActionType>($InboxMessagesTable.$converteractionType);
-  static const VerificationMeta _payloadMeta = const VerificationMeta(
-    'payload',
-  );
+      actionType = GeneratedColumn<String>('action_type', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<InboxActionType>(
+              $InboxMessagesTable.$converteractionType);
+  static const VerificationMeta _payloadMeta =
+      const VerificationMeta('payload');
   @override
   late final GeneratedColumn<String> payload = GeneratedColumn<String>(
-    'payload',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _resolvedMeta = const VerificationMeta(
-    'resolved',
-  );
+      'payload', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _resolvedMeta =
+      const VerificationMeta('resolved');
   @override
   late final GeneratedColumn<bool> resolved = GeneratedColumn<bool>(
-    'resolved',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("resolved" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
+      'resolved', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("resolved" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _choiceMeta = const VerificationMeta('choice');
   @override
   late final GeneratedColumn<String> choice = GeneratedColumn<String>(
-    'choice',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+      'choice', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    date,
-    category,
-    title,
-    body,
-    isRead,
-    actionType,
-    payload,
-    resolved,
-    choice,
-  ];
+        id,
+        date,
+        category,
+        title,
+        body,
+        isRead,
+        actionType,
+        payload,
+        resolved,
+        choice
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'inbox_messages';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<InboxRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<InboxRow> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -4771,53 +3950,39 @@ class $InboxMessagesTable extends InboxMessages
     }
     if (data.containsKey('date')) {
       context.handle(
-        _dateMeta,
-        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
-      );
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
     context.handle(_categoryMeta, const VerificationResult.success());
     if (data.containsKey('title')) {
       context.handle(
-        _titleMeta,
-        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
-      );
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
     if (data.containsKey('body')) {
       context.handle(
-        _bodyMeta,
-        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
-      );
+          _bodyMeta, body.isAcceptableOrUnknown(data['body']!, _bodyMeta));
     } else if (isInserting) {
       context.missing(_bodyMeta);
     }
     if (data.containsKey('is_read')) {
-      context.handle(
-        _isReadMeta,
-        isRead.isAcceptableOrUnknown(data['is_read']!, _isReadMeta),
-      );
+      context.handle(_isReadMeta,
+          isRead.isAcceptableOrUnknown(data['is_read']!, _isReadMeta));
     }
     context.handle(_actionTypeMeta, const VerificationResult.success());
     if (data.containsKey('payload')) {
-      context.handle(
-        _payloadMeta,
-        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
-      );
+      context.handle(_payloadMeta,
+          payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
     }
     if (data.containsKey('resolved')) {
-      context.handle(
-        _resolvedMeta,
-        resolved.isAcceptableOrUnknown(data['resolved']!, _resolvedMeta),
-      );
+      context.handle(_resolvedMeta,
+          resolved.isAcceptableOrUnknown(data['resolved']!, _resolvedMeta));
     }
     if (data.containsKey('choice')) {
-      context.handle(
-        _choiceMeta,
-        choice.isAcceptableOrUnknown(data['choice']!, _choiceMeta),
-      );
+      context.handle(_choiceMeta,
+          choice.isAcceptableOrUnknown(data['choice']!, _choiceMeta));
     }
     return context;
   }
@@ -4828,56 +3993,28 @@ class $InboxMessagesTable extends InboxMessages
   InboxRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return InboxRow(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      date:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}date'],
-          )!,
-      category: $InboxMessagesTable.$convertercategory.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}category'],
-        )!,
-      ),
-      title:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}title'],
-          )!,
-      body:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}body'],
-          )!,
-      isRead:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_read'],
-          )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      category: $InboxMessagesTable.$convertercategory.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category'])!),
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      body: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}body'])!,
+      isRead: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_read'])!,
       actionType: $InboxMessagesTable.$converteractionType.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}action_type'],
-        )!,
-      ),
-      payload: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload'],
-      ),
-      resolved:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}resolved'],
-          )!,
-      choice: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}choice'],
-      ),
+              DriftSqlType.string, data['${effectivePrefix}action_type'])!),
+      payload: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload']),
+      resolved: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}resolved'])!,
+      choice: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}choice']),
     );
   }
 
@@ -4889,9 +4026,8 @@ class $InboxMessagesTable extends InboxMessages
   static JsonTypeConverter2<InboxCategory, String, String> $convertercategory =
       const EnumNameConverter<InboxCategory>(InboxCategory.values);
   static JsonTypeConverter2<InboxActionType, String, String>
-  $converteractionType = const EnumNameConverter<InboxActionType>(
-    InboxActionType.values,
-  );
+      $converteractionType =
+      const EnumNameConverter<InboxActionType>(InboxActionType.values);
 }
 
 class InboxRow extends DataClass implements Insertable<InboxRow> {
@@ -4905,18 +4041,17 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
   final String? payload;
   final bool resolved;
   final String? choice;
-  const InboxRow({
-    required this.id,
-    required this.date,
-    required this.category,
-    required this.title,
-    required this.body,
-    required this.isRead,
-    required this.actionType,
-    this.payload,
-    required this.resolved,
-    this.choice,
-  });
+  const InboxRow(
+      {required this.id,
+      required this.date,
+      required this.category,
+      required this.title,
+      required this.body,
+      required this.isRead,
+      required this.actionType,
+      this.payload,
+      required this.resolved,
+      this.choice});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4924,16 +4059,14 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
     map['date'] = Variable<DateTime>(date);
     {
       map['category'] = Variable<String>(
-        $InboxMessagesTable.$convertercategory.toSql(category),
-      );
+          $InboxMessagesTable.$convertercategory.toSql(category));
     }
     map['title'] = Variable<String>(title);
     map['body'] = Variable<String>(body);
     map['is_read'] = Variable<bool>(isRead);
     {
       map['action_type'] = Variable<String>(
-        $InboxMessagesTable.$converteractionType.toSql(actionType),
-      );
+          $InboxMessagesTable.$converteractionType.toSql(actionType));
     }
     if (!nullToAbsent || payload != null) {
       map['payload'] = Variable<String>(payload);
@@ -4954,33 +4087,28 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
       body: Value(body),
       isRead: Value(isRead),
       actionType: Value(actionType),
-      payload:
-          payload == null && nullToAbsent
-              ? const Value.absent()
-              : Value(payload),
+      payload: payload == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payload),
       resolved: Value(resolved),
       choice:
           choice == null && nullToAbsent ? const Value.absent() : Value(choice),
     );
   }
 
-  factory InboxRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory InboxRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return InboxRow(
       id: serializer.fromJson<int>(json['id']),
       date: serializer.fromJson<DateTime>(json['date']),
-      category: $InboxMessagesTable.$convertercategory.fromJson(
-        serializer.fromJson<String>(json['category']),
-      ),
+      category: $InboxMessagesTable.$convertercategory
+          .fromJson(serializer.fromJson<String>(json['category'])),
       title: serializer.fromJson<String>(json['title']),
       body: serializer.fromJson<String>(json['body']),
       isRead: serializer.fromJson<bool>(json['isRead']),
-      actionType: $InboxMessagesTable.$converteractionType.fromJson(
-        serializer.fromJson<String>(json['actionType']),
-      ),
+      actionType: $InboxMessagesTable.$converteractionType
+          .fromJson(serializer.fromJson<String>(json['actionType'])),
       payload: serializer.fromJson<String?>(json['payload']),
       resolved: serializer.fromJson<bool>(json['resolved']),
       choice: serializer.fromJson<String?>(json['choice']),
@@ -4993,43 +4121,41 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
       'id': serializer.toJson<int>(id),
       'date': serializer.toJson<DateTime>(date),
       'category': serializer.toJson<String>(
-        $InboxMessagesTable.$convertercategory.toJson(category),
-      ),
+          $InboxMessagesTable.$convertercategory.toJson(category)),
       'title': serializer.toJson<String>(title),
       'body': serializer.toJson<String>(body),
       'isRead': serializer.toJson<bool>(isRead),
       'actionType': serializer.toJson<String>(
-        $InboxMessagesTable.$converteractionType.toJson(actionType),
-      ),
+          $InboxMessagesTable.$converteractionType.toJson(actionType)),
       'payload': serializer.toJson<String?>(payload),
       'resolved': serializer.toJson<bool>(resolved),
       'choice': serializer.toJson<String?>(choice),
     };
   }
 
-  InboxRow copyWith({
-    int? id,
-    DateTime? date,
-    InboxCategory? category,
-    String? title,
-    String? body,
-    bool? isRead,
-    InboxActionType? actionType,
-    Value<String?> payload = const Value.absent(),
-    bool? resolved,
-    Value<String?> choice = const Value.absent(),
-  }) => InboxRow(
-    id: id ?? this.id,
-    date: date ?? this.date,
-    category: category ?? this.category,
-    title: title ?? this.title,
-    body: body ?? this.body,
-    isRead: isRead ?? this.isRead,
-    actionType: actionType ?? this.actionType,
-    payload: payload.present ? payload.value : this.payload,
-    resolved: resolved ?? this.resolved,
-    choice: choice.present ? choice.value : this.choice,
-  );
+  InboxRow copyWith(
+          {int? id,
+          DateTime? date,
+          InboxCategory? category,
+          String? title,
+          String? body,
+          bool? isRead,
+          InboxActionType? actionType,
+          Value<String?> payload = const Value.absent(),
+          bool? resolved,
+          Value<String?> choice = const Value.absent()}) =>
+      InboxRow(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        category: category ?? this.category,
+        title: title ?? this.title,
+        body: body ?? this.body,
+        isRead: isRead ?? this.isRead,
+        actionType: actionType ?? this.actionType,
+        payload: payload.present ? payload.value : this.payload,
+        resolved: resolved ?? this.resolved,
+        choice: choice.present ? choice.value : this.choice,
+      );
   InboxRow copyWithCompanion(InboxMessagesCompanion data) {
     return InboxRow(
       id: data.id.present ? data.id.value : this.id,
@@ -5064,18 +4190,8 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    date,
-    category,
-    title,
-    body,
-    isRead,
-    actionType,
-    payload,
-    resolved,
-    choice,
-  );
+  int get hashCode => Object.hash(id, date, category, title, body, isRead,
+      actionType, payload, resolved, choice);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5126,11 +4242,11 @@ class InboxMessagesCompanion extends UpdateCompanion<InboxRow> {
     this.payload = const Value.absent(),
     this.resolved = const Value.absent(),
     this.choice = const Value.absent(),
-  }) : date = Value(date),
-       category = Value(category),
-       title = Value(title),
-       body = Value(body),
-       actionType = Value(actionType);
+  })  : date = Value(date),
+        category = Value(category),
+        title = Value(title),
+        body = Value(body),
+        actionType = Value(actionType);
   static Insertable<InboxRow> custom({
     Expression<int>? id,
     Expression<DateTime>? date,
@@ -5157,18 +4273,17 @@ class InboxMessagesCompanion extends UpdateCompanion<InboxRow> {
     });
   }
 
-  InboxMessagesCompanion copyWith({
-    Value<int>? id,
-    Value<DateTime>? date,
-    Value<InboxCategory>? category,
-    Value<String>? title,
-    Value<String>? body,
-    Value<bool>? isRead,
-    Value<InboxActionType>? actionType,
-    Value<String?>? payload,
-    Value<bool>? resolved,
-    Value<String?>? choice,
-  }) {
+  InboxMessagesCompanion copyWith(
+      {Value<int>? id,
+      Value<DateTime>? date,
+      Value<InboxCategory>? category,
+      Value<String>? title,
+      Value<String>? body,
+      Value<bool>? isRead,
+      Value<InboxActionType>? actionType,
+      Value<String?>? payload,
+      Value<bool>? resolved,
+      Value<String?>? choice}) {
     return InboxMessagesCompanion(
       id: id ?? this.id,
       date: date ?? this.date,
@@ -5194,8 +4309,7 @@ class InboxMessagesCompanion extends UpdateCompanion<InboxRow> {
     }
     if (category.present) {
       map['category'] = Variable<String>(
-        $InboxMessagesTable.$convertercategory.toSql(category.value),
-      );
+          $InboxMessagesTable.$convertercategory.toSql(category.value));
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -5208,8 +4322,7 @@ class InboxMessagesCompanion extends UpdateCompanion<InboxRow> {
     }
     if (actionType.present) {
       map['action_type'] = Variable<String>(
-        $InboxMessagesTable.$converteractionType.toSql(actionType.value),
-      );
+          $InboxMessagesTable.$converteractionType.toSql(actionType.value));
     }
     if (payload.present) {
       map['payload'] = Variable<String>(payload.value);
@@ -5241,6 +4354,1366 @@ class InboxMessagesCompanion extends UpdateCompanion<InboxRow> {
   }
 }
 
+class $ClubTacticsTable extends ClubTactics
+    with TableInfo<$ClubTacticsTable, ClubTacticRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ClubTacticsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _clubIdMeta = const VerificationMeta('clubId');
+  @override
+  late final GeneratedColumn<String> clubId = GeneratedColumn<String>(
+      'club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _formationMeta =
+      const VerificationMeta('formation');
+  @override
+  late final GeneratedColumnWithTypeConverter<Formation, String> formation =
+      GeneratedColumn<String>('formation', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<Formation>($ClubTacticsTable.$converterformation);
+  static const VerificationMeta _mentalityMeta =
+      const VerificationMeta('mentality');
+  @override
+  late final GeneratedColumnWithTypeConverter<Mentality, String> mentality =
+      GeneratedColumn<String>('mentality', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<Mentality>($ClubTacticsTable.$convertermentality);
+  static const VerificationMeta _starterIdsMeta =
+      const VerificationMeta('starterIds');
+  @override
+  late final GeneratedColumn<String> starterIds = GeneratedColumn<String>(
+      'starter_ids', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _subIdsMeta = const VerificationMeta('subIds');
+  @override
+  late final GeneratedColumn<String> subIds = GeneratedColumn<String>(
+      'sub_ids', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [clubId, formation, mentality, starterIds, subIds];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'club_tactics';
+  @override
+  VerificationContext validateIntegrity(Insertable<ClubTacticRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('club_id')) {
+      context.handle(_clubIdMeta,
+          clubId.isAcceptableOrUnknown(data['club_id']!, _clubIdMeta));
+    } else if (isInserting) {
+      context.missing(_clubIdMeta);
+    }
+    context.handle(_formationMeta, const VerificationResult.success());
+    context.handle(_mentalityMeta, const VerificationResult.success());
+    if (data.containsKey('starter_ids')) {
+      context.handle(
+          _starterIdsMeta,
+          starterIds.isAcceptableOrUnknown(
+              data['starter_ids']!, _starterIdsMeta));
+    }
+    if (data.containsKey('sub_ids')) {
+      context.handle(_subIdsMeta,
+          subIds.isAcceptableOrUnknown(data['sub_ids']!, _subIdsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {clubId};
+  @override
+  ClubTacticRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ClubTacticRow(
+      clubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}club_id'])!,
+      formation: $ClubTacticsTable.$converterformation.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}formation'])!),
+      mentality: $ClubTacticsTable.$convertermentality.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mentality'])!),
+      starterIds: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}starter_ids'])!,
+      subIds: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sub_ids'])!,
+    );
+  }
+
+  @override
+  $ClubTacticsTable createAlias(String alias) {
+    return $ClubTacticsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<Formation, String, String> $converterformation =
+      const EnumNameConverter<Formation>(Formation.values);
+  static JsonTypeConverter2<Mentality, String, String> $convertermentality =
+      const EnumNameConverter<Mentality>(Mentality.values);
+}
+
+class ClubTacticRow extends DataClass implements Insertable<ClubTacticRow> {
+  final String clubId;
+  final Formation formation;
+  final Mentality mentality;
+  final String starterIds;
+  final String subIds;
+  const ClubTacticRow(
+      {required this.clubId,
+      required this.formation,
+      required this.mentality,
+      required this.starterIds,
+      required this.subIds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['club_id'] = Variable<String>(clubId);
+    {
+      map['formation'] = Variable<String>(
+          $ClubTacticsTable.$converterformation.toSql(formation));
+    }
+    {
+      map['mentality'] = Variable<String>(
+          $ClubTacticsTable.$convertermentality.toSql(mentality));
+    }
+    map['starter_ids'] = Variable<String>(starterIds);
+    map['sub_ids'] = Variable<String>(subIds);
+    return map;
+  }
+
+  ClubTacticsCompanion toCompanion(bool nullToAbsent) {
+    return ClubTacticsCompanion(
+      clubId: Value(clubId),
+      formation: Value(formation),
+      mentality: Value(mentality),
+      starterIds: Value(starterIds),
+      subIds: Value(subIds),
+    );
+  }
+
+  factory ClubTacticRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ClubTacticRow(
+      clubId: serializer.fromJson<String>(json['clubId']),
+      formation: $ClubTacticsTable.$converterformation
+          .fromJson(serializer.fromJson<String>(json['formation'])),
+      mentality: $ClubTacticsTable.$convertermentality
+          .fromJson(serializer.fromJson<String>(json['mentality'])),
+      starterIds: serializer.fromJson<String>(json['starterIds']),
+      subIds: serializer.fromJson<String>(json['subIds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'clubId': serializer.toJson<String>(clubId),
+      'formation': serializer.toJson<String>(
+          $ClubTacticsTable.$converterformation.toJson(formation)),
+      'mentality': serializer.toJson<String>(
+          $ClubTacticsTable.$convertermentality.toJson(mentality)),
+      'starterIds': serializer.toJson<String>(starterIds),
+      'subIds': serializer.toJson<String>(subIds),
+    };
+  }
+
+  ClubTacticRow copyWith(
+          {String? clubId,
+          Formation? formation,
+          Mentality? mentality,
+          String? starterIds,
+          String? subIds}) =>
+      ClubTacticRow(
+        clubId: clubId ?? this.clubId,
+        formation: formation ?? this.formation,
+        mentality: mentality ?? this.mentality,
+        starterIds: starterIds ?? this.starterIds,
+        subIds: subIds ?? this.subIds,
+      );
+  ClubTacticRow copyWithCompanion(ClubTacticsCompanion data) {
+    return ClubTacticRow(
+      clubId: data.clubId.present ? data.clubId.value : this.clubId,
+      formation: data.formation.present ? data.formation.value : this.formation,
+      mentality: data.mentality.present ? data.mentality.value : this.mentality,
+      starterIds:
+          data.starterIds.present ? data.starterIds.value : this.starterIds,
+      subIds: data.subIds.present ? data.subIds.value : this.subIds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClubTacticRow(')
+          ..write('clubId: $clubId, ')
+          ..write('formation: $formation, ')
+          ..write('mentality: $mentality, ')
+          ..write('starterIds: $starterIds, ')
+          ..write('subIds: $subIds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(clubId, formation, mentality, starterIds, subIds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ClubTacticRow &&
+          other.clubId == this.clubId &&
+          other.formation == this.formation &&
+          other.mentality == this.mentality &&
+          other.starterIds == this.starterIds &&
+          other.subIds == this.subIds);
+}
+
+class ClubTacticsCompanion extends UpdateCompanion<ClubTacticRow> {
+  final Value<String> clubId;
+  final Value<Formation> formation;
+  final Value<Mentality> mentality;
+  final Value<String> starterIds;
+  final Value<String> subIds;
+  final Value<int> rowid;
+  const ClubTacticsCompanion({
+    this.clubId = const Value.absent(),
+    this.formation = const Value.absent(),
+    this.mentality = const Value.absent(),
+    this.starterIds = const Value.absent(),
+    this.subIds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ClubTacticsCompanion.insert({
+    required String clubId,
+    required Formation formation,
+    required Mentality mentality,
+    this.starterIds = const Value.absent(),
+    this.subIds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : clubId = Value(clubId),
+        formation = Value(formation),
+        mentality = Value(mentality);
+  static Insertable<ClubTacticRow> custom({
+    Expression<String>? clubId,
+    Expression<String>? formation,
+    Expression<String>? mentality,
+    Expression<String>? starterIds,
+    Expression<String>? subIds,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (clubId != null) 'club_id': clubId,
+      if (formation != null) 'formation': formation,
+      if (mentality != null) 'mentality': mentality,
+      if (starterIds != null) 'starter_ids': starterIds,
+      if (subIds != null) 'sub_ids': subIds,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ClubTacticsCompanion copyWith(
+      {Value<String>? clubId,
+      Value<Formation>? formation,
+      Value<Mentality>? mentality,
+      Value<String>? starterIds,
+      Value<String>? subIds,
+      Value<int>? rowid}) {
+    return ClubTacticsCompanion(
+      clubId: clubId ?? this.clubId,
+      formation: formation ?? this.formation,
+      mentality: mentality ?? this.mentality,
+      starterIds: starterIds ?? this.starterIds,
+      subIds: subIds ?? this.subIds,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (clubId.present) {
+      map['club_id'] = Variable<String>(clubId.value);
+    }
+    if (formation.present) {
+      map['formation'] = Variable<String>(
+          $ClubTacticsTable.$converterformation.toSql(formation.value));
+    }
+    if (mentality.present) {
+      map['mentality'] = Variable<String>(
+          $ClubTacticsTable.$convertermentality.toSql(mentality.value));
+    }
+    if (starterIds.present) {
+      map['starter_ids'] = Variable<String>(starterIds.value);
+    }
+    if (subIds.present) {
+      map['sub_ids'] = Variable<String>(subIds.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClubTacticsCompanion(')
+          ..write('clubId: $clubId, ')
+          ..write('formation: $formation, ')
+          ..write('mentality: $mentality, ')
+          ..write('starterIds: $starterIds, ')
+          ..write('subIds: $subIds, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TransferOffersTable extends TransferOffers
+    with TableInfo<$TransferOffersTable, TransferOfferRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransferOffersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _fromClubIdMeta =
+      const VerificationMeta('fromClubId');
+  @override
+  late final GeneratedColumn<String> fromClubId = GeneratedColumn<String>(
+      'from_club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _toClubIdMeta =
+      const VerificationMeta('toClubId');
+  @override
+  late final GeneratedColumn<String> toClubId = GeneratedColumn<String>(
+      'to_club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _feeMeta = const VerificationMeta('fee');
+  @override
+  late final GeneratedColumn<int> fee = GeneratedColumn<int>(
+      'fee', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumnWithTypeConverter<TransferOfferStatus, String>
+      status = GeneratedColumn<String>('status', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<TransferOfferStatus>(
+              $TransferOffersTable.$converterstatus);
+  static const VerificationMeta _createdDateMeta =
+      const VerificationMeta('createdDate');
+  @override
+  late final GeneratedColumn<DateTime> createdDate = GeneratedColumn<DateTime>(
+      'created_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _responseDateMeta =
+      const VerificationMeta('responseDate');
+  @override
+  late final GeneratedColumn<DateTime> responseDate = GeneratedColumn<DateTime>(
+      'response_date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        fromClubId,
+        toClubId,
+        fee,
+        status,
+        createdDate,
+        responseDate
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transfer_offers';
+  @override
+  VerificationContext validateIntegrity(Insertable<TransferOfferRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('from_club_id')) {
+      context.handle(
+          _fromClubIdMeta,
+          fromClubId.isAcceptableOrUnknown(
+              data['from_club_id']!, _fromClubIdMeta));
+    } else if (isInserting) {
+      context.missing(_fromClubIdMeta);
+    }
+    if (data.containsKey('to_club_id')) {
+      context.handle(_toClubIdMeta,
+          toClubId.isAcceptableOrUnknown(data['to_club_id']!, _toClubIdMeta));
+    } else if (isInserting) {
+      context.missing(_toClubIdMeta);
+    }
+    if (data.containsKey('fee')) {
+      context.handle(
+          _feeMeta, fee.isAcceptableOrUnknown(data['fee']!, _feeMeta));
+    } else if (isInserting) {
+      context.missing(_feeMeta);
+    }
+    context.handle(_statusMeta, const VerificationResult.success());
+    if (data.containsKey('created_date')) {
+      context.handle(
+          _createdDateMeta,
+          createdDate.isAcceptableOrUnknown(
+              data['created_date']!, _createdDateMeta));
+    } else if (isInserting) {
+      context.missing(_createdDateMeta);
+    }
+    if (data.containsKey('response_date')) {
+      context.handle(
+          _responseDateMeta,
+          responseDate.isAcceptableOrUnknown(
+              data['response_date']!, _responseDateMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TransferOfferRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TransferOfferRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      fromClubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}from_club_id'])!,
+      toClubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_club_id'])!,
+      fee: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}fee'])!,
+      status: $TransferOffersTable.$converterstatus.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!),
+      createdDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_date'])!,
+      responseDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}response_date']),
+    );
+  }
+
+  @override
+  $TransferOffersTable createAlias(String alias) {
+    return $TransferOffersTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<TransferOfferStatus, String, String>
+      $converterstatus =
+      const EnumNameConverter<TransferOfferStatus>(TransferOfferStatus.values);
+}
+
+class TransferOfferRow extends DataClass
+    implements Insertable<TransferOfferRow> {
+  final int id;
+  final int playerId;
+  final String fromClubId;
+  final String toClubId;
+  final int fee;
+  final TransferOfferStatus status;
+  final DateTime createdDate;
+  final DateTime? responseDate;
+  const TransferOfferRow(
+      {required this.id,
+      required this.playerId,
+      required this.fromClubId,
+      required this.toClubId,
+      required this.fee,
+      required this.status,
+      required this.createdDate,
+      this.responseDate});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['from_club_id'] = Variable<String>(fromClubId);
+    map['to_club_id'] = Variable<String>(toClubId);
+    map['fee'] = Variable<int>(fee);
+    {
+      map['status'] =
+          Variable<String>($TransferOffersTable.$converterstatus.toSql(status));
+    }
+    map['created_date'] = Variable<DateTime>(createdDate);
+    if (!nullToAbsent || responseDate != null) {
+      map['response_date'] = Variable<DateTime>(responseDate);
+    }
+    return map;
+  }
+
+  TransferOffersCompanion toCompanion(bool nullToAbsent) {
+    return TransferOffersCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      fromClubId: Value(fromClubId),
+      toClubId: Value(toClubId),
+      fee: Value(fee),
+      status: Value(status),
+      createdDate: Value(createdDate),
+      responseDate: responseDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(responseDate),
+    );
+  }
+
+  factory TransferOfferRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TransferOfferRow(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      fromClubId: serializer.fromJson<String>(json['fromClubId']),
+      toClubId: serializer.fromJson<String>(json['toClubId']),
+      fee: serializer.fromJson<int>(json['fee']),
+      status: $TransferOffersTable.$converterstatus
+          .fromJson(serializer.fromJson<String>(json['status'])),
+      createdDate: serializer.fromJson<DateTime>(json['createdDate']),
+      responseDate: serializer.fromJson<DateTime?>(json['responseDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'fromClubId': serializer.toJson<String>(fromClubId),
+      'toClubId': serializer.toJson<String>(toClubId),
+      'fee': serializer.toJson<int>(fee),
+      'status': serializer
+          .toJson<String>($TransferOffersTable.$converterstatus.toJson(status)),
+      'createdDate': serializer.toJson<DateTime>(createdDate),
+      'responseDate': serializer.toJson<DateTime?>(responseDate),
+    };
+  }
+
+  TransferOfferRow copyWith(
+          {int? id,
+          int? playerId,
+          String? fromClubId,
+          String? toClubId,
+          int? fee,
+          TransferOfferStatus? status,
+          DateTime? createdDate,
+          Value<DateTime?> responseDate = const Value.absent()}) =>
+      TransferOfferRow(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        fromClubId: fromClubId ?? this.fromClubId,
+        toClubId: toClubId ?? this.toClubId,
+        fee: fee ?? this.fee,
+        status: status ?? this.status,
+        createdDate: createdDate ?? this.createdDate,
+        responseDate:
+            responseDate.present ? responseDate.value : this.responseDate,
+      );
+  TransferOfferRow copyWithCompanion(TransferOffersCompanion data) {
+    return TransferOfferRow(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      fromClubId:
+          data.fromClubId.present ? data.fromClubId.value : this.fromClubId,
+      toClubId: data.toClubId.present ? data.toClubId.value : this.toClubId,
+      fee: data.fee.present ? data.fee.value : this.fee,
+      status: data.status.present ? data.status.value : this.status,
+      createdDate:
+          data.createdDate.present ? data.createdDate.value : this.createdDate,
+      responseDate: data.responseDate.present
+          ? data.responseDate.value
+          : this.responseDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransferOfferRow(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('fromClubId: $fromClubId, ')
+          ..write('toClubId: $toClubId, ')
+          ..write('fee: $fee, ')
+          ..write('status: $status, ')
+          ..write('createdDate: $createdDate, ')
+          ..write('responseDate: $responseDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, playerId, fromClubId, toClubId, fee,
+      status, createdDate, responseDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TransferOfferRow &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.fromClubId == this.fromClubId &&
+          other.toClubId == this.toClubId &&
+          other.fee == this.fee &&
+          other.status == this.status &&
+          other.createdDate == this.createdDate &&
+          other.responseDate == this.responseDate);
+}
+
+class TransferOffersCompanion extends UpdateCompanion<TransferOfferRow> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> fromClubId;
+  final Value<String> toClubId;
+  final Value<int> fee;
+  final Value<TransferOfferStatus> status;
+  final Value<DateTime> createdDate;
+  final Value<DateTime?> responseDate;
+  const TransferOffersCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.fromClubId = const Value.absent(),
+    this.toClubId = const Value.absent(),
+    this.fee = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdDate = const Value.absent(),
+    this.responseDate = const Value.absent(),
+  });
+  TransferOffersCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String fromClubId,
+    required String toClubId,
+    required int fee,
+    required TransferOfferStatus status,
+    required DateTime createdDate,
+    this.responseDate = const Value.absent(),
+  })  : playerId = Value(playerId),
+        fromClubId = Value(fromClubId),
+        toClubId = Value(toClubId),
+        fee = Value(fee),
+        status = Value(status),
+        createdDate = Value(createdDate);
+  static Insertable<TransferOfferRow> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? fromClubId,
+    Expression<String>? toClubId,
+    Expression<int>? fee,
+    Expression<String>? status,
+    Expression<DateTime>? createdDate,
+    Expression<DateTime>? responseDate,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (fromClubId != null) 'from_club_id': fromClubId,
+      if (toClubId != null) 'to_club_id': toClubId,
+      if (fee != null) 'fee': fee,
+      if (status != null) 'status': status,
+      if (createdDate != null) 'created_date': createdDate,
+      if (responseDate != null) 'response_date': responseDate,
+    });
+  }
+
+  TransferOffersCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? fromClubId,
+      Value<String>? toClubId,
+      Value<int>? fee,
+      Value<TransferOfferStatus>? status,
+      Value<DateTime>? createdDate,
+      Value<DateTime?>? responseDate}) {
+    return TransferOffersCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      fromClubId: fromClubId ?? this.fromClubId,
+      toClubId: toClubId ?? this.toClubId,
+      fee: fee ?? this.fee,
+      status: status ?? this.status,
+      createdDate: createdDate ?? this.createdDate,
+      responseDate: responseDate ?? this.responseDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (fromClubId.present) {
+      map['from_club_id'] = Variable<String>(fromClubId.value);
+    }
+    if (toClubId.present) {
+      map['to_club_id'] = Variable<String>(toClubId.value);
+    }
+    if (fee.present) {
+      map['fee'] = Variable<int>(fee.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(
+          $TransferOffersTable.$converterstatus.toSql(status.value));
+    }
+    if (createdDate.present) {
+      map['created_date'] = Variable<DateTime>(createdDate.value);
+    }
+    if (responseDate.present) {
+      map['response_date'] = Variable<DateTime>(responseDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransferOffersCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('fromClubId: $fromClubId, ')
+          ..write('toClubId: $toClubId, ')
+          ..write('fee: $fee, ')
+          ..write('status: $status, ')
+          ..write('createdDate: $createdDate, ')
+          ..write('responseDate: $responseDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TransferHistoryTable extends TransferHistory
+    with TableInfo<$TransferHistoryTable, TransferHistoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransferHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _playerNameMeta =
+      const VerificationMeta('playerName');
+  @override
+  late final GeneratedColumn<String> playerName = GeneratedColumn<String>(
+      'player_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fromClubIdMeta =
+      const VerificationMeta('fromClubId');
+  @override
+  late final GeneratedColumn<String> fromClubId = GeneratedColumn<String>(
+      'from_club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _toClubIdMeta =
+      const VerificationMeta('toClubId');
+  @override
+  late final GeneratedColumn<String> toClubId = GeneratedColumn<String>(
+      'to_club_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _feeMeta = const VerificationMeta('fee');
+  @override
+  late final GeneratedColumn<int> fee = GeneratedColumn<int>(
+      'fee', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumnWithTypeConverter<TransferType, String> type =
+      GeneratedColumn<String>('type', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<TransferType>($TransferHistoryTable.$convertertype);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, date, playerId, playerName, fromClubId, toClubId, fee, type];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transfer_history';
+  @override
+  VerificationContext validateIntegrity(Insertable<TransferHistoryRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('player_name')) {
+      context.handle(
+          _playerNameMeta,
+          playerName.isAcceptableOrUnknown(
+              data['player_name']!, _playerNameMeta));
+    } else if (isInserting) {
+      context.missing(_playerNameMeta);
+    }
+    if (data.containsKey('from_club_id')) {
+      context.handle(
+          _fromClubIdMeta,
+          fromClubId.isAcceptableOrUnknown(
+              data['from_club_id']!, _fromClubIdMeta));
+    } else if (isInserting) {
+      context.missing(_fromClubIdMeta);
+    }
+    if (data.containsKey('to_club_id')) {
+      context.handle(_toClubIdMeta,
+          toClubId.isAcceptableOrUnknown(data['to_club_id']!, _toClubIdMeta));
+    } else if (isInserting) {
+      context.missing(_toClubIdMeta);
+    }
+    if (data.containsKey('fee')) {
+      context.handle(
+          _feeMeta, fee.isAcceptableOrUnknown(data['fee']!, _feeMeta));
+    } else if (isInserting) {
+      context.missing(_feeMeta);
+    }
+    context.handle(_typeMeta, const VerificationResult.success());
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TransferHistoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TransferHistoryRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      playerName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}player_name'])!,
+      fromClubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}from_club_id'])!,
+      toClubId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_club_id'])!,
+      fee: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}fee'])!,
+      type: $TransferHistoryTable.$convertertype.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
+    );
+  }
+
+  @override
+  $TransferHistoryTable createAlias(String alias) {
+    return $TransferHistoryTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<TransferType, String, String> $convertertype =
+      const EnumNameConverter<TransferType>(TransferType.values);
+}
+
+class TransferHistoryRow extends DataClass
+    implements Insertable<TransferHistoryRow> {
+  final int id;
+  final DateTime date;
+  final int playerId;
+  final String playerName;
+  final String fromClubId;
+  final String toClubId;
+  final int fee;
+  final TransferType type;
+  const TransferHistoryRow(
+      {required this.id,
+      required this.date,
+      required this.playerId,
+      required this.playerName,
+      required this.fromClubId,
+      required this.toClubId,
+      required this.fee,
+      required this.type});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date'] = Variable<DateTime>(date);
+    map['player_id'] = Variable<int>(playerId);
+    map['player_name'] = Variable<String>(playerName);
+    map['from_club_id'] = Variable<String>(fromClubId);
+    map['to_club_id'] = Variable<String>(toClubId);
+    map['fee'] = Variable<int>(fee);
+    {
+      map['type'] =
+          Variable<String>($TransferHistoryTable.$convertertype.toSql(type));
+    }
+    return map;
+  }
+
+  TransferHistoryCompanion toCompanion(bool nullToAbsent) {
+    return TransferHistoryCompanion(
+      id: Value(id),
+      date: Value(date),
+      playerId: Value(playerId),
+      playerName: Value(playerName),
+      fromClubId: Value(fromClubId),
+      toClubId: Value(toClubId),
+      fee: Value(fee),
+      type: Value(type),
+    );
+  }
+
+  factory TransferHistoryRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TransferHistoryRow(
+      id: serializer.fromJson<int>(json['id']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      playerName: serializer.fromJson<String>(json['playerName']),
+      fromClubId: serializer.fromJson<String>(json['fromClubId']),
+      toClubId: serializer.fromJson<String>(json['toClubId']),
+      fee: serializer.fromJson<int>(json['fee']),
+      type: $TransferHistoryTable.$convertertype
+          .fromJson(serializer.fromJson<String>(json['type'])),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'date': serializer.toJson<DateTime>(date),
+      'playerId': serializer.toJson<int>(playerId),
+      'playerName': serializer.toJson<String>(playerName),
+      'fromClubId': serializer.toJson<String>(fromClubId),
+      'toClubId': serializer.toJson<String>(toClubId),
+      'fee': serializer.toJson<int>(fee),
+      'type': serializer
+          .toJson<String>($TransferHistoryTable.$convertertype.toJson(type)),
+    };
+  }
+
+  TransferHistoryRow copyWith(
+          {int? id,
+          DateTime? date,
+          int? playerId,
+          String? playerName,
+          String? fromClubId,
+          String? toClubId,
+          int? fee,
+          TransferType? type}) =>
+      TransferHistoryRow(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        playerId: playerId ?? this.playerId,
+        playerName: playerName ?? this.playerName,
+        fromClubId: fromClubId ?? this.fromClubId,
+        toClubId: toClubId ?? this.toClubId,
+        fee: fee ?? this.fee,
+        type: type ?? this.type,
+      );
+  TransferHistoryRow copyWithCompanion(TransferHistoryCompanion data) {
+    return TransferHistoryRow(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      playerName:
+          data.playerName.present ? data.playerName.value : this.playerName,
+      fromClubId:
+          data.fromClubId.present ? data.fromClubId.value : this.fromClubId,
+      toClubId: data.toClubId.present ? data.toClubId.value : this.toClubId,
+      fee: data.fee.present ? data.fee.value : this.fee,
+      type: data.type.present ? data.type.value : this.type,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransferHistoryRow(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('playerId: $playerId, ')
+          ..write('playerName: $playerName, ')
+          ..write('fromClubId: $fromClubId, ')
+          ..write('toClubId: $toClubId, ')
+          ..write('fee: $fee, ')
+          ..write('type: $type')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, date, playerId, playerName, fromClubId, toClubId, fee, type);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TransferHistoryRow &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.playerId == this.playerId &&
+          other.playerName == this.playerName &&
+          other.fromClubId == this.fromClubId &&
+          other.toClubId == this.toClubId &&
+          other.fee == this.fee &&
+          other.type == this.type);
+}
+
+class TransferHistoryCompanion extends UpdateCompanion<TransferHistoryRow> {
+  final Value<int> id;
+  final Value<DateTime> date;
+  final Value<int> playerId;
+  final Value<String> playerName;
+  final Value<String> fromClubId;
+  final Value<String> toClubId;
+  final Value<int> fee;
+  final Value<TransferType> type;
+  const TransferHistoryCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.playerName = const Value.absent(),
+    this.fromClubId = const Value.absent(),
+    this.toClubId = const Value.absent(),
+    this.fee = const Value.absent(),
+    this.type = const Value.absent(),
+  });
+  TransferHistoryCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime date,
+    required int playerId,
+    required String playerName,
+    required String fromClubId,
+    required String toClubId,
+    required int fee,
+    required TransferType type,
+  })  : date = Value(date),
+        playerId = Value(playerId),
+        playerName = Value(playerName),
+        fromClubId = Value(fromClubId),
+        toClubId = Value(toClubId),
+        fee = Value(fee),
+        type = Value(type);
+  static Insertable<TransferHistoryRow> custom({
+    Expression<int>? id,
+    Expression<DateTime>? date,
+    Expression<int>? playerId,
+    Expression<String>? playerName,
+    Expression<String>? fromClubId,
+    Expression<String>? toClubId,
+    Expression<int>? fee,
+    Expression<String>? type,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (playerId != null) 'player_id': playerId,
+      if (playerName != null) 'player_name': playerName,
+      if (fromClubId != null) 'from_club_id': fromClubId,
+      if (toClubId != null) 'to_club_id': toClubId,
+      if (fee != null) 'fee': fee,
+      if (type != null) 'type': type,
+    });
+  }
+
+  TransferHistoryCompanion copyWith(
+      {Value<int>? id,
+      Value<DateTime>? date,
+      Value<int>? playerId,
+      Value<String>? playerName,
+      Value<String>? fromClubId,
+      Value<String>? toClubId,
+      Value<int>? fee,
+      Value<TransferType>? type}) {
+    return TransferHistoryCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      playerId: playerId ?? this.playerId,
+      playerName: playerName ?? this.playerName,
+      fromClubId: fromClubId ?? this.fromClubId,
+      toClubId: toClubId ?? this.toClubId,
+      fee: fee ?? this.fee,
+      type: type ?? this.type,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (playerName.present) {
+      map['player_name'] = Variable<String>(playerName.value);
+    }
+    if (fromClubId.present) {
+      map['from_club_id'] = Variable<String>(fromClubId.value);
+    }
+    if (toClubId.present) {
+      map['to_club_id'] = Variable<String>(toClubId.value);
+    }
+    if (fee.present) {
+      map['fee'] = Variable<int>(fee.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+          $TransferHistoryTable.$convertertype.toSql(type.value));
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransferHistoryCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('playerId: $playerId, ')
+          ..write('playerName: $playerName, ')
+          ..write('fromClubId: $fromClubId, ')
+          ..write('toClubId: $toClubId, ')
+          ..write('fee: $fee, ')
+          ..write('type: $type')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ShortlistTable extends Shortlist
+    with TableInfo<$ShortlistTable, ShortlistRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShortlistTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _addedDateMeta =
+      const VerificationMeta('addedDate');
+  @override
+  late final GeneratedColumn<DateTime> addedDate = GeneratedColumn<DateTime>(
+      'added_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [playerId, addedDate];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shortlist';
+  @override
+  VerificationContext validateIntegrity(Insertable<ShortlistRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    }
+    if (data.containsKey('added_date')) {
+      context.handle(_addedDateMeta,
+          addedDate.isAcceptableOrUnknown(data['added_date']!, _addedDateMeta));
+    } else if (isInserting) {
+      context.missing(_addedDateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId};
+  @override
+  ShortlistRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShortlistRow(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      addedDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}added_date'])!,
+    );
+  }
+
+  @override
+  $ShortlistTable createAlias(String alias) {
+    return $ShortlistTable(attachedDatabase, alias);
+  }
+}
+
+class ShortlistRow extends DataClass implements Insertable<ShortlistRow> {
+  final int playerId;
+  final DateTime addedDate;
+  const ShortlistRow({required this.playerId, required this.addedDate});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['added_date'] = Variable<DateTime>(addedDate);
+    return map;
+  }
+
+  ShortlistCompanion toCompanion(bool nullToAbsent) {
+    return ShortlistCompanion(
+      playerId: Value(playerId),
+      addedDate: Value(addedDate),
+    );
+  }
+
+  factory ShortlistRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShortlistRow(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      addedDate: serializer.fromJson<DateTime>(json['addedDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'addedDate': serializer.toJson<DateTime>(addedDate),
+    };
+  }
+
+  ShortlistRow copyWith({int? playerId, DateTime? addedDate}) => ShortlistRow(
+        playerId: playerId ?? this.playerId,
+        addedDate: addedDate ?? this.addedDate,
+      );
+  ShortlistRow copyWithCompanion(ShortlistCompanion data) {
+    return ShortlistRow(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      addedDate: data.addedDate.present ? data.addedDate.value : this.addedDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortlistRow(')
+          ..write('playerId: $playerId, ')
+          ..write('addedDate: $addedDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, addedDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShortlistRow &&
+          other.playerId == this.playerId &&
+          other.addedDate == this.addedDate);
+}
+
+class ShortlistCompanion extends UpdateCompanion<ShortlistRow> {
+  final Value<int> playerId;
+  final Value<DateTime> addedDate;
+  const ShortlistCompanion({
+    this.playerId = const Value.absent(),
+    this.addedDate = const Value.absent(),
+  });
+  ShortlistCompanion.insert({
+    this.playerId = const Value.absent(),
+    required DateTime addedDate,
+  }) : addedDate = Value(addedDate);
+  static Insertable<ShortlistRow> custom({
+    Expression<int>? playerId,
+    Expression<DateTime>? addedDate,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (addedDate != null) 'added_date': addedDate,
+    });
+  }
+
+  ShortlistCompanion copyWith(
+      {Value<int>? playerId, Value<DateTime>? addedDate}) {
+    return ShortlistCompanion(
+      playerId: playerId ?? this.playerId,
+      addedDate: addedDate ?? this.addedDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (addedDate.present) {
+      map['added_date'] = Variable<DateTime>(addedDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortlistCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('addedDate: $addedDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5252,36 +5725,43 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GameStatesTable gameStates = $GameStatesTable(this);
   late final $FixturesTable fixtures = $FixturesTable(this);
   late final $InboxMessagesTable inboxMessages = $InboxMessagesTable(this);
+  late final $ClubTacticsTable clubTactics = $ClubTacticsTable(this);
+  late final $TransferOffersTable transferOffers = $TransferOffersTable(this);
+  late final $TransferHistoryTable transferHistory =
+      $TransferHistoryTable(this);
+  late final $ShortlistTable shortlist = $ShortlistTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    nations,
-    leagues,
-    clubs,
-    players,
-    contracts,
-    gameStates,
-    fixtures,
-    inboxMessages,
-  ];
+        nations,
+        leagues,
+        clubs,
+        players,
+        contracts,
+        gameStates,
+        fixtures,
+        inboxMessages,
+        clubTactics,
+        transferOffers,
+        transferHistory,
+        shortlist
+      ];
 }
 
-typedef $$NationsTableCreateCompanionBuilder =
-    NationsCompanion Function({
-      required String id,
-      required String name,
-      required String code,
-      Value<int> rowid,
-    });
-typedef $$NationsTableUpdateCompanionBuilder =
-    NationsCompanion Function({
-      Value<String> id,
-      Value<String> name,
-      Value<String> code,
-      Value<int> rowid,
-    });
+typedef $$NationsTableCreateCompanionBuilder = NationsCompanion Function({
+  required String id,
+  required String name,
+  required String code,
+  Value<int> rowid,
+});
+typedef $$NationsTableUpdateCompanionBuilder = NationsCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> code,
+  Value<int> rowid,
+});
 
 class $$NationsTableFilterComposer
     extends Composer<_$AppDatabase, $NationsTable> {
@@ -5293,19 +5773,13 @@ class $$NationsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.name, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get code => $composableBuilder(
-    column: $table.code,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.code, builder: (column) => ColumnFilters(column));
 }
 
 class $$NationsTableOrderingComposer
@@ -5318,19 +5792,13 @@ class $$NationsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.name, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get code => $composableBuilder(
-    column: $table.code,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.code, builder: (column) => ColumnOrderings(column));
 }
 
 class $$NationsTableAnnotationComposer
@@ -5352,109 +5820,93 @@ class $$NationsTableAnnotationComposer
       $composableBuilder(column: $table.code, builder: (column) => column);
 }
 
-class $$NationsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $NationsTable,
-          NationRow,
-          $$NationsTableFilterComposer,
-          $$NationsTableOrderingComposer,
-          $$NationsTableAnnotationComposer,
-          $$NationsTableCreateCompanionBuilder,
-          $$NationsTableUpdateCompanionBuilder,
-          (NationRow, BaseReferences<_$AppDatabase, $NationsTable, NationRow>),
-          NationRow,
-          PrefetchHooks Function()
-        > {
+class $$NationsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NationsTable,
+    NationRow,
+    $$NationsTableFilterComposer,
+    $$NationsTableOrderingComposer,
+    $$NationsTableAnnotationComposer,
+    $$NationsTableCreateCompanionBuilder,
+    $$NationsTableUpdateCompanionBuilder,
+    (NationRow, BaseReferences<_$AppDatabase, $NationsTable, NationRow>),
+    NationRow,
+    PrefetchHooks Function()> {
   $$NationsTableTableManager(_$AppDatabase db, $NationsTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$NationsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$NationsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$NationsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> code = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => NationsCompanion(
-                id: id,
-                name: name,
-                code: code,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String name,
-                required String code,
-                Value<int> rowid = const Value.absent(),
-              }) => NationsCompanion.insert(
-                id: id,
-                name: name,
-                code: code,
-                rowid: rowid,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$NationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> code = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NationsCompanion(
+            id: id,
+            name: name,
+            code: code,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String code,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NationsCompanion.insert(
+            id: id,
+            name: name,
+            code: code,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$NationsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $NationsTable,
-      NationRow,
-      $$NationsTableFilterComposer,
-      $$NationsTableOrderingComposer,
-      $$NationsTableAnnotationComposer,
-      $$NationsTableCreateCompanionBuilder,
-      $$NationsTableUpdateCompanionBuilder,
-      (NationRow, BaseReferences<_$AppDatabase, $NationsTable, NationRow>),
-      NationRow,
-      PrefetchHooks Function()
-    >;
-typedef $$LeaguesTableCreateCompanionBuilder =
-    LeaguesCompanion Function({
-      required String id,
-      required String nationId,
-      required String name,
-      required int tier,
-      required int jumlahTim,
-      required int slotPromosi,
-      required int slotDegradasi,
-      Value<int> slotPlayoff,
-      Value<int> rowid,
-    });
-typedef $$LeaguesTableUpdateCompanionBuilder =
-    LeaguesCompanion Function({
-      Value<String> id,
-      Value<String> nationId,
-      Value<String> name,
-      Value<int> tier,
-      Value<int> jumlahTim,
-      Value<int> slotPromosi,
-      Value<int> slotDegradasi,
-      Value<int> slotPlayoff,
-      Value<int> rowid,
-    });
+typedef $$NationsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $NationsTable,
+    NationRow,
+    $$NationsTableFilterComposer,
+    $$NationsTableOrderingComposer,
+    $$NationsTableAnnotationComposer,
+    $$NationsTableCreateCompanionBuilder,
+    $$NationsTableUpdateCompanionBuilder,
+    (NationRow, BaseReferences<_$AppDatabase, $NationsTable, NationRow>),
+    NationRow,
+    PrefetchHooks Function()>;
+typedef $$LeaguesTableCreateCompanionBuilder = LeaguesCompanion Function({
+  required String id,
+  required String nationId,
+  required String name,
+  required int tier,
+  required int jumlahTim,
+  required int slotPromosi,
+  required int slotDegradasi,
+  Value<int> slotPlayoff,
+  Value<int> rowid,
+});
+typedef $$LeaguesTableUpdateCompanionBuilder = LeaguesCompanion Function({
+  Value<String> id,
+  Value<String> nationId,
+  Value<String> name,
+  Value<int> tier,
+  Value<int> jumlahTim,
+  Value<int> slotPromosi,
+  Value<int> slotDegradasi,
+  Value<int> slotPlayoff,
+  Value<int> rowid,
+});
 
 class $$LeaguesTableFilterComposer
     extends Composer<_$AppDatabase, $LeaguesTable> {
@@ -5466,44 +5918,28 @@ class $$LeaguesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get nationId => $composableBuilder(
-    column: $table.nationId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.nationId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.name, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get tier => $composableBuilder(
-    column: $table.tier,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.tier, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get jumlahTim => $composableBuilder(
-    column: $table.jumlahTim,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.jumlahTim, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get slotPromosi => $composableBuilder(
-    column: $table.slotPromosi,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.slotPromosi, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get slotDegradasi => $composableBuilder(
-    column: $table.slotDegradasi,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.slotDegradasi, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get slotPlayoff => $composableBuilder(
-    column: $table.slotPlayoff,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.slotPlayoff, builder: (column) => ColumnFilters(column));
 }
 
 class $$LeaguesTableOrderingComposer
@@ -5516,44 +5952,29 @@ class $$LeaguesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get nationId => $composableBuilder(
-    column: $table.nationId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.nationId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.name, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get tier => $composableBuilder(
-    column: $table.tier,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.tier, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get jumlahTim => $composableBuilder(
-    column: $table.jumlahTim,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.jumlahTim, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get slotPromosi => $composableBuilder(
-    column: $table.slotPromosi,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.slotPromosi, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get slotDegradasi => $composableBuilder(
-    column: $table.slotDegradasi,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.slotDegradasi,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get slotPlayoff => $composableBuilder(
-    column: $table.slotPlayoff,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.slotPlayoff, builder: (column) => ColumnOrderings(column));
 }
 
 class $$LeaguesTableAnnotationComposer
@@ -5581,152 +6002,130 @@ class $$LeaguesTableAnnotationComposer
       $composableBuilder(column: $table.jumlahTim, builder: (column) => column);
 
   GeneratedColumn<int> get slotPromosi => $composableBuilder(
-    column: $table.slotPromosi,
-    builder: (column) => column,
-  );
+      column: $table.slotPromosi, builder: (column) => column);
 
   GeneratedColumn<int> get slotDegradasi => $composableBuilder(
-    column: $table.slotDegradasi,
-    builder: (column) => column,
-  );
+      column: $table.slotDegradasi, builder: (column) => column);
 
   GeneratedColumn<int> get slotPlayoff => $composableBuilder(
-    column: $table.slotPlayoff,
-    builder: (column) => column,
-  );
+      column: $table.slotPlayoff, builder: (column) => column);
 }
 
-class $$LeaguesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $LeaguesTable,
-          LeagueRow,
-          $$LeaguesTableFilterComposer,
-          $$LeaguesTableOrderingComposer,
-          $$LeaguesTableAnnotationComposer,
-          $$LeaguesTableCreateCompanionBuilder,
-          $$LeaguesTableUpdateCompanionBuilder,
-          (LeagueRow, BaseReferences<_$AppDatabase, $LeaguesTable, LeagueRow>),
-          LeagueRow,
-          PrefetchHooks Function()
-        > {
+class $$LeaguesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $LeaguesTable,
+    LeagueRow,
+    $$LeaguesTableFilterComposer,
+    $$LeaguesTableOrderingComposer,
+    $$LeaguesTableAnnotationComposer,
+    $$LeaguesTableCreateCompanionBuilder,
+    $$LeaguesTableUpdateCompanionBuilder,
+    (LeagueRow, BaseReferences<_$AppDatabase, $LeaguesTable, LeagueRow>),
+    LeagueRow,
+    PrefetchHooks Function()> {
   $$LeaguesTableTableManager(_$AppDatabase db, $LeaguesTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$LeaguesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$LeaguesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$LeaguesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> nationId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<int> tier = const Value.absent(),
-                Value<int> jumlahTim = const Value.absent(),
-                Value<int> slotPromosi = const Value.absent(),
-                Value<int> slotDegradasi = const Value.absent(),
-                Value<int> slotPlayoff = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => LeaguesCompanion(
-                id: id,
-                nationId: nationId,
-                name: name,
-                tier: tier,
-                jumlahTim: jumlahTim,
-                slotPromosi: slotPromosi,
-                slotDegradasi: slotDegradasi,
-                slotPlayoff: slotPlayoff,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String nationId,
-                required String name,
-                required int tier,
-                required int jumlahTim,
-                required int slotPromosi,
-                required int slotDegradasi,
-                Value<int> slotPlayoff = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => LeaguesCompanion.insert(
-                id: id,
-                nationId: nationId,
-                name: name,
-                tier: tier,
-                jumlahTim: jumlahTim,
-                slotPromosi: slotPromosi,
-                slotDegradasi: slotDegradasi,
-                slotPlayoff: slotPlayoff,
-                rowid: rowid,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$LeaguesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LeaguesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LeaguesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> nationId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> tier = const Value.absent(),
+            Value<int> jumlahTim = const Value.absent(),
+            Value<int> slotPromosi = const Value.absent(),
+            Value<int> slotDegradasi = const Value.absent(),
+            Value<int> slotPlayoff = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LeaguesCompanion(
+            id: id,
+            nationId: nationId,
+            name: name,
+            tier: tier,
+            jumlahTim: jumlahTim,
+            slotPromosi: slotPromosi,
+            slotDegradasi: slotDegradasi,
+            slotPlayoff: slotPlayoff,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String nationId,
+            required String name,
+            required int tier,
+            required int jumlahTim,
+            required int slotPromosi,
+            required int slotDegradasi,
+            Value<int> slotPlayoff = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LeaguesCompanion.insert(
+            id: id,
+            nationId: nationId,
+            name: name,
+            tier: tier,
+            jumlahTim: jumlahTim,
+            slotPromosi: slotPromosi,
+            slotDegradasi: slotDegradasi,
+            slotPlayoff: slotPlayoff,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$LeaguesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $LeaguesTable,
-      LeagueRow,
-      $$LeaguesTableFilterComposer,
-      $$LeaguesTableOrderingComposer,
-      $$LeaguesTableAnnotationComposer,
-      $$LeaguesTableCreateCompanionBuilder,
-      $$LeaguesTableUpdateCompanionBuilder,
-      (LeagueRow, BaseReferences<_$AppDatabase, $LeaguesTable, LeagueRow>),
-      LeagueRow,
-      PrefetchHooks Function()
-    >;
-typedef $$ClubsTableCreateCompanionBuilder =
-    ClubsCompanion Function({
-      required String id,
-      required String leagueId,
-      required String name,
-      required String shortName,
-      required String primaryColor,
-      required String secondaryColor,
-      required int reputation,
-      required String stadiumName,
-      required int capacity,
-      required int balance,
-      required int transferBudget,
-      required int wageBudget,
-      Value<int> rowid,
-    });
-typedef $$ClubsTableUpdateCompanionBuilder =
-    ClubsCompanion Function({
-      Value<String> id,
-      Value<String> leagueId,
-      Value<String> name,
-      Value<String> shortName,
-      Value<String> primaryColor,
-      Value<String> secondaryColor,
-      Value<int> reputation,
-      Value<String> stadiumName,
-      Value<int> capacity,
-      Value<int> balance,
-      Value<int> transferBudget,
-      Value<int> wageBudget,
-      Value<int> rowid,
-    });
+typedef $$LeaguesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $LeaguesTable,
+    LeagueRow,
+    $$LeaguesTableFilterComposer,
+    $$LeaguesTableOrderingComposer,
+    $$LeaguesTableAnnotationComposer,
+    $$LeaguesTableCreateCompanionBuilder,
+    $$LeaguesTableUpdateCompanionBuilder,
+    (LeagueRow, BaseReferences<_$AppDatabase, $LeaguesTable, LeagueRow>),
+    LeagueRow,
+    PrefetchHooks Function()>;
+typedef $$ClubsTableCreateCompanionBuilder = ClubsCompanion Function({
+  required String id,
+  required String leagueId,
+  required String name,
+  required String shortName,
+  required String primaryColor,
+  required String secondaryColor,
+  required int reputation,
+  required String stadiumName,
+  required int capacity,
+  required int balance,
+  required int transferBudget,
+  required int wageBudget,
+  Value<int> rowid,
+});
+typedef $$ClubsTableUpdateCompanionBuilder = ClubsCompanion Function({
+  Value<String> id,
+  Value<String> leagueId,
+  Value<String> name,
+  Value<String> shortName,
+  Value<String> primaryColor,
+  Value<String> secondaryColor,
+  Value<int> reputation,
+  Value<String> stadiumName,
+  Value<int> capacity,
+  Value<int> balance,
+  Value<int> transferBudget,
+  Value<int> wageBudget,
+  Value<int> rowid,
+});
 
 class $$ClubsTableFilterComposer extends Composer<_$AppDatabase, $ClubsTable> {
   $$ClubsTableFilterComposer({
@@ -5737,64 +6136,42 @@ class $$ClubsTableFilterComposer extends Composer<_$AppDatabase, $ClubsTable> {
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get leagueId => $composableBuilder(
-    column: $table.leagueId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.leagueId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.name, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get shortName => $composableBuilder(
-    column: $table.shortName,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.shortName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get primaryColor => $composableBuilder(
-    column: $table.primaryColor,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.primaryColor, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get secondaryColor => $composableBuilder(
-    column: $table.secondaryColor,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.secondaryColor,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get reputation => $composableBuilder(
-    column: $table.reputation,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.reputation, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get stadiumName => $composableBuilder(
-    column: $table.stadiumName,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.stadiumName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get capacity => $composableBuilder(
-    column: $table.capacity,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.capacity, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get balance => $composableBuilder(
-    column: $table.balance,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.balance, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get transferBudget => $composableBuilder(
-    column: $table.transferBudget,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.transferBudget,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get wageBudget => $composableBuilder(
-    column: $table.wageBudget,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.wageBudget, builder: (column) => ColumnFilters(column));
 }
 
 class $$ClubsTableOrderingComposer
@@ -5807,64 +6184,43 @@ class $$ClubsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get leagueId => $composableBuilder(
-    column: $table.leagueId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.leagueId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.name, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get shortName => $composableBuilder(
-    column: $table.shortName,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.shortName, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get primaryColor => $composableBuilder(
-    column: $table.primaryColor,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.primaryColor,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get secondaryColor => $composableBuilder(
-    column: $table.secondaryColor,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.secondaryColor,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get reputation => $composableBuilder(
-    column: $table.reputation,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.reputation, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get stadiumName => $composableBuilder(
-    column: $table.stadiumName,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.stadiumName, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get capacity => $composableBuilder(
-    column: $table.capacity,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.capacity, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get balance => $composableBuilder(
-    column: $table.balance,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.balance, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get transferBudget => $composableBuilder(
-    column: $table.transferBudget,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.transferBudget,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get wageBudget => $composableBuilder(
-    column: $table.wageBudget,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.wageBudget, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ClubsTableAnnotationComposer
@@ -5889,24 +6245,16 @@ class $$ClubsTableAnnotationComposer
       $composableBuilder(column: $table.shortName, builder: (column) => column);
 
   GeneratedColumn<String> get primaryColor => $composableBuilder(
-    column: $table.primaryColor,
-    builder: (column) => column,
-  );
+      column: $table.primaryColor, builder: (column) => column);
 
   GeneratedColumn<String> get secondaryColor => $composableBuilder(
-    column: $table.secondaryColor,
-    builder: (column) => column,
-  );
+      column: $table.secondaryColor, builder: (column) => column);
 
   GeneratedColumn<int> get reputation => $composableBuilder(
-    column: $table.reputation,
-    builder: (column) => column,
-  );
+      column: $table.reputation, builder: (column) => column);
 
   GeneratedColumn<String> get stadiumName => $composableBuilder(
-    column: $table.stadiumName,
-    builder: (column) => column,
-  );
+      column: $table.stadiumName, builder: (column) => column);
 
   GeneratedColumn<int> get capacity =>
       $composableBuilder(column: $table.capacity, builder: (column) => column);
@@ -5915,207 +6263,189 @@ class $$ClubsTableAnnotationComposer
       $composableBuilder(column: $table.balance, builder: (column) => column);
 
   GeneratedColumn<int> get transferBudget => $composableBuilder(
-    column: $table.transferBudget,
-    builder: (column) => column,
-  );
+      column: $table.transferBudget, builder: (column) => column);
 
   GeneratedColumn<int> get wageBudget => $composableBuilder(
-    column: $table.wageBudget,
-    builder: (column) => column,
-  );
+      column: $table.wageBudget, builder: (column) => column);
 }
 
-class $$ClubsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $ClubsTable,
-          ClubRow,
-          $$ClubsTableFilterComposer,
-          $$ClubsTableOrderingComposer,
-          $$ClubsTableAnnotationComposer,
-          $$ClubsTableCreateCompanionBuilder,
-          $$ClubsTableUpdateCompanionBuilder,
-          (ClubRow, BaseReferences<_$AppDatabase, $ClubsTable, ClubRow>),
-          ClubRow,
-          PrefetchHooks Function()
-        > {
+class $$ClubsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ClubsTable,
+    ClubRow,
+    $$ClubsTableFilterComposer,
+    $$ClubsTableOrderingComposer,
+    $$ClubsTableAnnotationComposer,
+    $$ClubsTableCreateCompanionBuilder,
+    $$ClubsTableUpdateCompanionBuilder,
+    (ClubRow, BaseReferences<_$AppDatabase, $ClubsTable, ClubRow>),
+    ClubRow,
+    PrefetchHooks Function()> {
   $$ClubsTableTableManager(_$AppDatabase db, $ClubsTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$ClubsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$ClubsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$ClubsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> leagueId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> shortName = const Value.absent(),
-                Value<String> primaryColor = const Value.absent(),
-                Value<String> secondaryColor = const Value.absent(),
-                Value<int> reputation = const Value.absent(),
-                Value<String> stadiumName = const Value.absent(),
-                Value<int> capacity = const Value.absent(),
-                Value<int> balance = const Value.absent(),
-                Value<int> transferBudget = const Value.absent(),
-                Value<int> wageBudget = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ClubsCompanion(
-                id: id,
-                leagueId: leagueId,
-                name: name,
-                shortName: shortName,
-                primaryColor: primaryColor,
-                secondaryColor: secondaryColor,
-                reputation: reputation,
-                stadiumName: stadiumName,
-                capacity: capacity,
-                balance: balance,
-                transferBudget: transferBudget,
-                wageBudget: wageBudget,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String leagueId,
-                required String name,
-                required String shortName,
-                required String primaryColor,
-                required String secondaryColor,
-                required int reputation,
-                required String stadiumName,
-                required int capacity,
-                required int balance,
-                required int transferBudget,
-                required int wageBudget,
-                Value<int> rowid = const Value.absent(),
-              }) => ClubsCompanion.insert(
-                id: id,
-                leagueId: leagueId,
-                name: name,
-                shortName: shortName,
-                primaryColor: primaryColor,
-                secondaryColor: secondaryColor,
-                reputation: reputation,
-                stadiumName: stadiumName,
-                capacity: capacity,
-                balance: balance,
-                transferBudget: transferBudget,
-                wageBudget: wageBudget,
-                rowid: rowid,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$ClubsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ClubsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ClubsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> leagueId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> shortName = const Value.absent(),
+            Value<String> primaryColor = const Value.absent(),
+            Value<String> secondaryColor = const Value.absent(),
+            Value<int> reputation = const Value.absent(),
+            Value<String> stadiumName = const Value.absent(),
+            Value<int> capacity = const Value.absent(),
+            Value<int> balance = const Value.absent(),
+            Value<int> transferBudget = const Value.absent(),
+            Value<int> wageBudget = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ClubsCompanion(
+            id: id,
+            leagueId: leagueId,
+            name: name,
+            shortName: shortName,
+            primaryColor: primaryColor,
+            secondaryColor: secondaryColor,
+            reputation: reputation,
+            stadiumName: stadiumName,
+            capacity: capacity,
+            balance: balance,
+            transferBudget: transferBudget,
+            wageBudget: wageBudget,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String leagueId,
+            required String name,
+            required String shortName,
+            required String primaryColor,
+            required String secondaryColor,
+            required int reputation,
+            required String stadiumName,
+            required int capacity,
+            required int balance,
+            required int transferBudget,
+            required int wageBudget,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ClubsCompanion.insert(
+            id: id,
+            leagueId: leagueId,
+            name: name,
+            shortName: shortName,
+            primaryColor: primaryColor,
+            secondaryColor: secondaryColor,
+            reputation: reputation,
+            stadiumName: stadiumName,
+            capacity: capacity,
+            balance: balance,
+            transferBudget: transferBudget,
+            wageBudget: wageBudget,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$ClubsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $ClubsTable,
-      ClubRow,
-      $$ClubsTableFilterComposer,
-      $$ClubsTableOrderingComposer,
-      $$ClubsTableAnnotationComposer,
-      $$ClubsTableCreateCompanionBuilder,
-      $$ClubsTableUpdateCompanionBuilder,
-      (ClubRow, BaseReferences<_$AppDatabase, $ClubsTable, ClubRow>),
-      ClubRow,
-      PrefetchHooks Function()
-    >;
-typedef $$PlayersTableCreateCompanionBuilder =
-    PlayersCompanion Function({
-      Value<int> id,
-      required String clubId,
-      required String firstName,
-      required String lastName,
-      required int age,
-      required String nationality,
-      required Position position,
-      required int finishing,
-      required int passing,
-      required int dribbling,
-      required int firstTouch,
-      required int crossing,
-      required int tackling,
-      required int heading,
-      required int technique,
-      required int decisions,
-      required int positioning,
-      required int vision,
-      required int composure,
-      required int workRate,
-      required int aggression,
-      required int pace,
-      required int acceleration,
-      required int stamina,
-      required int strength,
-      required int agility,
-      required int handling,
-      required int reflexes,
-      required int oneOnOnes,
-      required int aerialReach,
-      required int potentialAbility,
-      required int currentAbility,
-      required int condition,
-      required int morale,
-      required int marketValue,
-    });
-typedef $$PlayersTableUpdateCompanionBuilder =
-    PlayersCompanion Function({
-      Value<int> id,
-      Value<String> clubId,
-      Value<String> firstName,
-      Value<String> lastName,
-      Value<int> age,
-      Value<String> nationality,
-      Value<Position> position,
-      Value<int> finishing,
-      Value<int> passing,
-      Value<int> dribbling,
-      Value<int> firstTouch,
-      Value<int> crossing,
-      Value<int> tackling,
-      Value<int> heading,
-      Value<int> technique,
-      Value<int> decisions,
-      Value<int> positioning,
-      Value<int> vision,
-      Value<int> composure,
-      Value<int> workRate,
-      Value<int> aggression,
-      Value<int> pace,
-      Value<int> acceleration,
-      Value<int> stamina,
-      Value<int> strength,
-      Value<int> agility,
-      Value<int> handling,
-      Value<int> reflexes,
-      Value<int> oneOnOnes,
-      Value<int> aerialReach,
-      Value<int> potentialAbility,
-      Value<int> currentAbility,
-      Value<int> condition,
-      Value<int> morale,
-      Value<int> marketValue,
-    });
+typedef $$ClubsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ClubsTable,
+    ClubRow,
+    $$ClubsTableFilterComposer,
+    $$ClubsTableOrderingComposer,
+    $$ClubsTableAnnotationComposer,
+    $$ClubsTableCreateCompanionBuilder,
+    $$ClubsTableUpdateCompanionBuilder,
+    (ClubRow, BaseReferences<_$AppDatabase, $ClubsTable, ClubRow>),
+    ClubRow,
+    PrefetchHooks Function()>;
+typedef $$PlayersTableCreateCompanionBuilder = PlayersCompanion Function({
+  Value<int> id,
+  required String clubId,
+  required String firstName,
+  required String lastName,
+  required int age,
+  required String nationality,
+  required Position position,
+  required int finishing,
+  required int passing,
+  required int dribbling,
+  required int firstTouch,
+  required int crossing,
+  required int tackling,
+  required int heading,
+  required int technique,
+  required int decisions,
+  required int positioning,
+  required int vision,
+  required int composure,
+  required int workRate,
+  required int aggression,
+  required int pace,
+  required int acceleration,
+  required int stamina,
+  required int strength,
+  required int agility,
+  required int handling,
+  required int reflexes,
+  required int oneOnOnes,
+  required int aerialReach,
+  required int potentialAbility,
+  required int currentAbility,
+  required int condition,
+  required int morale,
+  required int marketValue,
+  Value<bool> isTransferListed,
+});
+typedef $$PlayersTableUpdateCompanionBuilder = PlayersCompanion Function({
+  Value<int> id,
+  Value<String> clubId,
+  Value<String> firstName,
+  Value<String> lastName,
+  Value<int> age,
+  Value<String> nationality,
+  Value<Position> position,
+  Value<int> finishing,
+  Value<int> passing,
+  Value<int> dribbling,
+  Value<int> firstTouch,
+  Value<int> crossing,
+  Value<int> tackling,
+  Value<int> heading,
+  Value<int> technique,
+  Value<int> decisions,
+  Value<int> positioning,
+  Value<int> vision,
+  Value<int> composure,
+  Value<int> workRate,
+  Value<int> aggression,
+  Value<int> pace,
+  Value<int> acceleration,
+  Value<int> stamina,
+  Value<int> strength,
+  Value<int> agility,
+  Value<int> handling,
+  Value<int> reflexes,
+  Value<int> oneOnOnes,
+  Value<int> aerialReach,
+  Value<int> potentialAbility,
+  Value<int> currentAbility,
+  Value<int> condition,
+  Value<int> morale,
+  Value<int> marketValue,
+  Value<bool> isTransferListed,
+});
 
 class $$PlayersTableFilterComposer
     extends Composer<_$AppDatabase, $PlayersTable> {
@@ -6127,180 +6457,117 @@ class $$PlayersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get clubId => $composableBuilder(
-    column: $table.clubId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.clubId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get firstName => $composableBuilder(
-    column: $table.firstName,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.firstName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get lastName => $composableBuilder(
-    column: $table.lastName,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.lastName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get age => $composableBuilder(
-    column: $table.age,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.age, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get nationality => $composableBuilder(
-    column: $table.nationality,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.nationality, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<Position, Position, String> get position =>
       $composableBuilder(
-        column: $table.position,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+          column: $table.position,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<int> get finishing => $composableBuilder(
-    column: $table.finishing,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.finishing, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get passing => $composableBuilder(
-    column: $table.passing,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.passing, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get dribbling => $composableBuilder(
-    column: $table.dribbling,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.dribbling, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get firstTouch => $composableBuilder(
-    column: $table.firstTouch,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.firstTouch, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get crossing => $composableBuilder(
-    column: $table.crossing,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.crossing, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get tackling => $composableBuilder(
-    column: $table.tackling,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.tackling, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get heading => $composableBuilder(
-    column: $table.heading,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.heading, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get technique => $composableBuilder(
-    column: $table.technique,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.technique, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get decisions => $composableBuilder(
-    column: $table.decisions,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.decisions, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get positioning => $composableBuilder(
-    column: $table.positioning,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.positioning, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get vision => $composableBuilder(
-    column: $table.vision,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.vision, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get composure => $composableBuilder(
-    column: $table.composure,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.composure, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get workRate => $composableBuilder(
-    column: $table.workRate,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.workRate, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get aggression => $composableBuilder(
-    column: $table.aggression,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.aggression, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get pace => $composableBuilder(
-    column: $table.pace,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.pace, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get acceleration => $composableBuilder(
-    column: $table.acceleration,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.acceleration, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get stamina => $composableBuilder(
-    column: $table.stamina,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.stamina, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get strength => $composableBuilder(
-    column: $table.strength,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.strength, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get agility => $composableBuilder(
-    column: $table.agility,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.agility, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get handling => $composableBuilder(
-    column: $table.handling,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.handling, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get reflexes => $composableBuilder(
-    column: $table.reflexes,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.reflexes, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get oneOnOnes => $composableBuilder(
-    column: $table.oneOnOnes,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.oneOnOnes, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get aerialReach => $composableBuilder(
-    column: $table.aerialReach,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.aerialReach, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get potentialAbility => $composableBuilder(
-    column: $table.potentialAbility,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.potentialAbility,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get currentAbility => $composableBuilder(
-    column: $table.currentAbility,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.currentAbility,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get condition => $composableBuilder(
-    column: $table.condition,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.condition, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get morale => $composableBuilder(
-    column: $table.morale,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.morale, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get marketValue => $composableBuilder(
-    column: $table.marketValue,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.marketValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isTransferListed => $composableBuilder(
+      column: $table.isTransferListed,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$PlayersTableOrderingComposer
@@ -6313,179 +6580,116 @@ class $$PlayersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get clubId => $composableBuilder(
-    column: $table.clubId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.clubId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get firstName => $composableBuilder(
-    column: $table.firstName,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.firstName, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get lastName => $composableBuilder(
-    column: $table.lastName,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.lastName, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get age => $composableBuilder(
-    column: $table.age,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.age, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get nationality => $composableBuilder(
-    column: $table.nationality,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.nationality, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.position, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get finishing => $composableBuilder(
-    column: $table.finishing,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.finishing, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get passing => $composableBuilder(
-    column: $table.passing,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.passing, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get dribbling => $composableBuilder(
-    column: $table.dribbling,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.dribbling, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get firstTouch => $composableBuilder(
-    column: $table.firstTouch,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.firstTouch, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get crossing => $composableBuilder(
-    column: $table.crossing,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.crossing, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get tackling => $composableBuilder(
-    column: $table.tackling,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.tackling, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get heading => $composableBuilder(
-    column: $table.heading,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.heading, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get technique => $composableBuilder(
-    column: $table.technique,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.technique, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get decisions => $composableBuilder(
-    column: $table.decisions,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.decisions, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get positioning => $composableBuilder(
-    column: $table.positioning,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.positioning, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get vision => $composableBuilder(
-    column: $table.vision,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.vision, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get composure => $composableBuilder(
-    column: $table.composure,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.composure, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get workRate => $composableBuilder(
-    column: $table.workRate,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.workRate, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get aggression => $composableBuilder(
-    column: $table.aggression,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.aggression, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get pace => $composableBuilder(
-    column: $table.pace,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.pace, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get acceleration => $composableBuilder(
-    column: $table.acceleration,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.acceleration,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get stamina => $composableBuilder(
-    column: $table.stamina,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.stamina, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get strength => $composableBuilder(
-    column: $table.strength,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.strength, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get agility => $composableBuilder(
-    column: $table.agility,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.agility, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get handling => $composableBuilder(
-    column: $table.handling,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.handling, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get reflexes => $composableBuilder(
-    column: $table.reflexes,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.reflexes, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get oneOnOnes => $composableBuilder(
-    column: $table.oneOnOnes,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.oneOnOnes, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get aerialReach => $composableBuilder(
-    column: $table.aerialReach,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.aerialReach, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get potentialAbility => $composableBuilder(
-    column: $table.potentialAbility,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.potentialAbility,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get currentAbility => $composableBuilder(
-    column: $table.currentAbility,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.currentAbility,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get condition => $composableBuilder(
-    column: $table.condition,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.condition, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get morale => $composableBuilder(
-    column: $table.morale,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.morale, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get marketValue => $composableBuilder(
-    column: $table.marketValue,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.marketValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isTransferListed => $composableBuilder(
+      column: $table.isTransferListed,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableAnnotationComposer
@@ -6513,9 +6717,7 @@ class $$PlayersTableAnnotationComposer
       $composableBuilder(column: $table.age, builder: (column) => column);
 
   GeneratedColumn<String> get nationality => $composableBuilder(
-    column: $table.nationality,
-    builder: (column) => column,
-  );
+      column: $table.nationality, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<Position, String> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
@@ -6530,9 +6732,7 @@ class $$PlayersTableAnnotationComposer
       $composableBuilder(column: $table.dribbling, builder: (column) => column);
 
   GeneratedColumn<int> get firstTouch => $composableBuilder(
-    column: $table.firstTouch,
-    builder: (column) => column,
-  );
+      column: $table.firstTouch, builder: (column) => column);
 
   GeneratedColumn<int> get crossing =>
       $composableBuilder(column: $table.crossing, builder: (column) => column);
@@ -6550,9 +6750,7 @@ class $$PlayersTableAnnotationComposer
       $composableBuilder(column: $table.decisions, builder: (column) => column);
 
   GeneratedColumn<int> get positioning => $composableBuilder(
-    column: $table.positioning,
-    builder: (column) => column,
-  );
+      column: $table.positioning, builder: (column) => column);
 
   GeneratedColumn<int> get vision =>
       $composableBuilder(column: $table.vision, builder: (column) => column);
@@ -6564,17 +6762,13 @@ class $$PlayersTableAnnotationComposer
       $composableBuilder(column: $table.workRate, builder: (column) => column);
 
   GeneratedColumn<int> get aggression => $composableBuilder(
-    column: $table.aggression,
-    builder: (column) => column,
-  );
+      column: $table.aggression, builder: (column) => column);
 
   GeneratedColumn<int> get pace =>
       $composableBuilder(column: $table.pace, builder: (column) => column);
 
   GeneratedColumn<int> get acceleration => $composableBuilder(
-    column: $table.acceleration,
-    builder: (column) => column,
-  );
+      column: $table.acceleration, builder: (column) => column);
 
   GeneratedColumn<int> get stamina =>
       $composableBuilder(column: $table.stamina, builder: (column) => column);
@@ -6595,19 +6789,13 @@ class $$PlayersTableAnnotationComposer
       $composableBuilder(column: $table.oneOnOnes, builder: (column) => column);
 
   GeneratedColumn<int> get aerialReach => $composableBuilder(
-    column: $table.aerialReach,
-    builder: (column) => column,
-  );
+      column: $table.aerialReach, builder: (column) => column);
 
   GeneratedColumn<int> get potentialAbility => $composableBuilder(
-    column: $table.potentialAbility,
-    builder: (column) => column,
-  );
+      column: $table.potentialAbility, builder: (column) => column);
 
   GeneratedColumn<int> get currentAbility => $composableBuilder(
-    column: $table.currentAbility,
-    builder: (column) => column,
-  );
+      column: $table.currentAbility, builder: (column) => column);
 
   GeneratedColumn<int> get condition =>
       $composableBuilder(column: $table.condition, builder: (column) => column);
@@ -6616,230 +6804,219 @@ class $$PlayersTableAnnotationComposer
       $composableBuilder(column: $table.morale, builder: (column) => column);
 
   GeneratedColumn<int> get marketValue => $composableBuilder(
-    column: $table.marketValue,
-    builder: (column) => column,
-  );
+      column: $table.marketValue, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTransferListed => $composableBuilder(
+      column: $table.isTransferListed, builder: (column) => column);
 }
 
-class $$PlayersTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $PlayersTable,
-          PlayerRow,
-          $$PlayersTableFilterComposer,
-          $$PlayersTableOrderingComposer,
-          $$PlayersTableAnnotationComposer,
-          $$PlayersTableCreateCompanionBuilder,
-          $$PlayersTableUpdateCompanionBuilder,
-          (PlayerRow, BaseReferences<_$AppDatabase, $PlayersTable, PlayerRow>),
-          PlayerRow,
-          PrefetchHooks Function()
-        > {
+class $$PlayersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayersTable,
+    PlayerRow,
+    $$PlayersTableFilterComposer,
+    $$PlayersTableOrderingComposer,
+    $$PlayersTableAnnotationComposer,
+    $$PlayersTableCreateCompanionBuilder,
+    $$PlayersTableUpdateCompanionBuilder,
+    (PlayerRow, BaseReferences<_$AppDatabase, $PlayersTable, PlayerRow>),
+    PlayerRow,
+    PrefetchHooks Function()> {
   $$PlayersTableTableManager(_$AppDatabase db, $PlayersTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$PlayersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$PlayersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$PlayersTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> clubId = const Value.absent(),
-                Value<String> firstName = const Value.absent(),
-                Value<String> lastName = const Value.absent(),
-                Value<int> age = const Value.absent(),
-                Value<String> nationality = const Value.absent(),
-                Value<Position> position = const Value.absent(),
-                Value<int> finishing = const Value.absent(),
-                Value<int> passing = const Value.absent(),
-                Value<int> dribbling = const Value.absent(),
-                Value<int> firstTouch = const Value.absent(),
-                Value<int> crossing = const Value.absent(),
-                Value<int> tackling = const Value.absent(),
-                Value<int> heading = const Value.absent(),
-                Value<int> technique = const Value.absent(),
-                Value<int> decisions = const Value.absent(),
-                Value<int> positioning = const Value.absent(),
-                Value<int> vision = const Value.absent(),
-                Value<int> composure = const Value.absent(),
-                Value<int> workRate = const Value.absent(),
-                Value<int> aggression = const Value.absent(),
-                Value<int> pace = const Value.absent(),
-                Value<int> acceleration = const Value.absent(),
-                Value<int> stamina = const Value.absent(),
-                Value<int> strength = const Value.absent(),
-                Value<int> agility = const Value.absent(),
-                Value<int> handling = const Value.absent(),
-                Value<int> reflexes = const Value.absent(),
-                Value<int> oneOnOnes = const Value.absent(),
-                Value<int> aerialReach = const Value.absent(),
-                Value<int> potentialAbility = const Value.absent(),
-                Value<int> currentAbility = const Value.absent(),
-                Value<int> condition = const Value.absent(),
-                Value<int> morale = const Value.absent(),
-                Value<int> marketValue = const Value.absent(),
-              }) => PlayersCompanion(
-                id: id,
-                clubId: clubId,
-                firstName: firstName,
-                lastName: lastName,
-                age: age,
-                nationality: nationality,
-                position: position,
-                finishing: finishing,
-                passing: passing,
-                dribbling: dribbling,
-                firstTouch: firstTouch,
-                crossing: crossing,
-                tackling: tackling,
-                heading: heading,
-                technique: technique,
-                decisions: decisions,
-                positioning: positioning,
-                vision: vision,
-                composure: composure,
-                workRate: workRate,
-                aggression: aggression,
-                pace: pace,
-                acceleration: acceleration,
-                stamina: stamina,
-                strength: strength,
-                agility: agility,
-                handling: handling,
-                reflexes: reflexes,
-                oneOnOnes: oneOnOnes,
-                aerialReach: aerialReach,
-                potentialAbility: potentialAbility,
-                currentAbility: currentAbility,
-                condition: condition,
-                morale: morale,
-                marketValue: marketValue,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String clubId,
-                required String firstName,
-                required String lastName,
-                required int age,
-                required String nationality,
-                required Position position,
-                required int finishing,
-                required int passing,
-                required int dribbling,
-                required int firstTouch,
-                required int crossing,
-                required int tackling,
-                required int heading,
-                required int technique,
-                required int decisions,
-                required int positioning,
-                required int vision,
-                required int composure,
-                required int workRate,
-                required int aggression,
-                required int pace,
-                required int acceleration,
-                required int stamina,
-                required int strength,
-                required int agility,
-                required int handling,
-                required int reflexes,
-                required int oneOnOnes,
-                required int aerialReach,
-                required int potentialAbility,
-                required int currentAbility,
-                required int condition,
-                required int morale,
-                required int marketValue,
-              }) => PlayersCompanion.insert(
-                id: id,
-                clubId: clubId,
-                firstName: firstName,
-                lastName: lastName,
-                age: age,
-                nationality: nationality,
-                position: position,
-                finishing: finishing,
-                passing: passing,
-                dribbling: dribbling,
-                firstTouch: firstTouch,
-                crossing: crossing,
-                tackling: tackling,
-                heading: heading,
-                technique: technique,
-                decisions: decisions,
-                positioning: positioning,
-                vision: vision,
-                composure: composure,
-                workRate: workRate,
-                aggression: aggression,
-                pace: pace,
-                acceleration: acceleration,
-                stamina: stamina,
-                strength: strength,
-                agility: agility,
-                handling: handling,
-                reflexes: reflexes,
-                oneOnOnes: oneOnOnes,
-                aerialReach: aerialReach,
-                potentialAbility: potentialAbility,
-                currentAbility: currentAbility,
-                condition: condition,
-                morale: morale,
-                marketValue: marketValue,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$PlayersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> clubId = const Value.absent(),
+            Value<String> firstName = const Value.absent(),
+            Value<String> lastName = const Value.absent(),
+            Value<int> age = const Value.absent(),
+            Value<String> nationality = const Value.absent(),
+            Value<Position> position = const Value.absent(),
+            Value<int> finishing = const Value.absent(),
+            Value<int> passing = const Value.absent(),
+            Value<int> dribbling = const Value.absent(),
+            Value<int> firstTouch = const Value.absent(),
+            Value<int> crossing = const Value.absent(),
+            Value<int> tackling = const Value.absent(),
+            Value<int> heading = const Value.absent(),
+            Value<int> technique = const Value.absent(),
+            Value<int> decisions = const Value.absent(),
+            Value<int> positioning = const Value.absent(),
+            Value<int> vision = const Value.absent(),
+            Value<int> composure = const Value.absent(),
+            Value<int> workRate = const Value.absent(),
+            Value<int> aggression = const Value.absent(),
+            Value<int> pace = const Value.absent(),
+            Value<int> acceleration = const Value.absent(),
+            Value<int> stamina = const Value.absent(),
+            Value<int> strength = const Value.absent(),
+            Value<int> agility = const Value.absent(),
+            Value<int> handling = const Value.absent(),
+            Value<int> reflexes = const Value.absent(),
+            Value<int> oneOnOnes = const Value.absent(),
+            Value<int> aerialReach = const Value.absent(),
+            Value<int> potentialAbility = const Value.absent(),
+            Value<int> currentAbility = const Value.absent(),
+            Value<int> condition = const Value.absent(),
+            Value<int> morale = const Value.absent(),
+            Value<int> marketValue = const Value.absent(),
+            Value<bool> isTransferListed = const Value.absent(),
+          }) =>
+              PlayersCompanion(
+            id: id,
+            clubId: clubId,
+            firstName: firstName,
+            lastName: lastName,
+            age: age,
+            nationality: nationality,
+            position: position,
+            finishing: finishing,
+            passing: passing,
+            dribbling: dribbling,
+            firstTouch: firstTouch,
+            crossing: crossing,
+            tackling: tackling,
+            heading: heading,
+            technique: technique,
+            decisions: decisions,
+            positioning: positioning,
+            vision: vision,
+            composure: composure,
+            workRate: workRate,
+            aggression: aggression,
+            pace: pace,
+            acceleration: acceleration,
+            stamina: stamina,
+            strength: strength,
+            agility: agility,
+            handling: handling,
+            reflexes: reflexes,
+            oneOnOnes: oneOnOnes,
+            aerialReach: aerialReach,
+            potentialAbility: potentialAbility,
+            currentAbility: currentAbility,
+            condition: condition,
+            morale: morale,
+            marketValue: marketValue,
+            isTransferListed: isTransferListed,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String clubId,
+            required String firstName,
+            required String lastName,
+            required int age,
+            required String nationality,
+            required Position position,
+            required int finishing,
+            required int passing,
+            required int dribbling,
+            required int firstTouch,
+            required int crossing,
+            required int tackling,
+            required int heading,
+            required int technique,
+            required int decisions,
+            required int positioning,
+            required int vision,
+            required int composure,
+            required int workRate,
+            required int aggression,
+            required int pace,
+            required int acceleration,
+            required int stamina,
+            required int strength,
+            required int agility,
+            required int handling,
+            required int reflexes,
+            required int oneOnOnes,
+            required int aerialReach,
+            required int potentialAbility,
+            required int currentAbility,
+            required int condition,
+            required int morale,
+            required int marketValue,
+            Value<bool> isTransferListed = const Value.absent(),
+          }) =>
+              PlayersCompanion.insert(
+            id: id,
+            clubId: clubId,
+            firstName: firstName,
+            lastName: lastName,
+            age: age,
+            nationality: nationality,
+            position: position,
+            finishing: finishing,
+            passing: passing,
+            dribbling: dribbling,
+            firstTouch: firstTouch,
+            crossing: crossing,
+            tackling: tackling,
+            heading: heading,
+            technique: technique,
+            decisions: decisions,
+            positioning: positioning,
+            vision: vision,
+            composure: composure,
+            workRate: workRate,
+            aggression: aggression,
+            pace: pace,
+            acceleration: acceleration,
+            stamina: stamina,
+            strength: strength,
+            agility: agility,
+            handling: handling,
+            reflexes: reflexes,
+            oneOnOnes: oneOnOnes,
+            aerialReach: aerialReach,
+            potentialAbility: potentialAbility,
+            currentAbility: currentAbility,
+            condition: condition,
+            morale: morale,
+            marketValue: marketValue,
+            isTransferListed: isTransferListed,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$PlayersTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $PlayersTable,
-      PlayerRow,
-      $$PlayersTableFilterComposer,
-      $$PlayersTableOrderingComposer,
-      $$PlayersTableAnnotationComposer,
-      $$PlayersTableCreateCompanionBuilder,
-      $$PlayersTableUpdateCompanionBuilder,
-      (PlayerRow, BaseReferences<_$AppDatabase, $PlayersTable, PlayerRow>),
-      PlayerRow,
-      PrefetchHooks Function()
-    >;
-typedef $$ContractsTableCreateCompanionBuilder =
-    ContractsCompanion Function({
-      Value<int> playerId,
-      required String clubId,
-      required int wage,
-      required DateTime endDate,
-      required SquadStatus squadStatus,
-    });
-typedef $$ContractsTableUpdateCompanionBuilder =
-    ContractsCompanion Function({
-      Value<int> playerId,
-      Value<String> clubId,
-      Value<int> wage,
-      Value<DateTime> endDate,
-      Value<SquadStatus> squadStatus,
-    });
+typedef $$PlayersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PlayersTable,
+    PlayerRow,
+    $$PlayersTableFilterComposer,
+    $$PlayersTableOrderingComposer,
+    $$PlayersTableAnnotationComposer,
+    $$PlayersTableCreateCompanionBuilder,
+    $$PlayersTableUpdateCompanionBuilder,
+    (PlayerRow, BaseReferences<_$AppDatabase, $PlayersTable, PlayerRow>),
+    PlayerRow,
+    PrefetchHooks Function()>;
+typedef $$ContractsTableCreateCompanionBuilder = ContractsCompanion Function({
+  Value<int> playerId,
+  required String clubId,
+  required int wage,
+  required DateTime endDate,
+  required SquadStatus squadStatus,
+});
+typedef $$ContractsTableUpdateCompanionBuilder = ContractsCompanion Function({
+  Value<int> playerId,
+  Value<String> clubId,
+  Value<int> wage,
+  Value<DateTime> endDate,
+  Value<SquadStatus> squadStatus,
+});
 
 class $$ContractsTableFilterComposer
     extends Composer<_$AppDatabase, $ContractsTable> {
@@ -6851,30 +7028,21 @@ class $$ContractsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get playerId => $composableBuilder(
-    column: $table.playerId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get clubId => $composableBuilder(
-    column: $table.clubId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.clubId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get wage => $composableBuilder(
-    column: $table.wage,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.wage, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get endDate => $composableBuilder(
-    column: $table.endDate,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.endDate, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<SquadStatus, SquadStatus, String>
-  get squadStatus => $composableBuilder(
-    column: $table.squadStatus,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+      get squadStatus => $composableBuilder(
+          column: $table.squadStatus,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 }
 
 class $$ContractsTableOrderingComposer
@@ -6887,29 +7055,19 @@ class $$ContractsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get playerId => $composableBuilder(
-    column: $table.playerId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get clubId => $composableBuilder(
-    column: $table.clubId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.clubId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get wage => $composableBuilder(
-    column: $table.wage,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.wage, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get endDate => $composableBuilder(
-    column: $table.endDate,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.endDate, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get squadStatus => $composableBuilder(
-    column: $table.squadStatus,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.squadStatus, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ContractsTableAnnotationComposer
@@ -6935,116 +7093,92 @@ class $$ContractsTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<SquadStatus, String> get squadStatus =>
       $composableBuilder(
-        column: $table.squadStatus,
-        builder: (column) => column,
-      );
+          column: $table.squadStatus, builder: (column) => column);
 }
 
-class $$ContractsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $ContractsTable,
-          ContractRow,
-          $$ContractsTableFilterComposer,
-          $$ContractsTableOrderingComposer,
-          $$ContractsTableAnnotationComposer,
-          $$ContractsTableCreateCompanionBuilder,
-          $$ContractsTableUpdateCompanionBuilder,
-          (
-            ContractRow,
-            BaseReferences<_$AppDatabase, $ContractsTable, ContractRow>,
-          ),
-          ContractRow,
-          PrefetchHooks Function()
-        > {
+class $$ContractsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ContractsTable,
+    ContractRow,
+    $$ContractsTableFilterComposer,
+    $$ContractsTableOrderingComposer,
+    $$ContractsTableAnnotationComposer,
+    $$ContractsTableCreateCompanionBuilder,
+    $$ContractsTableUpdateCompanionBuilder,
+    (ContractRow, BaseReferences<_$AppDatabase, $ContractsTable, ContractRow>),
+    ContractRow,
+    PrefetchHooks Function()> {
   $$ContractsTableTableManager(_$AppDatabase db, $ContractsTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$ContractsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$ContractsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$ContractsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> playerId = const Value.absent(),
-                Value<String> clubId = const Value.absent(),
-                Value<int> wage = const Value.absent(),
-                Value<DateTime> endDate = const Value.absent(),
-                Value<SquadStatus> squadStatus = const Value.absent(),
-              }) => ContractsCompanion(
-                playerId: playerId,
-                clubId: clubId,
-                wage: wage,
-                endDate: endDate,
-                squadStatus: squadStatus,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> playerId = const Value.absent(),
-                required String clubId,
-                required int wage,
-                required DateTime endDate,
-                required SquadStatus squadStatus,
-              }) => ContractsCompanion.insert(
-                playerId: playerId,
-                clubId: clubId,
-                wage: wage,
-                endDate: endDate,
-                squadStatus: squadStatus,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$ContractsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContractsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContractsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> clubId = const Value.absent(),
+            Value<int> wage = const Value.absent(),
+            Value<DateTime> endDate = const Value.absent(),
+            Value<SquadStatus> squadStatus = const Value.absent(),
+          }) =>
+              ContractsCompanion(
+            playerId: playerId,
+            clubId: clubId,
+            wage: wage,
+            endDate: endDate,
+            squadStatus: squadStatus,
+          ),
+          createCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            required String clubId,
+            required int wage,
+            required DateTime endDate,
+            required SquadStatus squadStatus,
+          }) =>
+              ContractsCompanion.insert(
+            playerId: playerId,
+            clubId: clubId,
+            wage: wage,
+            endDate: endDate,
+            squadStatus: squadStatus,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$ContractsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $ContractsTable,
-      ContractRow,
-      $$ContractsTableFilterComposer,
-      $$ContractsTableOrderingComposer,
-      $$ContractsTableAnnotationComposer,
-      $$ContractsTableCreateCompanionBuilder,
-      $$ContractsTableUpdateCompanionBuilder,
-      (
-        ContractRow,
-        BaseReferences<_$AppDatabase, $ContractsTable, ContractRow>,
-      ),
-      ContractRow,
-      PrefetchHooks Function()
-    >;
-typedef $$GameStatesTableCreateCompanionBuilder =
-    GameStatesCompanion Function({
-      Value<int> id,
-      required DateTime currentDate,
-      required String managerName,
-      Value<String?> clubId,
-      required int seed,
-    });
-typedef $$GameStatesTableUpdateCompanionBuilder =
-    GameStatesCompanion Function({
-      Value<int> id,
-      Value<DateTime> currentDate,
-      Value<String> managerName,
-      Value<String?> clubId,
-      Value<int> seed,
-    });
+typedef $$ContractsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ContractsTable,
+    ContractRow,
+    $$ContractsTableFilterComposer,
+    $$ContractsTableOrderingComposer,
+    $$ContractsTableAnnotationComposer,
+    $$ContractsTableCreateCompanionBuilder,
+    $$ContractsTableUpdateCompanionBuilder,
+    (ContractRow, BaseReferences<_$AppDatabase, $ContractsTable, ContractRow>),
+    ContractRow,
+    PrefetchHooks Function()>;
+typedef $$GameStatesTableCreateCompanionBuilder = GameStatesCompanion Function({
+  Value<int> id,
+  required DateTime currentDate,
+  required String managerName,
+  Value<String?> clubId,
+  required int seed,
+});
+typedef $$GameStatesTableUpdateCompanionBuilder = GameStatesCompanion Function({
+  Value<int> id,
+  Value<DateTime> currentDate,
+  Value<String> managerName,
+  Value<String?> clubId,
+  Value<int> seed,
+});
 
 class $$GameStatesTableFilterComposer
     extends Composer<_$AppDatabase, $GameStatesTable> {
@@ -7056,29 +7190,19 @@ class $$GameStatesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get currentDate => $composableBuilder(
-    column: $table.currentDate,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.currentDate, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get managerName => $composableBuilder(
-    column: $table.managerName,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.managerName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get clubId => $composableBuilder(
-    column: $table.clubId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.clubId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get seed => $composableBuilder(
-    column: $table.seed,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.seed, builder: (column) => ColumnFilters(column));
 }
 
 class $$GameStatesTableOrderingComposer
@@ -7091,29 +7215,19 @@ class $$GameStatesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get currentDate => $composableBuilder(
-    column: $table.currentDate,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.currentDate, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get managerName => $composableBuilder(
-    column: $table.managerName,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.managerName, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get clubId => $composableBuilder(
-    column: $table.clubId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.clubId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get seed => $composableBuilder(
-    column: $table.seed,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.seed, builder: (column) => ColumnOrderings(column));
 }
 
 class $$GameStatesTableAnnotationComposer
@@ -7129,14 +7243,10 @@ class $$GameStatesTableAnnotationComposer
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<DateTime> get currentDate => $composableBuilder(
-    column: $table.currentDate,
-    builder: (column) => column,
-  );
+      column: $table.currentDate, builder: (column) => column);
 
   GeneratedColumn<String> get managerName => $composableBuilder(
-    column: $table.managerName,
-    builder: (column) => column,
-  );
+      column: $table.managerName, builder: (column) => column);
 
   GeneratedColumn<String> get clubId =>
       $composableBuilder(column: $table.clubId, builder: (column) => column);
@@ -7145,117 +7255,101 @@ class $$GameStatesTableAnnotationComposer
       $composableBuilder(column: $table.seed, builder: (column) => column);
 }
 
-class $$GameStatesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $GameStatesTable,
-          GameStateRow,
-          $$GameStatesTableFilterComposer,
-          $$GameStatesTableOrderingComposer,
-          $$GameStatesTableAnnotationComposer,
-          $$GameStatesTableCreateCompanionBuilder,
-          $$GameStatesTableUpdateCompanionBuilder,
-          (
-            GameStateRow,
-            BaseReferences<_$AppDatabase, $GameStatesTable, GameStateRow>,
-          ),
-          GameStateRow,
-          PrefetchHooks Function()
-        > {
+class $$GameStatesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $GameStatesTable,
+    GameStateRow,
+    $$GameStatesTableFilterComposer,
+    $$GameStatesTableOrderingComposer,
+    $$GameStatesTableAnnotationComposer,
+    $$GameStatesTableCreateCompanionBuilder,
+    $$GameStatesTableUpdateCompanionBuilder,
+    (
+      GameStateRow,
+      BaseReferences<_$AppDatabase, $GameStatesTable, GameStateRow>
+    ),
+    GameStateRow,
+    PrefetchHooks Function()> {
   $$GameStatesTableTableManager(_$AppDatabase db, $GameStatesTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$GameStatesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$GameStatesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$GameStatesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<DateTime> currentDate = const Value.absent(),
-                Value<String> managerName = const Value.absent(),
-                Value<String?> clubId = const Value.absent(),
-                Value<int> seed = const Value.absent(),
-              }) => GameStatesCompanion(
-                id: id,
-                currentDate: currentDate,
-                managerName: managerName,
-                clubId: clubId,
-                seed: seed,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required DateTime currentDate,
-                required String managerName,
-                Value<String?> clubId = const Value.absent(),
-                required int seed,
-              }) => GameStatesCompanion.insert(
-                id: id,
-                currentDate: currentDate,
-                managerName: managerName,
-                clubId: clubId,
-                seed: seed,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$GameStatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GameStatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GameStatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<DateTime> currentDate = const Value.absent(),
+            Value<String> managerName = const Value.absent(),
+            Value<String?> clubId = const Value.absent(),
+            Value<int> seed = const Value.absent(),
+          }) =>
+              GameStatesCompanion(
+            id: id,
+            currentDate: currentDate,
+            managerName: managerName,
+            clubId: clubId,
+            seed: seed,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required DateTime currentDate,
+            required String managerName,
+            Value<String?> clubId = const Value.absent(),
+            required int seed,
+          }) =>
+              GameStatesCompanion.insert(
+            id: id,
+            currentDate: currentDate,
+            managerName: managerName,
+            clubId: clubId,
+            seed: seed,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$GameStatesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $GameStatesTable,
+typedef $$GameStatesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $GameStatesTable,
+    GameStateRow,
+    $$GameStatesTableFilterComposer,
+    $$GameStatesTableOrderingComposer,
+    $$GameStatesTableAnnotationComposer,
+    $$GameStatesTableCreateCompanionBuilder,
+    $$GameStatesTableUpdateCompanionBuilder,
+    (
       GameStateRow,
-      $$GameStatesTableFilterComposer,
-      $$GameStatesTableOrderingComposer,
-      $$GameStatesTableAnnotationComposer,
-      $$GameStatesTableCreateCompanionBuilder,
-      $$GameStatesTableUpdateCompanionBuilder,
-      (
-        GameStateRow,
-        BaseReferences<_$AppDatabase, $GameStatesTable, GameStateRow>,
-      ),
-      GameStateRow,
-      PrefetchHooks Function()
-    >;
-typedef $$FixturesTableCreateCompanionBuilder =
-    FixturesCompanion Function({
-      Value<int> id,
-      required String leagueId,
-      required int round,
-      required DateTime date,
-      required String homeClubId,
-      required String awayClubId,
-      Value<int?> homeGoals,
-      Value<int?> awayGoals,
-    });
-typedef $$FixturesTableUpdateCompanionBuilder =
-    FixturesCompanion Function({
-      Value<int> id,
-      Value<String> leagueId,
-      Value<int> round,
-      Value<DateTime> date,
-      Value<String> homeClubId,
-      Value<String> awayClubId,
-      Value<int?> homeGoals,
-      Value<int?> awayGoals,
-    });
+      BaseReferences<_$AppDatabase, $GameStatesTable, GameStateRow>
+    ),
+    GameStateRow,
+    PrefetchHooks Function()>;
+typedef $$FixturesTableCreateCompanionBuilder = FixturesCompanion Function({
+  Value<int> id,
+  required String leagueId,
+  required int round,
+  required DateTime date,
+  required String homeClubId,
+  required String awayClubId,
+  Value<int?> homeGoals,
+  Value<int?> awayGoals,
+});
+typedef $$FixturesTableUpdateCompanionBuilder = FixturesCompanion Function({
+  Value<int> id,
+  Value<String> leagueId,
+  Value<int> round,
+  Value<DateTime> date,
+  Value<String> homeClubId,
+  Value<String> awayClubId,
+  Value<int?> homeGoals,
+  Value<int?> awayGoals,
+});
 
 class $$FixturesTableFilterComposer
     extends Composer<_$AppDatabase, $FixturesTable> {
@@ -7267,44 +7361,28 @@ class $$FixturesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get leagueId => $composableBuilder(
-    column: $table.leagueId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.leagueId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get round => $composableBuilder(
-    column: $table.round,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.round, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.date, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get homeClubId => $composableBuilder(
-    column: $table.homeClubId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.homeClubId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get awayClubId => $composableBuilder(
-    column: $table.awayClubId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.awayClubId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get homeGoals => $composableBuilder(
-    column: $table.homeGoals,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.homeGoals, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get awayGoals => $composableBuilder(
-    column: $table.awayGoals,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.awayGoals, builder: (column) => ColumnFilters(column));
 }
 
 class $$FixturesTableOrderingComposer
@@ -7317,44 +7395,28 @@ class $$FixturesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get leagueId => $composableBuilder(
-    column: $table.leagueId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.leagueId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get round => $composableBuilder(
-    column: $table.round,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.round, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.date, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get homeClubId => $composableBuilder(
-    column: $table.homeClubId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.homeClubId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get awayClubId => $composableBuilder(
-    column: $table.awayClubId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.awayClubId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get homeGoals => $composableBuilder(
-    column: $table.homeGoals,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.homeGoals, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get awayGoals => $composableBuilder(
-    column: $table.awayGoals,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.awayGoals, builder: (column) => ColumnOrderings(column));
 }
 
 class $$FixturesTableAnnotationComposer
@@ -7379,14 +7441,10 @@ class $$FixturesTableAnnotationComposer
       $composableBuilder(column: $table.date, builder: (column) => column);
 
   GeneratedColumn<String> get homeClubId => $composableBuilder(
-    column: $table.homeClubId,
-    builder: (column) => column,
-  );
+      column: $table.homeClubId, builder: (column) => column);
 
   GeneratedColumn<String> get awayClubId => $composableBuilder(
-    column: $table.awayClubId,
-    builder: (column) => column,
-  );
+      column: $table.awayClubId, builder: (column) => column);
 
   GeneratedColumn<int> get homeGoals =>
       $composableBuilder(column: $table.homeGoals, builder: (column) => column);
@@ -7395,130 +7453,113 @@ class $$FixturesTableAnnotationComposer
       $composableBuilder(column: $table.awayGoals, builder: (column) => column);
 }
 
-class $$FixturesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $FixturesTable,
-          FixtureRow,
-          $$FixturesTableFilterComposer,
-          $$FixturesTableOrderingComposer,
-          $$FixturesTableAnnotationComposer,
-          $$FixturesTableCreateCompanionBuilder,
-          $$FixturesTableUpdateCompanionBuilder,
-          (
-            FixtureRow,
-            BaseReferences<_$AppDatabase, $FixturesTable, FixtureRow>,
-          ),
-          FixtureRow,
-          PrefetchHooks Function()
-        > {
+class $$FixturesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $FixturesTable,
+    FixtureRow,
+    $$FixturesTableFilterComposer,
+    $$FixturesTableOrderingComposer,
+    $$FixturesTableAnnotationComposer,
+    $$FixturesTableCreateCompanionBuilder,
+    $$FixturesTableUpdateCompanionBuilder,
+    (FixtureRow, BaseReferences<_$AppDatabase, $FixturesTable, FixtureRow>),
+    FixtureRow,
+    PrefetchHooks Function()> {
   $$FixturesTableTableManager(_$AppDatabase db, $FixturesTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$FixturesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$FixturesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$FixturesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> leagueId = const Value.absent(),
-                Value<int> round = const Value.absent(),
-                Value<DateTime> date = const Value.absent(),
-                Value<String> homeClubId = const Value.absent(),
-                Value<String> awayClubId = const Value.absent(),
-                Value<int?> homeGoals = const Value.absent(),
-                Value<int?> awayGoals = const Value.absent(),
-              }) => FixturesCompanion(
-                id: id,
-                leagueId: leagueId,
-                round: round,
-                date: date,
-                homeClubId: homeClubId,
-                awayClubId: awayClubId,
-                homeGoals: homeGoals,
-                awayGoals: awayGoals,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String leagueId,
-                required int round,
-                required DateTime date,
-                required String homeClubId,
-                required String awayClubId,
-                Value<int?> homeGoals = const Value.absent(),
-                Value<int?> awayGoals = const Value.absent(),
-              }) => FixturesCompanion.insert(
-                id: id,
-                leagueId: leagueId,
-                round: round,
-                date: date,
-                homeClubId: homeClubId,
-                awayClubId: awayClubId,
-                homeGoals: homeGoals,
-                awayGoals: awayGoals,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$FixturesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FixturesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FixturesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> leagueId = const Value.absent(),
+            Value<int> round = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<String> homeClubId = const Value.absent(),
+            Value<String> awayClubId = const Value.absent(),
+            Value<int?> homeGoals = const Value.absent(),
+            Value<int?> awayGoals = const Value.absent(),
+          }) =>
+              FixturesCompanion(
+            id: id,
+            leagueId: leagueId,
+            round: round,
+            date: date,
+            homeClubId: homeClubId,
+            awayClubId: awayClubId,
+            homeGoals: homeGoals,
+            awayGoals: awayGoals,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String leagueId,
+            required int round,
+            required DateTime date,
+            required String homeClubId,
+            required String awayClubId,
+            Value<int?> homeGoals = const Value.absent(),
+            Value<int?> awayGoals = const Value.absent(),
+          }) =>
+              FixturesCompanion.insert(
+            id: id,
+            leagueId: leagueId,
+            round: round,
+            date: date,
+            homeClubId: homeClubId,
+            awayClubId: awayClubId,
+            homeGoals: homeGoals,
+            awayGoals: awayGoals,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$FixturesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $FixturesTable,
-      FixtureRow,
-      $$FixturesTableFilterComposer,
-      $$FixturesTableOrderingComposer,
-      $$FixturesTableAnnotationComposer,
-      $$FixturesTableCreateCompanionBuilder,
-      $$FixturesTableUpdateCompanionBuilder,
-      (FixtureRow, BaseReferences<_$AppDatabase, $FixturesTable, FixtureRow>),
-      FixtureRow,
-      PrefetchHooks Function()
-    >;
-typedef $$InboxMessagesTableCreateCompanionBuilder =
-    InboxMessagesCompanion Function({
-      Value<int> id,
-      required DateTime date,
-      required InboxCategory category,
-      required String title,
-      required String body,
-      Value<bool> isRead,
-      required InboxActionType actionType,
-      Value<String?> payload,
-      Value<bool> resolved,
-      Value<String?> choice,
-    });
-typedef $$InboxMessagesTableUpdateCompanionBuilder =
-    InboxMessagesCompanion Function({
-      Value<int> id,
-      Value<DateTime> date,
-      Value<InboxCategory> category,
-      Value<String> title,
-      Value<String> body,
-      Value<bool> isRead,
-      Value<InboxActionType> actionType,
-      Value<String?> payload,
-      Value<bool> resolved,
-      Value<String?> choice,
-    });
+typedef $$FixturesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $FixturesTable,
+    FixtureRow,
+    $$FixturesTableFilterComposer,
+    $$FixturesTableOrderingComposer,
+    $$FixturesTableAnnotationComposer,
+    $$FixturesTableCreateCompanionBuilder,
+    $$FixturesTableUpdateCompanionBuilder,
+    (FixtureRow, BaseReferences<_$AppDatabase, $FixturesTable, FixtureRow>),
+    FixtureRow,
+    PrefetchHooks Function()>;
+typedef $$InboxMessagesTableCreateCompanionBuilder = InboxMessagesCompanion
+    Function({
+  Value<int> id,
+  required DateTime date,
+  required InboxCategory category,
+  required String title,
+  required String body,
+  Value<bool> isRead,
+  required InboxActionType actionType,
+  Value<String?> payload,
+  Value<bool> resolved,
+  Value<String?> choice,
+});
+typedef $$InboxMessagesTableUpdateCompanionBuilder = InboxMessagesCompanion
+    Function({
+  Value<int> id,
+  Value<DateTime> date,
+  Value<InboxCategory> category,
+  Value<String> title,
+  Value<String> body,
+  Value<bool> isRead,
+  Value<InboxActionType> actionType,
+  Value<String?> payload,
+  Value<bool> resolved,
+  Value<String?> choice,
+});
 
 class $$InboxMessagesTableFilterComposer
     extends Composer<_$AppDatabase, $InboxMessagesTable> {
@@ -7530,56 +7571,38 @@ class $$InboxMessagesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.date, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<InboxCategory, InboxCategory, String>
-  get category => $composableBuilder(
-    column: $table.category,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+      get category => $composableBuilder(
+          column: $table.category,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.title, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get body => $composableBuilder(
-    column: $table.body,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.body, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isRead => $composableBuilder(
-    column: $table.isRead,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.isRead, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<InboxActionType, InboxActionType, String>
-  get actionType => $composableBuilder(
-    column: $table.actionType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+      get actionType => $composableBuilder(
+          column: $table.actionType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.payload, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get resolved => $composableBuilder(
-    column: $table.resolved,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.resolved, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get choice => $composableBuilder(
-    column: $table.choice,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.choice, builder: (column) => ColumnFilters(column));
 }
 
 class $$InboxMessagesTableOrderingComposer
@@ -7592,54 +7615,34 @@ class $$InboxMessagesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.date, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get category => $composableBuilder(
-    column: $table.category,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.category, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.title, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get body => $composableBuilder(
-    column: $table.body,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.body, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get isRead => $composableBuilder(
-    column: $table.isRead,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.isRead, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get actionType => $composableBuilder(
-    column: $table.actionType,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.actionType, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.payload, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get resolved => $composableBuilder(
-    column: $table.resolved,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.resolved, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get choice => $composableBuilder(
-    column: $table.choice,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.choice, builder: (column) => ColumnOrderings(column));
 }
 
 class $$InboxMessagesTableAnnotationComposer
@@ -7671,9 +7674,7 @@ class $$InboxMessagesTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<InboxActionType, String> get actionType =>
       $composableBuilder(
-        column: $table.actionType,
-        builder: (column) => column,
-      );
+          column: $table.actionType, builder: (column) => column);
 
   GeneratedColumn<String> get payload =>
       $composableBuilder(column: $table.payload, builder: (column) => column);
@@ -7685,116 +7686,824 @@ class $$InboxMessagesTableAnnotationComposer
       $composableBuilder(column: $table.choice, builder: (column) => column);
 }
 
-class $$InboxMessagesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $InboxMessagesTable,
-          InboxRow,
-          $$InboxMessagesTableFilterComposer,
-          $$InboxMessagesTableOrderingComposer,
-          $$InboxMessagesTableAnnotationComposer,
-          $$InboxMessagesTableCreateCompanionBuilder,
-          $$InboxMessagesTableUpdateCompanionBuilder,
-          (
-            InboxRow,
-            BaseReferences<_$AppDatabase, $InboxMessagesTable, InboxRow>,
-          ),
-          InboxRow,
-          PrefetchHooks Function()
-        > {
+class $$InboxMessagesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $InboxMessagesTable,
+    InboxRow,
+    $$InboxMessagesTableFilterComposer,
+    $$InboxMessagesTableOrderingComposer,
+    $$InboxMessagesTableAnnotationComposer,
+    $$InboxMessagesTableCreateCompanionBuilder,
+    $$InboxMessagesTableUpdateCompanionBuilder,
+    (InboxRow, BaseReferences<_$AppDatabase, $InboxMessagesTable, InboxRow>),
+    InboxRow,
+    PrefetchHooks Function()> {
   $$InboxMessagesTableTableManager(_$AppDatabase db, $InboxMessagesTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$InboxMessagesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () =>
-                  $$InboxMessagesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$InboxMessagesTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<DateTime> date = const Value.absent(),
-                Value<InboxCategory> category = const Value.absent(),
-                Value<String> title = const Value.absent(),
-                Value<String> body = const Value.absent(),
-                Value<bool> isRead = const Value.absent(),
-                Value<InboxActionType> actionType = const Value.absent(),
-                Value<String?> payload = const Value.absent(),
-                Value<bool> resolved = const Value.absent(),
-                Value<String?> choice = const Value.absent(),
-              }) => InboxMessagesCompanion(
-                id: id,
-                date: date,
-                category: category,
-                title: title,
-                body: body,
-                isRead: isRead,
-                actionType: actionType,
-                payload: payload,
-                resolved: resolved,
-                choice: choice,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required DateTime date,
-                required InboxCategory category,
-                required String title,
-                required String body,
-                Value<bool> isRead = const Value.absent(),
-                required InboxActionType actionType,
-                Value<String?> payload = const Value.absent(),
-                Value<bool> resolved = const Value.absent(),
-                Value<String?> choice = const Value.absent(),
-              }) => InboxMessagesCompanion.insert(
-                id: id,
-                date: date,
-                category: category,
-                title: title,
-                body: body,
-                isRead: isRead,
-                actionType: actionType,
-                payload: payload,
-                resolved: resolved,
-                choice: choice,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          createFilteringComposer: () =>
+              $$InboxMessagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InboxMessagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InboxMessagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<InboxCategory> category = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> body = const Value.absent(),
+            Value<bool> isRead = const Value.absent(),
+            Value<InboxActionType> actionType = const Value.absent(),
+            Value<String?> payload = const Value.absent(),
+            Value<bool> resolved = const Value.absent(),
+            Value<String?> choice = const Value.absent(),
+          }) =>
+              InboxMessagesCompanion(
+            id: id,
+            date: date,
+            category: category,
+            title: title,
+            body: body,
+            isRead: isRead,
+            actionType: actionType,
+            payload: payload,
+            resolved: resolved,
+            choice: choice,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required DateTime date,
+            required InboxCategory category,
+            required String title,
+            required String body,
+            Value<bool> isRead = const Value.absent(),
+            required InboxActionType actionType,
+            Value<String?> payload = const Value.absent(),
+            Value<bool> resolved = const Value.absent(),
+            Value<String?> choice = const Value.absent(),
+          }) =>
+              InboxMessagesCompanion.insert(
+            id: id,
+            date: date,
+            category: category,
+            title: title,
+            body: body,
+            isRead: isRead,
+            actionType: actionType,
+            payload: payload,
+            resolved: resolved,
+            choice: choice,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$InboxMessagesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $InboxMessagesTable,
-      InboxRow,
-      $$InboxMessagesTableFilterComposer,
-      $$InboxMessagesTableOrderingComposer,
-      $$InboxMessagesTableAnnotationComposer,
-      $$InboxMessagesTableCreateCompanionBuilder,
-      $$InboxMessagesTableUpdateCompanionBuilder,
-      (InboxRow, BaseReferences<_$AppDatabase, $InboxMessagesTable, InboxRow>),
-      InboxRow,
-      PrefetchHooks Function()
-    >;
+typedef $$InboxMessagesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $InboxMessagesTable,
+    InboxRow,
+    $$InboxMessagesTableFilterComposer,
+    $$InboxMessagesTableOrderingComposer,
+    $$InboxMessagesTableAnnotationComposer,
+    $$InboxMessagesTableCreateCompanionBuilder,
+    $$InboxMessagesTableUpdateCompanionBuilder,
+    (InboxRow, BaseReferences<_$AppDatabase, $InboxMessagesTable, InboxRow>),
+    InboxRow,
+    PrefetchHooks Function()>;
+typedef $$ClubTacticsTableCreateCompanionBuilder = ClubTacticsCompanion
+    Function({
+  required String clubId,
+  required Formation formation,
+  required Mentality mentality,
+  Value<String> starterIds,
+  Value<String> subIds,
+  Value<int> rowid,
+});
+typedef $$ClubTacticsTableUpdateCompanionBuilder = ClubTacticsCompanion
+    Function({
+  Value<String> clubId,
+  Value<Formation> formation,
+  Value<Mentality> mentality,
+  Value<String> starterIds,
+  Value<String> subIds,
+  Value<int> rowid,
+});
+
+class $$ClubTacticsTableFilterComposer
+    extends Composer<_$AppDatabase, $ClubTacticsTable> {
+  $$ClubTacticsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get clubId => $composableBuilder(
+      column: $table.clubId, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<Formation, Formation, String> get formation =>
+      $composableBuilder(
+          column: $table.formation,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<Mentality, Mentality, String> get mentality =>
+      $composableBuilder(
+          column: $table.mentality,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<String> get starterIds => $composableBuilder(
+      column: $table.starterIds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subIds => $composableBuilder(
+      column: $table.subIds, builder: (column) => ColumnFilters(column));
+}
+
+class $$ClubTacticsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ClubTacticsTable> {
+  $$ClubTacticsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get clubId => $composableBuilder(
+      column: $table.clubId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get formation => $composableBuilder(
+      column: $table.formation, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get mentality => $composableBuilder(
+      column: $table.mentality, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get starterIds => $composableBuilder(
+      column: $table.starterIds, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subIds => $composableBuilder(
+      column: $table.subIds, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ClubTacticsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ClubTacticsTable> {
+  $$ClubTacticsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get clubId =>
+      $composableBuilder(column: $table.clubId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Formation, String> get formation =>
+      $composableBuilder(column: $table.formation, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Mentality, String> get mentality =>
+      $composableBuilder(column: $table.mentality, builder: (column) => column);
+
+  GeneratedColumn<String> get starterIds => $composableBuilder(
+      column: $table.starterIds, builder: (column) => column);
+
+  GeneratedColumn<String> get subIds =>
+      $composableBuilder(column: $table.subIds, builder: (column) => column);
+}
+
+class $$ClubTacticsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ClubTacticsTable,
+    ClubTacticRow,
+    $$ClubTacticsTableFilterComposer,
+    $$ClubTacticsTableOrderingComposer,
+    $$ClubTacticsTableAnnotationComposer,
+    $$ClubTacticsTableCreateCompanionBuilder,
+    $$ClubTacticsTableUpdateCompanionBuilder,
+    (
+      ClubTacticRow,
+      BaseReferences<_$AppDatabase, $ClubTacticsTable, ClubTacticRow>
+    ),
+    ClubTacticRow,
+    PrefetchHooks Function()> {
+  $$ClubTacticsTableTableManager(_$AppDatabase db, $ClubTacticsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ClubTacticsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ClubTacticsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ClubTacticsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> clubId = const Value.absent(),
+            Value<Formation> formation = const Value.absent(),
+            Value<Mentality> mentality = const Value.absent(),
+            Value<String> starterIds = const Value.absent(),
+            Value<String> subIds = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ClubTacticsCompanion(
+            clubId: clubId,
+            formation: formation,
+            mentality: mentality,
+            starterIds: starterIds,
+            subIds: subIds,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String clubId,
+            required Formation formation,
+            required Mentality mentality,
+            Value<String> starterIds = const Value.absent(),
+            Value<String> subIds = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ClubTacticsCompanion.insert(
+            clubId: clubId,
+            formation: formation,
+            mentality: mentality,
+            starterIds: starterIds,
+            subIds: subIds,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ClubTacticsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ClubTacticsTable,
+    ClubTacticRow,
+    $$ClubTacticsTableFilterComposer,
+    $$ClubTacticsTableOrderingComposer,
+    $$ClubTacticsTableAnnotationComposer,
+    $$ClubTacticsTableCreateCompanionBuilder,
+    $$ClubTacticsTableUpdateCompanionBuilder,
+    (
+      ClubTacticRow,
+      BaseReferences<_$AppDatabase, $ClubTacticsTable, ClubTacticRow>
+    ),
+    ClubTacticRow,
+    PrefetchHooks Function()>;
+typedef $$TransferOffersTableCreateCompanionBuilder = TransferOffersCompanion
+    Function({
+  Value<int> id,
+  required int playerId,
+  required String fromClubId,
+  required String toClubId,
+  required int fee,
+  required TransferOfferStatus status,
+  required DateTime createdDate,
+  Value<DateTime?> responseDate,
+});
+typedef $$TransferOffersTableUpdateCompanionBuilder = TransferOffersCompanion
+    Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> fromClubId,
+  Value<String> toClubId,
+  Value<int> fee,
+  Value<TransferOfferStatus> status,
+  Value<DateTime> createdDate,
+  Value<DateTime?> responseDate,
+});
+
+class $$TransferOffersTableFilterComposer
+    extends Composer<_$AppDatabase, $TransferOffersTable> {
+  $$TransferOffersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fromClubId => $composableBuilder(
+      column: $table.fromClubId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toClubId => $composableBuilder(
+      column: $table.toClubId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get fee => $composableBuilder(
+      column: $table.fee, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<TransferOfferStatus, TransferOfferStatus,
+          String>
+      get status => $composableBuilder(
+          column: $table.status,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<DateTime> get createdDate => $composableBuilder(
+      column: $table.createdDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get responseDate => $composableBuilder(
+      column: $table.responseDate, builder: (column) => ColumnFilters(column));
+}
+
+class $$TransferOffersTableOrderingComposer
+    extends Composer<_$AppDatabase, $TransferOffersTable> {
+  $$TransferOffersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fromClubId => $composableBuilder(
+      column: $table.fromClubId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get toClubId => $composableBuilder(
+      column: $table.toClubId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get fee => $composableBuilder(
+      column: $table.fee, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdDate => $composableBuilder(
+      column: $table.createdDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get responseDate => $composableBuilder(
+      column: $table.responseDate,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$TransferOffersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TransferOffersTable> {
+  $$TransferOffersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get fromClubId => $composableBuilder(
+      column: $table.fromClubId, builder: (column) => column);
+
+  GeneratedColumn<String> get toClubId =>
+      $composableBuilder(column: $table.toClubId, builder: (column) => column);
+
+  GeneratedColumn<int> get fee =>
+      $composableBuilder(column: $table.fee, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<TransferOfferStatus, String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdDate => $composableBuilder(
+      column: $table.createdDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get responseDate => $composableBuilder(
+      column: $table.responseDate, builder: (column) => column);
+}
+
+class $$TransferOffersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TransferOffersTable,
+    TransferOfferRow,
+    $$TransferOffersTableFilterComposer,
+    $$TransferOffersTableOrderingComposer,
+    $$TransferOffersTableAnnotationComposer,
+    $$TransferOffersTableCreateCompanionBuilder,
+    $$TransferOffersTableUpdateCompanionBuilder,
+    (
+      TransferOfferRow,
+      BaseReferences<_$AppDatabase, $TransferOffersTable, TransferOfferRow>
+    ),
+    TransferOfferRow,
+    PrefetchHooks Function()> {
+  $$TransferOffersTableTableManager(
+      _$AppDatabase db, $TransferOffersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransferOffersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransferOffersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TransferOffersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> fromClubId = const Value.absent(),
+            Value<String> toClubId = const Value.absent(),
+            Value<int> fee = const Value.absent(),
+            Value<TransferOfferStatus> status = const Value.absent(),
+            Value<DateTime> createdDate = const Value.absent(),
+            Value<DateTime?> responseDate = const Value.absent(),
+          }) =>
+              TransferOffersCompanion(
+            id: id,
+            playerId: playerId,
+            fromClubId: fromClubId,
+            toClubId: toClubId,
+            fee: fee,
+            status: status,
+            createdDate: createdDate,
+            responseDate: responseDate,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String fromClubId,
+            required String toClubId,
+            required int fee,
+            required TransferOfferStatus status,
+            required DateTime createdDate,
+            Value<DateTime?> responseDate = const Value.absent(),
+          }) =>
+              TransferOffersCompanion.insert(
+            id: id,
+            playerId: playerId,
+            fromClubId: fromClubId,
+            toClubId: toClubId,
+            fee: fee,
+            status: status,
+            createdDate: createdDate,
+            responseDate: responseDate,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$TransferOffersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TransferOffersTable,
+    TransferOfferRow,
+    $$TransferOffersTableFilterComposer,
+    $$TransferOffersTableOrderingComposer,
+    $$TransferOffersTableAnnotationComposer,
+    $$TransferOffersTableCreateCompanionBuilder,
+    $$TransferOffersTableUpdateCompanionBuilder,
+    (
+      TransferOfferRow,
+      BaseReferences<_$AppDatabase, $TransferOffersTable, TransferOfferRow>
+    ),
+    TransferOfferRow,
+    PrefetchHooks Function()>;
+typedef $$TransferHistoryTableCreateCompanionBuilder = TransferHistoryCompanion
+    Function({
+  Value<int> id,
+  required DateTime date,
+  required int playerId,
+  required String playerName,
+  required String fromClubId,
+  required String toClubId,
+  required int fee,
+  required TransferType type,
+});
+typedef $$TransferHistoryTableUpdateCompanionBuilder = TransferHistoryCompanion
+    Function({
+  Value<int> id,
+  Value<DateTime> date,
+  Value<int> playerId,
+  Value<String> playerName,
+  Value<String> fromClubId,
+  Value<String> toClubId,
+  Value<int> fee,
+  Value<TransferType> type,
+});
+
+class $$TransferHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $TransferHistoryTable> {
+  $$TransferHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get playerName => $composableBuilder(
+      column: $table.playerName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fromClubId => $composableBuilder(
+      column: $table.fromClubId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toClubId => $composableBuilder(
+      column: $table.toClubId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get fee => $composableBuilder(
+      column: $table.fee, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<TransferType, TransferType, String> get type =>
+      $composableBuilder(
+          column: $table.type,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+}
+
+class $$TransferHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $TransferHistoryTable> {
+  $$TransferHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get playerName => $composableBuilder(
+      column: $table.playerName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fromClubId => $composableBuilder(
+      column: $table.fromClubId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get toClubId => $composableBuilder(
+      column: $table.toClubId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get fee => $composableBuilder(
+      column: $table.fee, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+}
+
+class $$TransferHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TransferHistoryTable> {
+  $$TransferHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get playerName => $composableBuilder(
+      column: $table.playerName, builder: (column) => column);
+
+  GeneratedColumn<String> get fromClubId => $composableBuilder(
+      column: $table.fromClubId, builder: (column) => column);
+
+  GeneratedColumn<String> get toClubId =>
+      $composableBuilder(column: $table.toClubId, builder: (column) => column);
+
+  GeneratedColumn<int> get fee =>
+      $composableBuilder(column: $table.fee, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<TransferType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+}
+
+class $$TransferHistoryTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TransferHistoryTable,
+    TransferHistoryRow,
+    $$TransferHistoryTableFilterComposer,
+    $$TransferHistoryTableOrderingComposer,
+    $$TransferHistoryTableAnnotationComposer,
+    $$TransferHistoryTableCreateCompanionBuilder,
+    $$TransferHistoryTableUpdateCompanionBuilder,
+    (
+      TransferHistoryRow,
+      BaseReferences<_$AppDatabase, $TransferHistoryTable, TransferHistoryRow>
+    ),
+    TransferHistoryRow,
+    PrefetchHooks Function()> {
+  $$TransferHistoryTableTableManager(
+      _$AppDatabase db, $TransferHistoryTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransferHistoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransferHistoryTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TransferHistoryTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> playerName = const Value.absent(),
+            Value<String> fromClubId = const Value.absent(),
+            Value<String> toClubId = const Value.absent(),
+            Value<int> fee = const Value.absent(),
+            Value<TransferType> type = const Value.absent(),
+          }) =>
+              TransferHistoryCompanion(
+            id: id,
+            date: date,
+            playerId: playerId,
+            playerName: playerName,
+            fromClubId: fromClubId,
+            toClubId: toClubId,
+            fee: fee,
+            type: type,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required DateTime date,
+            required int playerId,
+            required String playerName,
+            required String fromClubId,
+            required String toClubId,
+            required int fee,
+            required TransferType type,
+          }) =>
+              TransferHistoryCompanion.insert(
+            id: id,
+            date: date,
+            playerId: playerId,
+            playerName: playerName,
+            fromClubId: fromClubId,
+            toClubId: toClubId,
+            fee: fee,
+            type: type,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$TransferHistoryTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TransferHistoryTable,
+    TransferHistoryRow,
+    $$TransferHistoryTableFilterComposer,
+    $$TransferHistoryTableOrderingComposer,
+    $$TransferHistoryTableAnnotationComposer,
+    $$TransferHistoryTableCreateCompanionBuilder,
+    $$TransferHistoryTableUpdateCompanionBuilder,
+    (
+      TransferHistoryRow,
+      BaseReferences<_$AppDatabase, $TransferHistoryTable, TransferHistoryRow>
+    ),
+    TransferHistoryRow,
+    PrefetchHooks Function()>;
+typedef $$ShortlistTableCreateCompanionBuilder = ShortlistCompanion Function({
+  Value<int> playerId,
+  required DateTime addedDate,
+});
+typedef $$ShortlistTableUpdateCompanionBuilder = ShortlistCompanion Function({
+  Value<int> playerId,
+  Value<DateTime> addedDate,
+});
+
+class $$ShortlistTableFilterComposer
+    extends Composer<_$AppDatabase, $ShortlistTable> {
+  $$ShortlistTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get addedDate => $composableBuilder(
+      column: $table.addedDate, builder: (column) => ColumnFilters(column));
+}
+
+class $$ShortlistTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShortlistTable> {
+  $$ShortlistTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get addedDate => $composableBuilder(
+      column: $table.addedDate, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ShortlistTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShortlistTable> {
+  $$ShortlistTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get addedDate =>
+      $composableBuilder(column: $table.addedDate, builder: (column) => column);
+}
+
+class $$ShortlistTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ShortlistTable,
+    ShortlistRow,
+    $$ShortlistTableFilterComposer,
+    $$ShortlistTableOrderingComposer,
+    $$ShortlistTableAnnotationComposer,
+    $$ShortlistTableCreateCompanionBuilder,
+    $$ShortlistTableUpdateCompanionBuilder,
+    (
+      ShortlistRow,
+      BaseReferences<_$AppDatabase, $ShortlistTable, ShortlistRow>
+    ),
+    ShortlistRow,
+    PrefetchHooks Function()> {
+  $$ShortlistTableTableManager(_$AppDatabase db, $ShortlistTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShortlistTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShortlistTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShortlistTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<DateTime> addedDate = const Value.absent(),
+          }) =>
+              ShortlistCompanion(
+            playerId: playerId,
+            addedDate: addedDate,
+          ),
+          createCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            required DateTime addedDate,
+          }) =>
+              ShortlistCompanion.insert(
+            playerId: playerId,
+            addedDate: addedDate,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ShortlistTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ShortlistTable,
+    ShortlistRow,
+    $$ShortlistTableFilterComposer,
+    $$ShortlistTableOrderingComposer,
+    $$ShortlistTableAnnotationComposer,
+    $$ShortlistTableCreateCompanionBuilder,
+    $$ShortlistTableUpdateCompanionBuilder,
+    (
+      ShortlistRow,
+      BaseReferences<_$AppDatabase, $ShortlistTable, ShortlistRow>
+    ),
+    ShortlistRow,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7815,4 +8524,12 @@ class $AppDatabaseManager {
       $$FixturesTableTableManager(_db, _db.fixtures);
   $$InboxMessagesTableTableManager get inboxMessages =>
       $$InboxMessagesTableTableManager(_db, _db.inboxMessages);
+  $$ClubTacticsTableTableManager get clubTactics =>
+      $$ClubTacticsTableTableManager(_db, _db.clubTactics);
+  $$TransferOffersTableTableManager get transferOffers =>
+      $$TransferOffersTableTableManager(_db, _db.transferOffers);
+  $$TransferHistoryTableTableManager get transferHistory =>
+      $$TransferHistoryTableTableManager(_db, _db.transferHistory);
+  $$ShortlistTableTableManager get shortlist =>
+      $$ShortlistTableTableManager(_db, _db.shortlist);
 }

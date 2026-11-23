@@ -5,6 +5,7 @@ import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../core/utils/date_format.dart';
 import '../../domain/enums/inbox.dart';
+import '../../domain/finance/money_label.dart';
 import '../../domain/models/season_models.dart';
 
 class InboxScreen extends ConsumerWidget {
@@ -62,6 +63,7 @@ class InboxScreen extends ConsumerWidget {
     InboxCategory.finance => Icons.payments,
     InboxCategory.contract => Icons.description,
     InboxCategory.season => Icons.emoji_events,
+    InboxCategory.transfer => Icons.swap_horiz,
   };
 
   Future<void> _open(
@@ -110,6 +112,31 @@ class InboxScreen extends ConsumerWidget {
                   child: const Text('Perpanjang'),
                 ),
               ];
+            case InboxActionType.incomingTransferOffer:
+              actions = [
+                TextButton(
+                  onPressed: () => choose('reject'),
+                  child: const Text('Tolak'),
+                ),
+                FilledButton(
+                  onPressed: () => choose('accept'),
+                  child: const Text('Terima'),
+                ),
+              ];
+            case InboxActionType.contractNegotiation:
+              actions = [
+                TextButton(
+                  onPressed: () => choose('cancel'),
+                  child: const Text('Batalkan'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _negotiate(context, ref, m);
+                  },
+                  child: const Text('Ajukan kontrak'),
+                ),
+              ];
             case InboxActionType.none:
               actions = [
                 TextButton(
@@ -127,5 +154,87 @@ class InboxScreen extends ConsumerWidget {
         );
       },
     );
+  }
+
+  /// Dialog negosiasi kontrak: gaji per tahun (€ ribu) dan durasi 1–5 tahun.
+  Future<void> _negotiate(
+    BuildContext context,
+    WidgetRef ref,
+    InboxMessage m,
+  ) async {
+    final minWage = _minWageOf(m.payload);
+    final wageCtl = TextEditingController(text: '${minWage ?? 0}');
+    var years = 3;
+    final choice = await showDialog<String>(
+      context: context,
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setState) => AlertDialog(
+                  title: const Text('Negosiasi kontrak'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        controller: wageCtl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Gaji per tahun (€ ribu)',
+                          helperText:
+                              minWage == null
+                                  ? null
+                                  : 'Minimal ${moneyLabel(minWage)}',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Text('Durasi'),
+                          const SizedBox(width: 12),
+                          DropdownButton<int>(
+                            value: years,
+                            items: [
+                              for (var y = 1; y <= 5; y++)
+                                DropdownMenuItem(
+                                  value: y,
+                                  child: Text('$y tahun'),
+                                ),
+                            ],
+                            onChanged:
+                                (v) => setState(() => years = v ?? years),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Kembali'),
+                    ),
+                    FilledButton(
+                      onPressed:
+                          () => Navigator.pop(
+                            ctx,
+                            'wage:${int.tryParse(wageCtl.text.trim()) ?? 0}|years:$years',
+                          ),
+                      child: const Text('Ajukan'),
+                    ),
+                  ],
+                ),
+          ),
+    );
+    wageCtl.dispose();
+    if (choice != null) GameActions.resolve(ref, m, choice);
+  }
+
+  /// Membaca bagian min: dari payload pesan negosiasi.
+  static int? _minWageOf(String? payload) {
+    if (payload == null) return null;
+    for (final part in payload.split('|')) {
+      if (part.startsWith('min:')) return int.tryParse(part.substring(4));
+    }
+    return null;
   }
 }

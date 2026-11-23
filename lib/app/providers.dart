@@ -5,11 +5,16 @@ import '../data/repositories/club_repository.dart';
 import '../data/repositories/fixture_repository.dart';
 import '../data/repositories/game_state_repository.dart';
 import '../data/repositories/player_repository.dart';
+import '../data/repositories/tactics_repository.dart';
+import '../data/repositories/transfer_repository.dart';
 import '../data/repositories/world_repository.dart';
 import '../data/services/game_engine.dart';
 import '../domain/generators/seed_catalog.dart';
+import '../domain/match/lineup_builder.dart';
 import '../domain/models/game_models.dart';
+import '../domain/models/match_models.dart';
 import '../domain/models/season_models.dart';
+import '../domain/models/transfer_models.dart';
 import '../domain/season/league_table.dart';
 
 /// Katalog liga & klub dari seed JSON. Tidak membutuhkan database,
@@ -58,6 +63,60 @@ final gameEngineProvider = Provider<GameEngine>(
   (ref) => GameEngine(ref.watch(databaseProvider)),
 );
 
+final tacticsRepositoryProvider = Provider<TacticsRepository>(
+  (ref) => TacticsRepository(ref.watch(databaseProvider)),
+);
+
+final transferRepositoryProvider = Provider<TransferRepository>(
+  (ref) => TransferRepository(ref.watch(databaseProvider)),
+);
+
+/// Taktik tersimpan tim kita (null bila belum pernah diatur).
+final clubTacticProvider = FutureProvider<ClubTactic?>((ref) async {
+  ref.watch(worldVersionProvider);
+  final state = await ref.watch(gameStateProvider.future);
+  final clubId = state?.clubId;
+  if (clubId == null) return null;
+  return ref.watch(tacticsRepositoryProvider).load(clubId);
+});
+
+/// Skuad tim kita yang sudah disusun sesuai taktik (starter & bangku).
+final lineupProvider = FutureProvider<({List<Player> starters, List<Player> bench})>((
+  ref,
+) async {
+  ref.watch(worldVersionProvider);
+  final state = await ref.watch(gameStateProvider.future);
+  final clubId = state?.clubId;
+  if (clubId == null) return (starters: <Player>[], bench: <Player>[]);
+  final squad = await ref.watch(squadProvider(clubId).future);
+  final saved = await ref.watch(clubTacticProvider.future);
+  return LineupBuilder.resolve(squad, saved);
+});
+
+/// Semua pemain di database untuk layar pencarian.
+final playerSearchRowsProvider = FutureProvider<List<PlayerSearchRow>>((ref) {
+  ref.watch(worldVersionProvider);
+  return ref.watch(playerRepositoryProvider).allForSearch();
+});
+
+/// Tawaran yang melibatkan klub kita (keluar & masuk).
+final clubOffersProvider = FutureProvider<List<TransferOffer>>((ref) async {
+  ref.watch(worldVersionProvider);
+  final state = await ref.watch(gameStateProvider.future);
+  final clubId = state?.clubId;
+  if (clubId == null) return const [];
+  return ref.watch(transferRepositoryProvider).offersFor(clubId);
+});
+
+final transferHistoryProvider = FutureProvider<List<TransferRecord>>((ref) {
+  ref.watch(worldVersionProvider);
+  return ref.watch(transferRepositoryProvider).history();
+});
+
+final shortlistProvider = FutureProvider<Set<int>>((ref) {
+  ref.watch(worldVersionProvider);
+  return ref.watch(transferRepositoryProvider).shortlistIds();
+});
 final clubByIdProvider = FutureProvider.family<Club?, String>((ref, clubId) {
   ref.watch(worldVersionProvider);
   return ref.watch(clubRepositoryProvider).clubById(clubId);

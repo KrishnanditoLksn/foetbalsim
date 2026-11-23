@@ -9,6 +9,7 @@ import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../data/services/game_engine.dart';
 import '../../domain/models/game_models.dart';
+import '../match/match_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -100,12 +101,23 @@ class DashboardScreen extends ConsumerWidget {
                               context,
                             ).pushNamed(AppRoutes.fixtures),
                       ),
-                      for (final label in const [
-                        'Taktik',
-                        'Latihan',
-                        'Transfer',
-                        'Klub',
-                      ])
+                      _MenuTile(
+                        label: 'Taktik',
+                        icon: Icons.tune,
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRoutes.tactics),
+                      ),
+                      _MenuTile(
+                        label: 'Transfer',
+                        icon: Icons.swap_horiz,
+                        onTap:
+                            () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRoutes.transfer),
+                      ),
+                      for (final label in const ['Latihan', 'Klub'])
                         _MenuTile(
                           label: label,
                           icon: Icons.construction,
@@ -227,7 +239,9 @@ class _ActionButton extends ConsumerWidget {
   }
 
   Future<void> _playMatch(BuildContext context, WidgetRef ref) async {
-    final res = await GameActions.playMatchDay(ref);
+    final res = await Navigator.of(context).push<MatchDayResult>(
+      MaterialPageRoute(builder: (_) => const MatchScreen()),
+    );
     if (res == null || !context.mounted) return;
     final ours = res.ours;
     await showDialog<void>(

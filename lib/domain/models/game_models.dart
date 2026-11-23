@@ -77,6 +77,7 @@ class Player {
     required this.condition,
     required this.morale,
     required this.marketValue,
+    this.isTransferListed = false,
   });
 
   final int id;
@@ -92,6 +93,7 @@ class Player {
   final int condition; // 0–100
   final int morale; // 0–100
   final int marketValue; // €K
+  final bool isTransferListed; // masuk daftar jual
 
   String get fullName => '$firstName $lastName';
 }

@@ -74,6 +74,7 @@ abstract final class RowMappers {
     condition: r.condition,
     morale: r.morale,
     marketValue: r.marketValue,
+    isTransferListed: r.isTransferListed,
   );
 
   static Contract contract(ContractRow r) => Contract(
@@ -129,6 +130,7 @@ abstract final class RowMappers {
       condition: p.condition,
       morale: p.morale,
       marketValue: p.marketValue,
+      isTransferListed: Value(p.isTransferListed),
     );
   }
 }

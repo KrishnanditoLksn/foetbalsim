@@ -30,6 +30,12 @@ class ClubRepository {
     return rows.map(RowMappers.club).toList();
   }
 
+  Future<List<Club>> allClubs() async {
+    final rows = await _db.select(_db.clubs).get();
+    return rows.map(RowMappers.club).toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+  }
+
   Future<Club?> clubById(String id) async {
     final row =
         await (_db.select(_db.clubs)

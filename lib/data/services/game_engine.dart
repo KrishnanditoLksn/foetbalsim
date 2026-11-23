@@ -3,7 +3,12 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart';
 
 import '../../domain/enums/inbox.dart';
+import '../../domain/enums/tactics.dart';
+import '../../domain/finance/money_label.dart';
+import '../../domain/match/lineup_builder.dart';
+import '../../domain/match/match_engine_2d.dart';
 import '../../domain/models/game_models.dart';
+import '../../domain/models/match_models.dart';
 import '../../domain/models/season_models.dart';
 import '../../domain/season/fixture_generator.dart';
 import '../../domain/season/league_table.dart';
@@ -15,6 +20,8 @@ import '../repositories/fixture_repository.dart';
 import '../repositories/game_state_repository.dart';
 import '../repositories/inbox_repository.dart';
 import '../repositories/player_repository.dart';
+import '../repositories/tactics_repository.dart';
+import 'transfer_service.dart';
 
 enum ContinueStop { blockingAction, matchDay, seasonOver, dayLimit }
 
@@ -54,6 +61,21 @@ class MatchDayResult {
   final List<MatchOutcome> others; // hasil laga lain di tanggal yang sama
 }
 
+/// Bahan untuk memulai laga 2D hari ini (laga tim kita).
+class MatchSetup {
+  const MatchSetup({
+    required this.fixture,
+    required this.seed,
+    required this.home,
+    required this.away,
+  });
+
+  final Fixture fixture;
+  final int seed;
+  final MatchTeamSetup home;
+  final MatchTeamSetup away;
+}
+
 class GameStatus {
   const GameStatus({
     required this.date,
@@ -79,7 +101,9 @@ class GameEngine {
       _players = PlayerRepository(_db),
       _fixtures = FixtureRepository(_db),
       _inbox = InboxRepository(_db),
-      _states = GameStateRepository(_db);
+      _states = GameStateRepository(_db),
+      _tactics = TacticsRepository(_db),
+      _transfers = TransferService(_db);
 
   final AppDatabase _db;
   final ClubRepository _clubs;
@@ -87,6 +111,8 @@ class GameEngine {
   final FixtureRepository _fixtures;
   final InboxRepository _inbox;
   final GameStateRepository _states;
+  final TacticsRepository _tactics;
+  final TransferService _transfers;
 
   static const int maxDaysPerContinue = 120;
   static const int recoveryPerDay = 5;
@@ -259,15 +285,21 @@ class GameEngine {
     final seed = (await _states.load())!.seed;
     for (final f in await _fixtures.onDate(d)) {
       if (f.played) continue;
-      // Laga tim kita tidak diproses di sini; dimainkan lewat playMatchDay().
+      // Laga tim kita tidak diproses di sini; dimainkan lewat laga 2D.
       if (clubId != null && f.involves(clubId)) continue;
       await _playFixture(f, seed);
+    }
+
+    if (clubId != null) {
+      await _transfers.processDay(date: d, seed: seed, ourClubId: clubId);
     }
   }
 
   // --- Hari laga tim kita ----------------------------------------------------
 
-  Future<MatchDayResult> playMatchDay() async {
+  /// Menyusun kedua tim untuk laga tim kita hari ini. Taktik tersimpan
+  /// dipakai untuk tim kita; lawan memakai susunan otomatis 4-4-2.
+  Future<MatchSetup> prepareMatch() async {
     final state = await _states.load();
     if (state == null) throw StateError('Save belum berisi data karier.');
     final s = await status();
@@ -277,10 +309,64 @@ class GameEngine {
       throw StateError('Tidak ada laga tim Anda hari ini.');
     }
 
-    final ours = await _playFixture(f, state.seed);
-    final goalsFor = f.homeClubId == clubId ? ours.homeGoals : ours.awayGoals;
-    final goalsAgainst =
-        f.homeClubId == clubId ? ours.awayGoals : ours.homeGoals;
+    final ourSide = f.homeClubId == clubId;
+    final ourTeam = await _teamSetup(clubId, useSavedTactics: true);
+    final oppTeam = await _teamSetup(
+      ourSide ? f.awayClubId : f.homeClubId,
+      useSavedTactics: false,
+    );
+    return MatchSetup(
+      fixture: f,
+      seed: state.seed,
+      home: ourSide ? ourTeam : oppTeam,
+      away: ourSide ? oppTeam : ourTeam,
+    );
+  }
+
+  Future<MatchTeamSetup> _teamSetup(
+    String clubId, {
+    required bool useSavedTactics,
+  }) async {
+    final club = await _clubs.clubById(clubId);
+    final squad = await _players.squad(clubId);
+    final saved = useSavedTactics ? await _tactics.load(clubId) : null;
+    final lineup = useSavedTactics
+        ? LineupBuilder.resolve(squad, saved)
+        : LineupBuilder.auto(squad, Formation.f442);
+    return MatchTeamSetup(
+      clubId: clubId,
+      name: club?.name ?? clubId,
+      formation: saved?.formation ?? Formation.f442,
+      mentality: saved?.mentality ?? Mentality.balanced,
+      starters: lineup.starters,
+      bench: lineup.bench,
+    );
+  }
+
+  /// Menyimpan hasil laga 2D tim kita: skor, kondisi & moral skuad, pendapatan
+  /// tiket, dan laporan di inbox. Laga hanya bisa disimpan sekali.
+  Future<MatchDayResult> commitMatch(MatchResultData r) async {
+    final state = await _states.load();
+    if (state == null) throw StateError('Save belum berisi data karier.');
+    final clubId = state.clubId;
+    if (clubId == null) throw StateError('Belum ada klub.');
+    final fixtures = await _fixtures.forClub(clubId);
+    final f = fixtures.firstWhere(
+      (x) => x.id == r.fixtureId,
+      orElse: () => throw StateError('Laga tidak ditemukan.'),
+    );
+    if (f.played) throw StateError('Laga ini sudah dimainkan.');
+
+    await _fixtures.setResult(f.id, r.homeGoals, r.awayGoals);
+    await _applyMatchLoad(r, state.seed);
+
+    final home = await _clubs.clubById(f.homeClubId);
+    if (home != null && f.homeClubId == clubId) {
+      await _addTicketRevenue(home);
+    }
+
+    final goalsFor = f.homeClubId == clubId ? r.homeGoals : r.awayGoals;
+    final goalsAgainst = f.homeClubId == clubId ? r.awayGoals : r.homeGoals;
     final delta =
         goalsFor > goalsAgainst
             ? 4
@@ -289,6 +375,26 @@ class GameEngine {
             : -4;
     await _applyMorale(clubId, delta);
 
+    final ours = await _outcome(
+      Fixture(
+        id: f.id,
+        leagueId: f.leagueId,
+        round: f.round,
+        date: f.date,
+        homeClubId: f.homeClubId,
+        awayClubId: f.awayClubId,
+        homeGoals: r.homeGoals,
+        awayGoals: r.awayGoals,
+      ),
+    );
+
+    final st = r.stats;
+    final scorers = [
+      if (r.homeScorerNames.isNotEmpty)
+        '${ours.homeName}: ${r.homeScorerNames.join(', ')}',
+      if (r.awayScorerNames.isNotEmpty)
+        '${ours.awayName}: ${r.awayScorerNames.join(', ')}',
+    ];
     await _inbox.add(
       InboxMessage(
         id: 0,
@@ -297,6 +403,10 @@ class GameEngine {
         title:
             'Hasil: ${ours.homeName} ${ours.homeGoals}-${ours.awayGoals} ${ours.awayName}',
         body:
+            '${scorers.isEmpty ? 'Tanpa gol.' : scorers.join('. ')}. '
+            'Penguasaan bola ${st.homePossession}%-${st.awayPossession}%. '
+            'Tembakan ${st.home.shots}-${st.away.shots} '
+            '(tepat sasaran ${st.home.onTarget}-${st.away.onTarget}). '
             'Moral skuad ${delta > 0
                 ? 'naik'
                 : delta < 0
@@ -322,9 +432,88 @@ class GameEngine {
     return MatchDayResult(ours: ours, others: others);
   }
 
+  /// Simulasi cepat sampai peluit akhir, lalu disimpan. Dipakai bila laga
+  /// tidak perlu ditonton (mis. tes). Hasilnya sama dengan laga 2D tanpa
+  /// intervensi pemain.
+  Future<MatchDayResult> playMatchDay() async {
+    final setup = await prepareMatch();
+    final session = MatchSession(
+      seed: setup.seed,
+      fixtureId: setup.fixture.id,
+      home: setup.home,
+      away: setup.away,
+    );
+    while (!session.finished) {
+      session.step();
+    }
+    return commitMatch(
+      session.result(fixtureId: setup.fixture.id),
+    );
+  }
+
+  /// Kondisi pemain berkurang sesuai menit bermain (starter penuh 12–22).
+  Future<void> _applyMatchLoad(MatchResultData r, int seed) async {
+    for (final entry in r.minutesPlayed.entries) {
+      final p = await _players.byId(entry.key);
+      if (p == null) continue;
+      final full = QuickMatchSimulator.conditionLoss(
+        seed,
+        r.fixtureId,
+        entry.key,
+      );
+      final loss = (full * entry.value / 90).round();
+      await (_db.update(_db.players)..where((t) => t.id.equals(p.id))).write(
+        PlayersCompanion(condition: Value(math.max(0, p.condition - loss))),
+      );
+    }
+  }
+
+  /// Menyimpan taktik klub kita.
+  Future<void> saveTactics(ClubTactic t) => _tactics.save(t);
+
+  Future<ClubTactic?> tactics(String clubId) => _tactics.load(clubId);
+
+  /// Tawaran transfer untuk layanan UI (ajukan, daftar jual, shortlist).
+  Future<void> placeBid(int playerId, int fee) async {
+    final state = await _states.load();
+    if (state == null || state.clubId == null) {
+      throw StateError('Belum ada klub.');
+    }
+    await _transfers.placeBid(
+      ourClubId: state.clubId!,
+      now: state.currentDate,
+      playerId: playerId,
+      fee: fee,
+    );
+  }
+
+  Future<void> setListed(int playerId, bool listed) =>
+      _transfers.setListed(playerId, listed);
+
+  Future<void> setShortlisted(int playerId, bool value) async {
+    final state = await _states.load();
+    await _transfers.setShortlisted(
+      playerId,
+      value,
+      state?.currentDate ?? DateTime.utc(2025, 7, 1),
+    );
+  }
+
   // --- Inbox -----------------------------------------------------------------
 
   Future<void> resolveMessage(InboxMessage m, String choice) async {
+    if (m.actionType == InboxActionType.incomingTransferOffer ||
+        m.actionType == InboxActionType.contractNegotiation) {
+      final state = await _states.load();
+      await _transfers.resolveAction(
+        message: m,
+        choice: choice,
+        date: state!.currentDate,
+        ourClubId: state.clubId!,
+      );
+      await _inbox.resolve(m.id, choice);
+      return;
+    }
     if (m.actionType == InboxActionType.contractDecision && choice == 'renew') {
       final playerId = int.parse(m.payload!.split(':').last);
       final contract =
@@ -571,8 +760,5 @@ class GameEngine {
     }
   }
 
-  static String _money(int thousands) =>
-      thousands >= 1000
-          ? '€${(thousands / 1000).toStringAsFixed(1)} jt'
-          : '€$thousands rb';
+  static String _money(int thousands) => moneyLabel(thousands);
 }
