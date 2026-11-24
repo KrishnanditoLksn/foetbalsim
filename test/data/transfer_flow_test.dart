@@ -7,7 +7,6 @@ import 'package:futbol/data/repositories/player_repository.dart';
 import 'package:futbol/data/repositories/transfer_repository.dart';
 import 'package:futbol/data/repositories/world_repository.dart';
 import 'package:futbol/data/services/game_engine.dart';
-import 'package:futbol/data/services/transfer_service.dart';
 import 'package:futbol/domain/enums/inbox.dart';
 import 'package:futbol/domain/enums/transfer.dart';
 import 'package:futbol/domain/generators/world_generator.dart';
@@ -83,16 +82,12 @@ void main() {
     throw StateError('payload tanpa min');
   }
 
-  /// Harga minta klub pada awal musim (saat tawaran diajukan).
+  /// Harga minta untuk klub kita saat tawaran diajukan (yang ditampilkan di
+  /// UI), termasuk premi rival lokal. Ditambah 1% sebagai ruang untuk
+  /// perubahan harga harian sampai tanggal respons.
   Future<int> bidFee(Player p) async {
-    final detail = await PlayerRepository(db).detail(p.id);
-    // Harga minta yang sama dengan yang dipakai klub AI saat menilai tawaran.
-    return TransferService(db).askingFor(
-      player: p,
-      contract: detail?.contract,
-      now: WorldGenerator.seasonStart,
-      seed: 99,
-    );
+    final ask = (await engine.transferQuote(p.id)).askingFee;
+    return (ask * 1.01).round();
   }
 
   /// Menyelesaikan sambutan dewan (aksi pertama di awal karier).
