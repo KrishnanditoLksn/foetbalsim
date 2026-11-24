@@ -75,6 +75,7 @@ abstract final class RowMappers {
     morale: r.morale,
     marketValue: r.marketValue,
     isTransferListed: r.isTransferListed,
+    lockedUntil: r.lockedUntil?.toUtc(),
   );
 
   static Contract contract(ContractRow r) => Contract(

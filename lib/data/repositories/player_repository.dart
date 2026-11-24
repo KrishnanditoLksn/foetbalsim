@@ -87,6 +87,13 @@ class PlayerRepository {
     ];
   }
 
+  /// Pemain yang baru pindah terkunci sampai [until] (tidak bolak-balik).
+  Future<void> setLockedUntil(int playerId, DateTime? until) {
+    return (_db.update(_db.players)..where((t) => t.id.equals(playerId))).write(
+      PlayersCompanion(lockedUntil: Value(until)),
+    );
+  }
+
   Future<void> setListed(int playerId, bool listed) {
     return (_db.update(_db.players)..where((t) => t.id.equals(playerId))).write(
       PlayersCompanion(isTransferListed: Value(listed)),
