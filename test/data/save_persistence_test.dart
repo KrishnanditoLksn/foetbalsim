@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:futbol/data/database/app_database.dart';
+import 'package:futbol/data/database/save_storage.dart';
 import 'package:futbol/data/repositories/club_repository.dart';
 import 'package:futbol/data/repositories/game_state_repository.dart';
 import 'package:futbol/data/repositories/player_repository.dart';
@@ -71,5 +72,78 @@ void main() {
     expect(detail, isNotNull);
     expect(detail!.contract, isNotNull);
     expect(detail.contract!.clubId, 'real-madrid');
+  });
+
+  group('SaveStorage: 5 slot dan hapus save', () {
+    setUp(() => SaveStorage.savesDirOverride = () async => tempDir);
+    tearDown(() => SaveStorage.savesDirOverride = null);
+
+    Future<void> fill(Iterable<int> slots) async {
+      for (final slot in slots) {
+        await (await SaveStorage.slotFile(slot)).writeAsString('x');
+      }
+    }
+
+    test('maksimal 5 slot', () {
+      expect(SaveStorage.maxSlots, 5);
+    });
+
+    test('existingSlots dan firstFreeSlot bekerja sampai slot 5', () async {
+      expect(await SaveStorage.existingSlots(), isEmpty);
+      expect(await SaveStorage.firstFreeSlot(), 1);
+
+      await fill([1, 2, 3, 4]);
+      expect(await SaveStorage.existingSlots(), [1, 2, 3, 4]);
+      expect(await SaveStorage.firstFreeSlot(), 5);
+
+      await fill([5]);
+      expect(await SaveStorage.existingSlots(), [1, 2, 3, 4, 5]);
+      expect(await SaveStorage.firstFreeSlot(), isNull);
+
+      // File di luar batas slot tidak dihitung.
+      await File(p.join(tempDir.path, 'save_6.sqlite')).writeAsString('x');
+      expect(await SaveStorage.existingSlots(), [1, 2, 3, 4, 5]);
+    });
+
+    test('delete menghapus .sqlite beserta -wal, -shm, -journal', () async {
+      await fill([1, 2, 3, 4, 5]);
+      final main = await SaveStorage.slotFile(3);
+      final companions = [
+        File('${main.path}-wal'),
+        File('${main.path}-shm'),
+        File('${main.path}-journal'),
+      ];
+      for (final f in companions) {
+        await f.writeAsString('x');
+      }
+
+      await SaveStorage.delete(3);
+
+      expect(await main.exists(), isFalse);
+      for (final f in companions) {
+        expect(await f.exists(), isFalse, reason: f.path);
+      }
+      expect(await SaveStorage.existingSlots(), [1, 2, 4, 5]);
+      expect(await SaveStorage.firstFreeSlot(), 3);
+      // Slot lain tidak tersentuh.
+      expect(await (await SaveStorage.slotFile(2)).exists(), isTrue);
+    });
+
+    test('delete slot kosong tidak error', () async {
+      await SaveStorage.delete(4);
+      expect(await SaveStorage.existingSlots(), isEmpty);
+    });
+
+    test('save SQLite asli bisa dihapus setelah ditutup', () async {
+      final file = await SaveStorage.slotFile(1);
+      final db = AppDatabase(NativeDatabase(file));
+      await GameStateRepository(db).load(); // memaksa file dibuat
+      await db.close();
+      expect(await SaveStorage.existingSlots(), [1]);
+
+      await SaveStorage.delete(1);
+      expect(await SaveStorage.existingSlots(), isEmpty);
+      expect(tempDir.listSync(), isEmpty);
+    });
   });
 }

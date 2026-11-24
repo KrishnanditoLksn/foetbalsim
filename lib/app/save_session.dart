@@ -19,6 +19,19 @@ Future<void> activateSave(WidgetRef ref, int slot) async {
   await previous?.close();
 }
 
+/// Menghapus slot save secara permanen. Bila slot itu sedang aktif, database
+/// dilepas dari provider lalu ditutup dulu, agar file tidak terkunci (Windows)
+/// dan layar lain tidak lagi memakai koneksi yang sudah ditutup.
+Future<void> deleteSave(WidgetRef ref, int slot) async {
+  if (ref.read(activeSaveSlotProvider) == slot) {
+    final activeDb = ref.read(currentDatabaseProvider);
+    ref.read(currentDatabaseProvider.notifier).state = null;
+    ref.read(activeSaveSlotProvider.notifier).state = null;
+    await activeDb?.close();
+  }
+  await SaveStorage.delete(slot);
+}
+
 /// Membuat karier baru di slot kosong pertama. Mengembalikan false bila slot penuh.
 Future<bool> createNewCareer(
   WidgetRef ref, {

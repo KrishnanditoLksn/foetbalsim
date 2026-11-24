@@ -28,7 +28,7 @@ final seedCatalogProvider = FutureProvider<SeedCatalog>((ref) async {
 /// Database save yang sedang aktif (null = belum ada save dibuka).
 final currentDatabaseProvider = StateProvider<AppDatabase?>((ref) => null);
 
-/// Slot save yang sedang aktif (1–3).
+/// Slot save yang sedang aktif (1–5, lihat `SaveStorage.maxSlots`).
 final activeSaveSlotProvider = StateProvider<int?>((ref) => null);
 
 /// Ringkasan LANJUTKAN terakhir (kartu "Hari Ini" di dashboard).

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -8,9 +9,15 @@ import 'app_database.dart';
 
 /// Mengelola file save: satu slot = satu file SQLite (`save_<slot>.sqlite`).
 abstract final class SaveStorage {
-  static const int maxSlots = 3;
+  static const int maxSlots = 5;
+
+  /// Direktori save pengganti untuk unit test (mis. direktori sementara).
+  @visibleForTesting
+  static Future<Directory> Function()? savesDirOverride;
 
   static Future<Directory> _savesDir() async {
+    final override = savesDirOverride;
+    if (override != null) return override();
     final base = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(base.path, 'futbol_saves'));
     if (!await dir.exists()) await dir.create(recursive: true);
@@ -60,8 +67,19 @@ abstract final class SaveStorage {
     return best;
   }
 
+  /// Menghapus file save beserta file pendamping SQLite (`-wal`, `-shm`,
+  /// `-journal`), agar slot benar-benar bersih saat dipakai ulang.
+  /// Database slot ini harus sudah ditutup (lihat `deleteSave`).
   static Future<void> delete(int slot) async {
     final file = await slotFile(slot);
-    if (await file.exists()) await file.delete();
+    final candidates = [
+      file,
+      File('${file.path}-wal'),
+      File('${file.path}-shm'),
+      File('${file.path}-journal'),
+    ];
+    for (final f in candidates) {
+      if (await f.exists()) await f.delete();
+    }
   }
 }

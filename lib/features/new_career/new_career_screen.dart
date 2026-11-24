@@ -6,6 +6,7 @@ import '../../app/router.dart';
 import '../../app/save_session.dart';
 import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
+import '../../data/database/save_storage.dart';
 import '../../data/repositories/world_repository.dart';
 import '../../domain/models/game_models.dart';
 
@@ -84,8 +85,18 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
 
     if (!created) {
       setState(() => _building = false);
+      final navigator = Navigator.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua slot save sudah terisi.')),
+        SnackBar(
+          content: const Text(
+            'Semua slot save sudah terisi '
+            '(maksimal ${SaveStorage.maxSlots} slot).',
+          ),
+          action: SnackBarAction(
+            label: 'Kelola Save',
+            onPressed: () => navigator.pushNamed(AppRoutes.loadGame),
+          ),
+        ),
       );
       return;
     }
