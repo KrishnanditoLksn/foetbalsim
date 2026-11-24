@@ -184,12 +184,12 @@ void main() {
       final result = PlayerSearch.apply(
         rows,
         const PlayerSearchFilter(status: PlayerSearchStatus.expiringSoon),
-        now: DateTime.utc(2026, 6, 1),
+        now: DateTime.utc(2027, 6, 1),
       );
       expect(result, isNotEmpty);
       for (final r in result) {
         expect(
-          r.contract!.endDate.isAfter(DateTime.utc(2026, 12, 1)),
+          r.contract!.endDate.isAfter(DateTime.utc(2027, 12, 1)),
           isFalse,
         );
       }

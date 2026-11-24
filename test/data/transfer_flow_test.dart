@@ -7,6 +7,7 @@ import 'package:futbol/data/repositories/player_repository.dart';
 import 'package:futbol/data/repositories/transfer_repository.dart';
 import 'package:futbol/data/repositories/world_repository.dart';
 import 'package:futbol/data/services/game_engine.dart';
+import 'package:futbol/data/services/transfer_service.dart';
 import 'package:futbol/domain/enums/inbox.dart';
 import 'package:futbol/domain/enums/transfer.dart';
 import 'package:futbol/domain/generators/world_generator.dart';
@@ -44,6 +45,7 @@ void main() {
     InboxActionType.contractDecision => 'leave',
     InboxActionType.incomingTransferOffer => 'reject',
     InboxActionType.contractNegotiation => 'cancel',
+    InboxActionType.counterOffer => 'cancel',
     InboxActionType.none => '',
   };
 
@@ -84,10 +86,12 @@ void main() {
   /// Harga minta klub pada awal musim (saat tawaran diajukan).
   Future<int> bidFee(Player p) async {
     final detail = await PlayerRepository(db).detail(p.id);
-    return TransferValuation.askingFee(
+    // Harga minta yang sama dengan yang dipakai klub AI saat menilai tawaran.
+    return TransferService(db).askingFor(
       player: p,
       contract: detail?.contract,
       now: WorldGenerator.seasonStart,
+      seed: 99,
     );
   }
 
@@ -157,7 +161,7 @@ void main() {
   test('tawaran ditolak di luar jendela transfer', () async {
     await resolveWelcome();
     // Majukan sampai bursa musim panas tutup (setelah 31 Agustus).
-    await autoPlay((s) => s.date.isAfter(DateTime.utc(2025, 8, 31)));
+    await autoPlay((s) => s.date.isAfter(DateTime.utc(2026, 8, 31)));
     final status = await engine.status();
     expect(TransferWindow.isOpen(status.date), isFalse);
 
