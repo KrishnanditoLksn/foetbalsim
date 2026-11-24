@@ -78,6 +78,7 @@ class Player {
     required this.morale,
     required this.marketValue,
     this.isTransferListed = false,
+    this.lockedUntil,
   });
 
   final int id;
@@ -94,6 +95,7 @@ class Player {
   final int morale; // 0–100
   final int marketValue; // €K
   final bool isTransferListed; // masuk daftar jual
+  final DateTime? lockedUntil; // terkunci sampai tanggal ini (baru pindah)
 
   String get fullName => '$firstName $lastName';
 }
