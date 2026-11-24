@@ -19,4 +19,5 @@ enum InboxActionType {
   contractDecision,
   incomingTransferOffer,
   contractNegotiation,
+  counterOffer,
 }

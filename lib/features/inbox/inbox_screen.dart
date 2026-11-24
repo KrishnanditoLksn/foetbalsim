@@ -5,8 +5,10 @@ import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../core/utils/date_format.dart';
 import '../../domain/enums/inbox.dart';
-import '../../domain/finance/money_label.dart';
+import '../../app/router.dart';
 import '../../domain/models/season_models.dart';
+import '../../domain/models/transfer_models.dart';
+import '../transfer/transfer_flow.dart';
 
 class InboxScreen extends ConsumerWidget {
   const InboxScreen({super.key});
@@ -17,6 +19,7 @@ class InboxScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Inbox')),
       body: inbox.when(
+      skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Gagal memuat inbox: $e')),
         data: (list) {
@@ -26,7 +29,7 @@ class InboxScreen extends ConsumerWidget {
           return ListView.separated(
             itemCount: list.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) {
+            itemBuilder: (_, i) {
               final m = list[i];
               return ListTile(
                 leading: Icon(
@@ -74,23 +77,31 @@ class InboxScreen extends ConsumerWidget {
     if (!m.isRead) await GameActions.markRead(ref, m.id);
     if (!context.mounted) return;
 
-    await showDialog<void>(
+    Future<void> submit(String choice) => GameActions.resolve(ref, m, choice);
+
+    // Tombol dibangun di dalam builder dialog agar Navigator.pop menutup
+    // dialog, bukan layar Inbox. Dialog lanjutan (kontra, tawaran final,
+    // kontrak) dibuka memakai context layar setelah dialog ini tertutup.
+    final next = await showDialog<_Next>(
       context: context,
       builder: (ctx) {
-        // Tombol dibangun di dalam builder dialog agar Navigator.pop
-        // menutup dialog, bukan layar Inbox.
-        void choose(String choice) {
-          Navigator.pop(ctx);
-          GameActions.resolve(ref, m, choice);
-        }
+        void go(_Next n) => Navigator.pop(ctx, n);
+        void choose(String choice) => go(_Next.choice(choice));
 
+        final close = TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Tutup'),
+        );
         final List<Widget> actions;
         if (!m.needsAction) {
+          final playerId = _playerIdOf(m.payload);
           actions = [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Tutup'),
-            ),
+            if (playerId != null)
+              TextButton(
+                onPressed: () => go(_Next.player(playerId)),
+                child: const Text('Lihat pemain'),
+              ),
+            close,
           ];
         } else {
           switch (m.actionType) {
@@ -118,9 +129,28 @@ class InboxScreen extends ConsumerWidget {
                   onPressed: () => choose('reject'),
                   child: const Text('Tolak'),
                 ),
+                TextButton(
+                  onPressed: () => go(const _Next.counter()),
+                  child: const Text('Kontra'),
+                ),
                 FilledButton(
                   onPressed: () => choose('accept'),
                   child: const Text('Terima'),
+                ),
+              ];
+            case InboxActionType.counterOffer:
+              actions = [
+                TextButton(
+                  onPressed: () => choose('cancel'),
+                  child: const Text('Batalkan'),
+                ),
+                TextButton(
+                  onPressed: () => go(const _Next.finalOffer()),
+                  child: const Text('Tawaran final'),
+                ),
+                FilledButton(
+                  onPressed: () => choose('accept'),
+                  child: const Text('Terima harga'),
                 ),
               ];
             case InboxActionType.contractNegotiation:
@@ -130,103 +160,77 @@ class InboxScreen extends ConsumerWidget {
                   child: const Text('Batalkan'),
                 ),
                 FilledButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _negotiate(context, ref, m);
-                  },
+                  onPressed: () => go(const _Next.contract()),
                   child: const Text('Ajukan kontrak'),
                 ),
               ];
             case InboxActionType.none:
-              actions = [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Tutup'),
-                ),
-              ];
+              actions = [close];
           }
         }
 
         return AlertDialog(
           title: Text(m.title),
-          content: Text(m.body),
+          content: SingleChildScrollView(child: Text(m.body)),
           actions: actions,
         );
       },
     );
+    if (next == null || !context.mounted) return;
+
+    switch (next.kind) {
+      case _NextKind.choice:
+        await TransferFlow.run(context, () => submit(next.choice!));
+      case _NextKind.player:
+        await Navigator.of(context).pushNamed(
+          AppRoutes.player,
+          arguments: next.playerId,
+        );
+      case _NextKind.counter:
+      case _NextKind.finalOffer:
+      case _NextKind.contract:
+        final offer = await _offerOf(ref, m);
+        if (!context.mounted) return;
+        if (offer == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Negosiasi ini sudah tidak berjalan.')),
+          );
+          return;
+        }
+        if (next.kind == _NextKind.counter) {
+          await TransferFlow.counterIncoming(context, offer, submit);
+        } else if (next.kind == _NextKind.finalOffer) {
+          await TransferFlow.finalOffer(context, offer, submit);
+        } else {
+          final name =
+              (await ref.read(playerDetailProvider(offer.playerId).future))
+                  ?.player
+                  .fullName ??
+              'Pemain';
+          if (!context.mounted) return;
+          await TransferFlow.contract(
+            context,
+            ref,
+            offer,
+            name,
+            submit,
+            minWage: _minWageOf(m.payload),
+          );
+        }
+    }
   }
 
-  /// Dialog negosiasi kontrak: gaji per tahun (€ ribu) dan durasi 1–5 tahun.
-  Future<void> _negotiate(
-    BuildContext context,
-    WidgetRef ref,
-    InboxMessage m,
-  ) async {
-    final minWage = _minWageOf(m.payload);
-    final wageCtl = TextEditingController(text: '${minWage ?? 0}');
-    var years = 3;
-    final choice = await showDialog<String>(
-      context: context,
-      builder:
-          (ctx) => StatefulBuilder(
-            builder:
-                (ctx, setState) => AlertDialog(
-                  title: const Text('Negosiasi kontrak'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextField(
-                        controller: wageCtl,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Gaji per tahun (€ ribu)',
-                          helperText:
-                              minWage == null
-                                  ? null
-                                  : 'Minimal ${moneyLabel(minWage)}',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Text('Durasi'),
-                          const SizedBox(width: 12),
-                          DropdownButton<int>(
-                            value: years,
-                            items: [
-                              for (var y = 1; y <= 5; y++)
-                                DropdownMenuItem(
-                                  value: y,
-                                  child: Text('$y tahun'),
-                                ),
-                            ],
-                            onChanged:
-                                (v) => setState(() => years = v ?? years),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Kembali'),
-                    ),
-                    FilledButton(
-                      onPressed:
-                          () => Navigator.pop(
-                            ctx,
-                            'wage:${int.tryParse(wageCtl.text.trim()) ?? 0}|years:$years',
-                          ),
-                      child: const Text('Ajukan'),
-                    ),
-                  ],
-                ),
-          ),
-    );
-    wageCtl.dispose();
-    if (choice != null) GameActions.resolve(ref, m, choice);
+  static Future<TransferOffer?> _offerOf(WidgetRef ref, InboxMessage m) async {
+    final head = m.payload?.split('|').first;
+    if (head == null || !head.startsWith('offer:')) return null;
+    final id = int.tryParse(head.substring('offer:'.length));
+    if (id == null) return null;
+    return ref.read(transferRepositoryProvider).offerById(id);
+  }
+
+  static int? _playerIdOf(String? payload) {
+    if (payload == null || !payload.startsWith('player:')) return null;
+    return int.tryParse(payload.substring('player:'.length));
   }
 
   /// Membaca bagian min: dari payload pesan negosiasi.
@@ -237,4 +241,29 @@ class InboxScreen extends ConsumerWidget {
     }
     return null;
   }
+}
+
+enum _NextKind { choice, player, counter, finalOffer, contract }
+
+/// Langkah setelah dialog pesan ditutup.
+class _Next {
+  const _Next.choice(String this.choice)
+    : kind = _NextKind.choice,
+      playerId = null;
+  const _Next.player(int this.playerId)
+    : kind = _NextKind.player,
+      choice = null;
+  const _Next.counter() : kind = _NextKind.counter, choice = null, playerId = null;
+  const _Next.finalOffer()
+    : kind = _NextKind.finalOffer,
+      choice = null,
+      playerId = null;
+  const _Next.contract()
+    : kind = _NextKind.contract,
+      choice = null,
+      playerId = null;
+
+  final _NextKind kind;
+  final String? choice;
+  final int? playerId;
 }

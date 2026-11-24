@@ -93,6 +93,7 @@ class Players extends Table {
   IntColumn get condition => integer()();
   IntColumn get morale => integer()();
   IntColumn get marketValue => integer()(); // €K
+  DateTimeColumn get lockedUntil => dateTime().nullable()(); // v4: tidak bisa pindah dua kali
   BoolColumn get isTransferListed =>
       boolean().withDefault(const Constant(false))(); // v3
 
@@ -120,6 +121,7 @@ class GameStates extends Table {
   TextColumn get managerName => text()();
   TextColumn get clubId => text().nullable()();
   IntColumn get seed => integer()();
+  IntColumn get seasonStartYear => integer().withDefault(const Constant(2026))(); // v4
 
   @override
   Set<Column> get primaryKey => {id};
@@ -135,6 +137,9 @@ class Fixtures extends Table {
   TextColumn get homeClubId => text()();
   TextColumn get awayClubId => text()();
   IntColumn get homeGoals => integer().nullable()();
+  IntColumn get seasonStartYear => integer().withDefault(const Constant(2026))(); // v4
+  TextColumn get stage => text().withDefault(const Constant('league'))(); // v4: league / playoffSemi / playoffFinal
+  IntColumn get leg => integer().nullable()(); // v4: 1 atau 2 pada playoff
   IntColumn get awayGoals => integer().nullable()();
 
   @override
@@ -180,6 +185,12 @@ class TransferOffers extends Table {
   TextColumn get status => textEnum<TransferOfferStatus>()();
   DateTimeColumn get createdDate => dateTime()();
   DateTimeColumn get responseDate => dateTime().nullable()();
+  IntColumn get installmentYears => integer().withDefault(const Constant(1))(); // v4
+  IntColumn get sellOnPct => integer().withDefault(const Constant(0))(); // v4
+  IntColumn get round => integer().withDefault(const Constant(1))(); // v4: 1 = tawaran, 2 = kontra
+  DateTimeColumn get expiresDate => dateTime().nullable()(); // v4
+  TextColumn get reason => text().nullable()(); // v4: alasan penolakan
+  TextColumn get kind => text().withDefault(const Constant("permanent"))(); // v4: jenis kesepakatan
 }
 
 /// Riwayat transfer (v3).
@@ -203,4 +214,95 @@ class Shortlist extends Table {
 
   @override
   Set<Column> get primaryKey => {playerId};
+}
+
+/// Profil kepribadian klub AI (README_FASE3 B.2). Satu baris per klub.
+@DataClassName('ClubAiProfileRow')
+class ClubAiProfiles extends Table {
+  TextColumn get clubId => text()();
+  TextColumn get personality => text()();
+  IntColumn get ambition => integer()();
+  IntColumn get riskTolerance => integer()();
+  IntColumn get negotiationSkill => integer()();
+  IntColumn get sellingWillingness => integer()();
+  IntColumn get youthFocus => integer()();
+
+  @override
+  Set<Column> get primaryKey => {clubId};
+}
+
+/// Skor minat klub terhadap pemain (README_FASE3 B.10.3).
+@DataClassName('TransferInterestRow')
+class TransferInterests extends Table {
+  TextColumn get clubId => text()();
+  IntColumn get playerId => integer()();
+  IntColumn get score => integer()();
+  TextColumn get level => text()();
+  DateTimeColumn get updatedDate => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {clubId, playerId};
+}
+
+/// Berita bursa: rumor, kesepakatan, tawaran, dan penanda deadline.
+@DataClassName('TransferNewsRow')
+class TransferNews extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get kind => text()();
+  TextColumn get body => text()();
+  TextColumn get clubIds => text().withDefault(const Constant(''))();
+}
+
+/// Memori perilaku user untuk adaptasi AI (README_FASE3 B.7).
+@DataClassName('MarketMemoryRow')
+class MarketMemory extends Table {
+  TextColumn get key => text()();
+  IntColumn get value => integer()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
+/// Musim yang pernah dimainkan (README_SEASON_CALENDAR §4).
+@DataClassName('SeasonRow')
+class Seasons extends Table {
+  IntColumn get startYear => integer()();
+  TextColumn get label => text()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate => dateTime()();
+  TextColumn get status => text()();
+
+  @override
+  Set<Column> get primaryKey => {startYear};
+}
+
+/// Klasemen akhir per musim per klub.
+@DataClassName('SeasonArchiveRow')
+class SeasonArchive extends Table {
+  IntColumn get seasonStartYear => integer()();
+  TextColumn get leagueId => text()();
+  TextColumn get clubId => text()();
+  IntColumn get position => integer()();
+  IntColumn get played => integer()();
+  IntColumn get won => integer()();
+  IntColumn get drawn => integer()();
+  IntColumn get lost => integer()();
+  IntColumn get gf => integer()();
+  IntColumn get ga => integer()();
+  IntColumn get points => integer()();
+
+  @override
+  Set<Column> get primaryKey => {seasonStartYear, clubId};
+}
+
+/// Gelar dan penghargaan klub (juara, promosi, degradasi, dll.).
+@DataClassName('HonourRow')
+class Honours extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get seasonStartYear => integer()();
+  TextColumn get leagueId => text()();
+  TextColumn get type => text()();
+  TextColumn get clubId => text()();
+  IntColumn get playerId => integer().nullable()();
 }

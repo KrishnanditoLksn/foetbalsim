@@ -7,6 +7,7 @@ import '../enums/position.dart';
 import '../enums/squad_status.dart';
 import '../models/game_models.dart';
 import '../models/player_attributes.dart';
+import '../season/season_calendar.dart';
 import 'current_ability.dart';
 import 'name_pool.dart';
 
@@ -15,8 +16,10 @@ import 'name_pool.dart';
 /// Fungsi ini murni (tanpa I/O, tanpa Flutter) sehingga aman dijalankan di
 /// isolate. Seed sama + JSON sama = [WorldBlueprint] identik.
 abstract final class WorldGenerator {
-  /// Tanggal awal musim 2025/26.
-  static final DateTime seasonStart = DateTime.utc(2025, 7, 1);
+  /// Tanggal save pertama dibuat: 15 Agustus 2026 (musim 2026/27), diambil
+  /// dari kalender musim agar tidak ada tahun yang di-hardcode di sini.
+  static final DateTime seasonStart =
+      SeasonCalendar.careerStart(SeasonCalendar.firstSeasonYear);
 
   /// Komposisi skuad per klub: 3 GK, 8 bek, 8 gelandang, 6 penyerang (= 25).
   static const List<Position> squadTemplate = [
@@ -137,7 +140,12 @@ abstract final class WorldGenerator {
             playerId: id,
             clubId: club.id,
             wage: d.wage,
-            endDate: DateTime.utc(2026 + rng.range(0, 4), 6, 30),
+            // Kontrak berakhir 30 Juni, 1–4 musim setelah musim pertama.
+            endDate: DateTime.utc(
+              SeasonCalendar.firstSeasonYear + 1 + rng.range(0, 4),
+              6,
+              30,
+            ),
             squadStatus: status,
           ),
         );
