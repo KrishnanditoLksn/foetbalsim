@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../data/services/transfer_service.dart';
 import '../../domain/enums/transfer.dart';
 import '../../domain/finance/money_label.dart';
@@ -153,8 +154,10 @@ abstract final class TransferFlow {
     var wage = minWage;
     if (wage == null) {
       try {
-        wage = (await ref.read(gameEngineProvider).transferQuote(offer.playerId))
-            .expectedWage;
+        wage =
+            (await ref
+                .read(gameEngineProvider)
+                .transferQuote(offer.playerId)).expectedWage;
       } on StateError {
         wage = 0;
       }
@@ -217,7 +220,8 @@ class OfferActions extends ConsumerWidget {
           child: const Text('Tawaran final'),
         ),
         FilledButton(
-          onPressed: () => simple('accept', 'Harga disepakati. Ajukan kontrak.'),
+          onPressed:
+              () => simple('accept', 'Harga disepakati. Ajukan kontrak.'),
           child: const Text('Terima harga'),
         ),
       ];
@@ -229,7 +233,13 @@ class OfferActions extends ConsumerWidget {
         ),
         FilledButton(
           onPressed:
-              () => TransferFlow.contract(context, ref, offer, playerName, submit),
+              () => TransferFlow.contract(
+                context,
+                ref,
+                offer,
+                playerName,
+                submit,
+              ),
           child: const Text('Ajukan kontrak'),
         ),
       ];
@@ -253,6 +263,17 @@ class OfferActions extends ConsumerWidget {
     );
   }
 }
+
+/// Warna badge status negosiasi.
+Color offerStatusColor(TransferOfferStatus s) => switch (s) {
+  TransferOfferStatus.pending => FutbolColors.cyan,
+  TransferOfferStatus.countered => FutbolColors.amber,
+  TransferOfferStatus.awaitingContract => FutbolColors.amber,
+  TransferOfferStatus.completed => FutbolColors.emerald,
+  TransferOfferStatus.rejected ||
+  TransferOfferStatus.failed => FutbolColors.coral,
+  TransferOfferStatus.withdrawn => FutbolColors.textSecondary,
+};
 
 /// Teks ringkas satu tawaran: syarat, ronde, dan alasan bila ditolak.
 String offerSummary(TransferOffer o) {

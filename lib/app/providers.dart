@@ -34,6 +34,19 @@ final activeSaveSlotProvider = StateProvider<int?>((ref) => null);
 /// Ringkasan LANJUTKAN terakhir (kartu "Hari Ini" di dashboard).
 final lastDayReportProvider = StateProvider<DayReport?>((ref) => null);
 
+/// Klub yang dilatih (null bila belum ada save aktif). Dipakai tema:
+/// aksen aplikasi mengikuti warna klub.
+final ourClubProvider = Provider<Club?>((ref) {
+  if (ref.watch(currentDatabaseProvider) == null) return null;
+  final clubId = ref.watch(gameStateProvider).valueOrNull?.clubId;
+  if (clubId == null) return null;
+  return ref.watch(clubByIdProvider(clubId)).valueOrNull;
+});
+
+/// Tab aktif di shell utama (0 Beranda, 1 Skuad, 2 Jadwal, 3 Transfer,
+/// 4 Inbox). Auto-dispose: kembali ke Beranda setiap shell dibuka ulang.
+final shellTabProvider = StateProvider.autoDispose<int>((ref) => 0);
+
 /// Naik setiap kali data permainan berubah. Provider yang membaca data
 /// permainan menonton angka ini agar otomatis dihitung ulang.
 final worldVersionProvider = StateProvider<int>((ref) => 0);
@@ -85,17 +98,16 @@ final clubTacticProvider = FutureProvider<ClubTactic?>((ref) async {
 });
 
 /// Skuad tim kita yang sudah disusun sesuai taktik (starter & bangku).
-final lineupProvider = FutureProvider<({List<Player> starters, List<Player> bench})>((
-  ref,
-) async {
-  ref.watch(worldVersionProvider);
-  final state = await ref.watch(gameStateProvider.future);
-  final clubId = state?.clubId;
-  if (clubId == null) return (starters: <Player>[], bench: <Player>[]);
-  final squad = await ref.watch(squadProvider(clubId).future);
-  final saved = await ref.watch(clubTacticProvider.future);
-  return LineupBuilder.resolve(squad, saved);
-});
+final lineupProvider =
+    FutureProvider<({List<Player> starters, List<Player> bench})>((ref) async {
+      ref.watch(worldVersionProvider);
+      final state = await ref.watch(gameStateProvider.future);
+      final clubId = state?.clubId;
+      if (clubId == null) return (starters: <Player>[], bench: <Player>[]);
+      final squad = await ref.watch(squadProvider(clubId).future);
+      final saved = await ref.watch(clubTacticProvider.future);
+      return LineupBuilder.resolve(squad, saved);
+    });
 
 /// Semua pemain di database untuk layar pencarian.
 final playerSearchRowsProvider = FutureProvider<List<PlayerSearchRow>>((ref) {

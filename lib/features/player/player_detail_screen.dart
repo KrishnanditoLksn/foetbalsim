@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
 import '../../core/utils/format_utils.dart';
+import '../../core/widgets/club_badge.dart';
+import '../../core/widgets/futbol_ui.dart';
 import '../../data/repositories/player_repository.dart';
 import '../../domain/enums/attribute.dart';
 import '../../domain/finance/money_label.dart';
@@ -25,11 +28,11 @@ class PlayerDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(playerDetailProvider(playerId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Pemain')),
+      appBar: AppBar(title: const Text('Profil pemain')),
       body: detail.when(
-      skipLoadingOnReload: true,
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Gagal memuat pemain: $e')),
+        error: (e, _) => Center(child: Text('Pemain gagal dimuat: $e')),
         data:
             (d) =>
                 d == null
@@ -49,53 +52,164 @@ class _PlayerBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = detail.player;
     final c = detail.contract;
-    final theme = Theme.of(context);
+    final club = ref.watch(clubByIdProvider(p.clubId)).valueOrNull;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
       children: [
-        Text(p.fullName, style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 4),
-        Text('${p.position.label} · ${p.age} tahun · ${p.nationality}'),
-        Text('Klub: ${detail.clubName}'),
-        if (p.isTransferListed)
-          Text(
-            'Status: Daftar jual',
-            style: TextStyle(
-              color: theme.colorScheme.tertiary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        const SizedBox(height: 12),
+        _Identity(detail: detail, club: club),
+        const SizedBox(height: 20),
+        _Numbers(player: p),
+        const SectionHeader('Transfer'),
         _TransferActions(detail: detail),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _InfoChip(
-              label: 'CA',
-              value: '${caToStars(p.currentAbility)} ★ (${p.currentAbility})',
-            ),
-            _InfoChip(
-              label: 'PA',
-              value:
-                  '${caToStars(p.potentialAbility)} ★ (${p.potentialAbility})',
-            ),
-            _InfoChip(label: 'Kondisi', value: '${p.condition}%'),
-            _InfoChip(label: 'Moral', value: '${p.morale}'),
-            _InfoChip(label: 'Nilai', value: formatMoney(p.marketValue)),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (c != null) _ContractCard(contract: c),
-        const SizedBox(height: 16),
+        if (c != null) ...[
+          const SectionHeader('Kontrak'),
+          _ContractRow(contract: c),
+        ],
         for (final entry in p.attributes.byGroup.entries)
           _AttributeSection(
             title: entry.key.label,
             attributes: entry.value,
             values: p.attributes,
           ),
+      ],
+    );
+  }
+}
+
+/// Identitas pemain: nama besar seperti di punggung kaus, garis warna klub
+/// di kiri, lalu posisi, usia, negara, dan klub.
+class _Identity extends StatelessWidget {
+  const _Identity({required this.detail, required this.club});
+
+  final PlayerDetail detail;
+  final Club? club;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = detail.player;
+    final stripe = club == null ? Chalk.line : colorFromHex(club!.primaryColor);
+    return Container(
+      padding: const EdgeInsets.only(left: 14),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: stripe, width: 5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.firstName,
+                  style: const TextStyle(color: Chalk.dim, fontSize: 16),
+                ),
+                Text(
+                  p.lastName,
+                  style: const TextStyle(
+                    fontFamily: Fonts.condensed,
+                    fontSize: 42,
+                    height: 1,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    PositionBadge(p.position),
+                    Text('${p.age} tahun, ${p.nationality}'),
+                    if (p.isTransferListed)
+                      const StatusBadge('Dijual', color: Chalk.yellow),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(detail.clubName, style: const TextStyle(color: Chalk.dim)),
+              ],
+            ),
+          ),
+          if (club != null) ClubBadge(club: club!, size: 48),
+        ],
+      ),
+    );
+  }
+}
+
+/// Kemampuan sekarang (CA), potensi (PA), kondisi, moral, nilai pasar.
+class _Numbers extends StatelessWidget {
+  const _Numbers({required this.player});
+
+  final Player player;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = player;
+    final moraleColor =
+        p.morale >= 70
+            ? Chalk.green
+            : p.morale >= 45
+            ? Chalk.yellow
+            : Chalk.red;
+    return Column(
+      children: [
+        StatStrip(
+          children: [
+            _Ability(label: 'Kemampuan (CA)', value: p.currentAbility),
+            _Ability(label: 'Potensi (PA)', value: p.potentialAbility),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 12),
+        StatStrip(
+          children: [
+            StatFigure(
+              label: 'Kondisi',
+              child: ConditionBar(p.condition, width: 44),
+            ),
+            StatFigure(
+              label: 'Moral',
+              value: '${p.morale}',
+              color: moraleColor,
+            ),
+            StatFigure(label: 'Nilai pasar', value: formatMoney(p.marketValue)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Ability extends StatelessWidget {
+  const _Ability({required this.label, required this.value});
+
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.end,
+          children: [
+            Text(
+              '$value',
+              style: scoreStyle(size: 46, color: ratingColor(value)),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: StarRow(stars: caToStars(value), size: 13),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Chalk.dim, fontSize: 13)),
       ],
     );
   }
@@ -119,10 +233,9 @@ class _TransferActions extends ConsumerWidget {
     final p = detail.player;
     final isOurs = p.clubId == ourId;
     final window = TransferWindow.status(now);
-    final shortlisted =
-        (ref.watch(shortlistProvider).valueOrNull ?? const <int>{}).contains(
-          p.id,
-        );
+    final shortlisted = (ref.watch(shortlistProvider).valueOrNull ??
+            const <int>{})
+        .contains(p.id);
     final offers = ref.watch(clubOffersProvider).valueOrNull ?? const [];
     TransferOffer? active;
     for (final o in offers) {
@@ -219,69 +332,45 @@ class _TransferActions extends ConsumerWidget {
       );
     }
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(spacing: 8, runSpacing: 8, children: buttons),
-            const SizedBox(height: 8),
-            ...lines,
-            const SizedBox(height: 6),
-            Text(
-              window.isOpen
-                  ? 'Jendela transfer buka (tutup ${formatDate(window.closesOn!)}).'
-                  : 'Jendela transfer tutup. Dibuka kembali '
-                      '${formatDate(window.nextOpensOn!)}.',
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...lines,
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, runSpacing: 8, children: buttons),
+        const SizedBox(height: 8),
+        Text(
+          window.isOpen
+              ? 'Bursa buka sampai ${formatDate(window.closesOn!)}.'
+              : 'Bursa tutup, buka lagi ${formatDate(window.nextOpensOn!)}.',
+          style: theme.textTheme.bodySmall,
         ),
-      ),
+      ],
     );
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(label: Text('$label: $value'));
-  }
-}
-
-class _ContractCard extends StatelessWidget {
-  const _ContractCard({required this.contract});
+/// Gaji, akhir kontrak, dan peran dalam satu baris angka.
+class _ContractRow extends StatelessWidget {
+  const _ContractRow({required this.contract});
 
   final Contract contract;
 
   @override
   Widget build(BuildContext context) {
     final end = contract.endDate;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Kontrak', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text('Gaji: ${formatMoney(contract.wage)} / tahun'),
-            Text('Berakhir: ${end.day}/${end.month}/${end.year}'),
-            Text('Peran: ${contract.squadStatus.label}'),
-          ],
-        ),
-      ),
+    return StatStrip(
+      children: [
+        StatFigure(label: 'Gaji per tahun', value: formatMoney(contract.wage)),
+        StatFigure(label: 'Berakhir', value: '${end.month}/${end.year}'),
+        StatFigure(label: 'Peran', value: contract.squadStatus.label),
+      ],
     );
   }
 }
 
+/// Atribut satu kategori dalam grid 2 kolom: nama di kiri, angka berkode
+/// warna di kanan (gaya Football Manager).
 class _AttributeSection extends StatelessWidget {
   const _AttributeSection({
     required this.title,
@@ -295,45 +384,45 @@ class _AttributeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    Widget cell(Attribute a) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              a.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          const SizedBox(width: 6),
+          AttributeBox(values[a]),
+        ],
+      ),
+    );
+
+    final rows = <Widget>[];
+    for (var i = 0; i < attributes.length; i += 2) {
+      rows.add(
+        Row(
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final a in attributes)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    SizedBox(width: 140, child: Text(a.label)),
-                    Expanded(
-                      child: LinearProgressIndicator(
-                        value: values[a] / 20,
-                        minHeight: 8,
-                        color: attributeColor(values[a]),
-                        backgroundColor: Colors.grey.shade300,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 32,
-                      child: Text(
-                        '${values[a]}',
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: attributeColor(values[a]),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Expanded(child: cell(attributes[i])),
+            const SizedBox(width: 20),
+            Expanded(
+              child:
+                  i + 1 < attributes.length
+                      ? cell(attributes[i + 1])
+                      : const SizedBox.shrink(),
+            ),
           ],
         ),
-      ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [SectionHeader(title), ...rows],
     );
   }
 }

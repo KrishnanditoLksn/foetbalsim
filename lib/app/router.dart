@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/dashboard/dashboard_screen.dart';
+import '../features/shell/main_shell_screen.dart';
 import '../features/fixtures/fixtures_screen.dart';
 import '../features/inbox/inbox_screen.dart';
 import '../features/load_game/load_game_screen.dart';
@@ -32,7 +32,8 @@ abstract final class AppRoutes {
       start => (_) => const StartScreen(),
       newCareer => (_) => const NewCareerScreen(),
       loadGame => (_) => const LoadGameScreen(),
-      dashboard => (_) => const DashboardScreen(),
+      // Setelah karier dibuka: shell 5 tab (Beranda di tab pertama).
+      dashboard => (_) => const MainShellScreen(),
       squad => (_) => const SquadScreen(),
       player => (_) => PlayerDetailScreen(playerId: settings.arguments as int),
       inbox => (_) => const InboxScreen(),

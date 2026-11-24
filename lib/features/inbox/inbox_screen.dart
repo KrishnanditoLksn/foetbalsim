@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
 import '../../domain/enums/inbox.dart';
 import '../../app/router.dart';
@@ -10,64 +11,98 @@ import '../../domain/models/season_models.dart';
 import '../../domain/models/transfer_models.dart';
 import '../transfer/transfer_flow.dart';
 
-class InboxScreen extends ConsumerWidget {
+enum _InboxFilter { all, action, unread }
+
+class InboxScreen extends ConsumerStatefulWidget {
   const InboxScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InboxScreen> createState() => _InboxScreenState();
+}
+
+class _InboxScreenState extends ConsumerState<InboxScreen> {
+  _InboxFilter _filter = _InboxFilter.all;
+
+  @override
+  Widget build(BuildContext context) {
     final inbox = ref.watch(inboxProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Inbox')),
       body: inbox.when(
-      skipLoadingOnReload: true,
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Gagal memuat inbox: $e')),
         data: (list) {
           if (list.isEmpty) {
             return const Center(child: Text('Inbox kosong.'));
           }
-          return ListView.separated(
-            itemCount: list.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (_, i) {
-              final m = list[i];
-              return ListTile(
-                leading: Icon(
-                  _iconOf(m.category),
-                  color:
-                      m.needsAction
-                          ? Theme.of(context).colorScheme.error
-                          : null,
+          final action = list.where((m) => m.needsAction).length;
+          final unread = list.where((m) => !m.isRead).length;
+          final shown = switch (_filter) {
+            _InboxFilter.all => list,
+            _InboxFilter.action => list.where((m) => m.needsAction).toList(),
+            _InboxFilter.unread => list.where((m) => !m.isRead).toList(),
+          };
+          Widget chip(_InboxFilter f, String label, {Color? color}) => Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: ChoiceChip(
+              label: Text(label),
+              selected: _filter == f,
+              showCheckmark: false,
+              selectedColor: color?.withValues(alpha: 0.22),
+              onSelected: (_) => setState(() => _filter = f),
+            ),
+          );
+          return Column(
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    chip(_InboxFilter.all, 'Semua (${list.length})'),
+                    chip(
+                      _InboxFilter.action,
+                      'Menunggu keputusan ($action)',
+                      color: Chalk.red,
+                    ),
+                    chip(
+                      _InboxFilter.unread,
+                      'Belum dibaca ($unread)',
+                      color: Chalk.blue,
+                    ),
+                  ],
                 ),
-                title: Text(
-                  m.title,
-                  style: TextStyle(
-                    fontWeight: m.isRead ? FontWeight.normal : FontWeight.w700,
-                  ),
-                ),
-                subtitle: Text('${m.category.label} · ${formatDate(m.date)}'),
-                trailing:
-                    m.needsAction
-                        ? const Chip(label: Text('Perlu tindakan'))
-                        : null,
-                onTap: () => _open(context, ref, m),
-              );
-            },
+              ),
+              const Divider(),
+              Expanded(
+                child:
+                    shown.isEmpty
+                        ? Center(
+                          child: Text(
+                            _filter == _InboxFilter.action
+                                ? 'Tidak ada keputusan yang menunggu.'
+                                : 'Semua pesan sudah dibaca.',
+                            style: const TextStyle(color: Chalk.dim),
+                          ),
+                        )
+                        : ListView.separated(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          itemCount: shown.length,
+                          separatorBuilder: (_, _) => const Divider(),
+                          itemBuilder:
+                              (_, i) => _MessageCard(
+                                message: shown[i],
+                                onTap: () => _open(context, ref, shown[i]),
+                              ),
+                        ),
+              ),
+            ],
           );
         },
       ),
     );
   }
-
-  static IconData _iconOf(InboxCategory c) => switch (c) {
-    InboxCategory.board => Icons.business,
-    InboxCategory.match => Icons.sports_soccer,
-    InboxCategory.scouting => Icons.visibility,
-    InboxCategory.finance => Icons.payments,
-    InboxCategory.contract => Icons.description,
-    InboxCategory.season => Icons.emoji_events,
-    InboxCategory.transfer => Icons.swap_horiz,
-  };
 
   Future<void> _open(
     BuildContext context,
@@ -182,10 +217,9 @@ class InboxScreen extends ConsumerWidget {
       case _NextKind.choice:
         await TransferFlow.run(context, () => submit(next.choice!));
       case _NextKind.player:
-        await Navigator.of(context).pushNamed(
-          AppRoutes.player,
-          arguments: next.playerId,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.player, arguments: next.playerId);
       case _NextKind.counter:
       case _NextKind.finalOffer:
       case _NextKind.contract:
@@ -193,7 +227,9 @@ class InboxScreen extends ConsumerWidget {
         if (!context.mounted) return;
         if (offer == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Negosiasi ini sudah tidak berjalan.')),
+            const SnackBar(
+              content: Text('Negosiasi ini sudah tidak berjalan.'),
+            ),
           );
           return;
         }
@@ -203,9 +239,9 @@ class InboxScreen extends ConsumerWidget {
           await TransferFlow.finalOffer(context, offer, submit);
         } else {
           final name =
-              (await ref.read(playerDetailProvider(offer.playerId).future))
-                  ?.player
-                  .fullName ??
+              (await ref.read(
+                playerDetailProvider(offer.playerId).future,
+              ))?.player.fullName ??
               'Pemain';
           if (!context.mounted) return;
           await TransferFlow.contract(
@@ -243,6 +279,101 @@ class InboxScreen extends ConsumerWidget {
   }
 }
 
+/// Satu pesan sebagai baris: kategori berwarna, judul, tanggal, titik
+/// belum dibaca, dan garis merah di kiri bila menunggu keputusan.
+class _MessageCard extends StatelessWidget {
+  const _MessageCard({required this.message, required this.onTap});
+
+  final InboxMessage message;
+  final VoidCallback onTap;
+
+  static Color colorOf(InboxCategory c) => switch (c) {
+    InboxCategory.board => Chalk.pink,
+    InboxCategory.match => Chalk.green,
+    InboxCategory.scouting => Chalk.blue,
+    InboxCategory.finance => Chalk.yellow,
+    InboxCategory.contract => Chalk.pink,
+    InboxCategory.season => Chalk.yellow,
+    InboxCategory.transfer => Chalk.blue,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final m = message;
+    final color = colorOf(m.category);
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: m.needsAction ? Chalk.red : Colors.transparent,
+              width: 4,
+            ),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 12, 20, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: m.category.label,
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        TextSpan(text: ', ${formatDate(m.date)}'),
+                      ],
+                    ),
+                    style: const TextStyle(fontSize: 13, color: Chalk.dim),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    m.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: m.isRead ? FontWeight.w400 : FontWeight.w700,
+                    ),
+                  ),
+                  if (m.needsAction) ...[
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Menunggu keputusan Anda',
+                      style: TextStyle(
+                        color: Chalk.red,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (!m.isRead)
+              Container(
+                width: 9,
+                height: 9,
+                margin: const EdgeInsets.only(left: 10, top: 24),
+                decoration: const BoxDecoration(
+                  color: Chalk.blue,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 enum _NextKind { choice, player, counter, finalOffer, contract }
 
 /// Langkah setelah dialog pesan ditutup.
@@ -253,7 +384,10 @@ class _Next {
   const _Next.player(int this.playerId)
     : kind = _NextKind.player,
       choice = null;
-  const _Next.counter() : kind = _NextKind.counter, choice = null, playerId = null;
+  const _Next.counter()
+    : kind = _NextKind.counter,
+      choice = null,
+      playerId = null;
   const _Next.finalOffer()
     : kind = _NextKind.finalOffer,
       choice = null,

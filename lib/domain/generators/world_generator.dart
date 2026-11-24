@@ -18,8 +18,9 @@ import 'name_pool.dart';
 abstract final class WorldGenerator {
   /// Tanggal save pertama dibuat: 15 Agustus 2026 (musim 2026/27), diambil
   /// dari kalender musim agar tidak ada tahun yang di-hardcode di sini.
-  static final DateTime seasonStart =
-      SeasonCalendar.careerStart(SeasonCalendar.firstSeasonYear);
+  static final DateTime seasonStart = SeasonCalendar.careerStart(
+    SeasonCalendar.firstSeasonYear,
+  );
 
   /// Komposisi skuad per klub: 3 GK, 8 bek, 8 gelandang, 6 penyerang (= 25).
   static const List<Position> squadTemplate = [

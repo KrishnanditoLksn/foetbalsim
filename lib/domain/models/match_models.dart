@@ -170,6 +170,7 @@ class MinuteFrame {
   final double ballFromY;
   final double ballToX;
   final double ballToY;
+
   /// Alur bola berurutan selama menit ini (awal → setiap aksi → akhir).
   final List<BallWaypoint> ballPath;
   final int carrierIndex; // indeks pemain yang menguasai bola di akhir menit

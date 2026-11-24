@@ -228,8 +228,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
       session.openSubWindow(_ourHome);
     } on StateError catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
       return;
     }
@@ -312,8 +313,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     final session = _session;
     final setup = _setup;
 
-    final canLeave =
-        _committed || session == null || session.minute == 0;
+    final canLeave = _committed || session == null || session.minute == 0;
 
     return PopScope(
       canPop: canLeave,
@@ -325,9 +325,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            setup == null
-                ? 'Laga'
-                : '${setup.home.name} vs ${setup.away.name}',
+            setup == null ? 'Laga' : '${setup.home.name} vs ${setup.away.name}',
           ),
         ),
         body:
@@ -388,10 +386,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           style: theme.textTheme.labelLarge,
         ),
         if (session.isHalfTimeBreak)
-          _Banner(text: 'JEDA BABAK PERTAMA · Pergantian bebas', color: theme.colorScheme.secondaryContainer)
-        else if (_bannerText != null &&
-            session.tick - _bannerTick <= 4)
-          _Banner(text: _bannerText!, color: theme.colorScheme.tertiaryContainer),
+          _Banner(
+            text: 'JEDA BABAK PERTAMA · Pergantian bebas',
+            color: theme.colorScheme.secondaryContainer,
+          )
+        else if (_bannerText != null && session.tick - _bannerTick <= 4)
+          _Banner(
+            text: _bannerText!,
+            color: theme.colorScheme.tertiaryContainer,
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: AspectRatio(
@@ -406,12 +409,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
                     return PitchDot(
                       x: pose.x,
                       y: pose.y,
-                      fill: club != null
-                          ? colorFromHex(club.primaryColor)
-                          : (d.isHome ? Colors.blue : Colors.red),
-                      stroke: club != null
-                          ? colorFromHex(club.secondaryColor)
-                          : Colors.white,
+                      fill:
+                          club != null
+                              ? colorFromHex(club.primaryColor)
+                              : (d.isHome ? Colors.blue : Colors.red),
+                      stroke:
+                          club != null
+                              ? colorFromHex(club.secondaryColor)
+                              : Colors.white,
                       label: '${d.shirt}',
                       name: hasBall ? _players[d.playerId]?.lastName : null,
                     );
@@ -427,8 +432,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           children: [
             IconButton.filledTonal(
               tooltip: _playing ? 'Jeda' : 'Mainkan',
-              onPressed:
-                  session.finished ? null : _togglePlay,
+              onPressed: session.finished ? null : _togglePlay,
               icon: Icon(_playing ? Icons.pause : Icons.play_arrow),
             ),
             SegmentedButton<int>(
@@ -475,7 +479,10 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             spacing: 8,
             runSpacing: 4,
             children: [
-              _StatChip('Penguasaan', '${st.homePossession}% - ${st.awayPossession}%'),
+              _StatChip(
+                'Penguasaan',
+                '${st.homePossession}% - ${st.awayPossession}%',
+              ),
               _StatChip('Tembakan', '${st.home.shots} - ${st.away.shots}'),
               _StatChip(
                 'Tepat sasaran',
@@ -513,7 +520,6 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
       ],
     );
   }
-
 }
 
 /// Banner singkat di atas lapangan untuk peristiwa penting.
@@ -566,8 +572,8 @@ class _EventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = switch (event.type) {
       MatchEventType.goal => const TextStyle(fontWeight: FontWeight.w800),
-      MatchEventType.red || MatchEventType.yellow =>
-        const TextStyle(color: Colors.orange),
+      MatchEventType.red ||
+      MatchEventType.yellow => const TextStyle(color: Colors.orange),
       _ => null,
     };
     final icon = switch (event.type) {
@@ -583,19 +589,17 @@ class _EventTile extends StatelessWidget {
     };
     return ListTile(
       dense: true,
-      leading: Text(
-        event.label,
-        style: Theme.of(context).textTheme.labelLarge,
-      ),
+      leading: Text(event.label, style: Theme.of(context).textTheme.labelLarge),
       title: Text(event.text, style: style),
       trailing: Icon(
         icon,
         size: 18,
-        color: event.type == MatchEventType.red
-            ? Colors.red
-            : event.type == MatchEventType.yellow
-            ? Colors.amber
-            : null,
+        color:
+            event.type == MatchEventType.red
+                ? Colors.red
+                : event.type == MatchEventType.yellow
+                ? Colors.amber
+                : null,
       ),
     );
   }
@@ -659,14 +663,19 @@ class _SubsSheetState extends State<_SubsSheet> {
                 child: ListView(
                   shrinkWrap: true,
                   children: [
-                    Text('Keluar (di lapangan)', style: theme.textTheme.labelLarge),
+                    Text(
+                      'Keluar (di lapangan)',
+                      style: theme.textTheme.labelLarge,
+                    ),
                     for (final p in widget.onPitch)
                       RadioListTile<int>(
                         dense: true,
                         value: p.id,
                         groupValue: _out,
                         title: Text(p.fullName),
-                        subtitle: Text('${p.position.label} · CA ${p.currentAbility}'),
+                        subtitle: Text(
+                          '${p.position.label} · CA ${p.currentAbility}',
+                        ),
                         onChanged: (v) => setState(() => _out = v),
                       ),
                     const SizedBox(height: 8),
@@ -677,7 +686,9 @@ class _SubsSheetState extends State<_SubsSheet> {
                         value: p.id,
                         groupValue: _in,
                         title: Text(p.fullName),
-                        subtitle: Text('${p.position.label} · CA ${p.currentAbility}'),
+                        subtitle: Text(
+                          '${p.position.label} · CA ${p.currentAbility}',
+                        ),
                         onChanged: (v) => setState(() => _in = v),
                       ),
                   ],

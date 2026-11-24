@@ -120,7 +120,10 @@ class PitchAnimator extends ChangeNotifier {
     final owner = ball.owner;
 
     final changed =
-        ball.x != ballX || ball.y != ballY || alpha != _alpha || owner != carrier;
+        ball.x != ballX ||
+        ball.y != ballY ||
+        alpha != _alpha ||
+        owner != carrier;
     ballX = ball.x;
     ballY = ball.y;
     _alpha = alpha;
@@ -161,9 +164,10 @@ class PitchAnimator extends ChangeNotifier {
     // Jika timeline sudah tertinggal, durasi run dimampatkan agar bola
     // tidak tertinggal jauh dari simulasi.
     final backlog = _endTime - tickStart;
-    final scale = backlog > _maxBacklogTicks
-        ? math.max(0.3, _maxBacklogTicks / backlog)
-        : 1.0;
+    final scale =
+        backlog > _maxBacklogTicks
+            ? math.max(0.3, _maxBacklogTicks / backlog)
+            : 1.0;
 
     var t = math.max(_endTime.isFinite ? _endTime : tickStart, tickStart);
     for (final g in groups) {
@@ -174,11 +178,16 @@ class PitchAnimator extends ChangeNotifier {
         cum.add(cum.last + math.sqrt(_sq(b.x - a.x) + _sq(b.y - a.y)));
       }
       if (cum.last < 1e-9) continue;
-      final base = g.owner >= 0
-          ? math.min(_maxDribbleTicks,
-              math.max(_minDribbleTicks, cum.last * 9))
-          : math.min(_maxAirTicks,
-              math.max(_minAirTicks, 1.2 + cum.last * 4.0));
+      final base =
+          g.owner >= 0
+              ? math.min(
+                _maxDribbleTicks,
+                math.max(_minDribbleTicks, cum.last * 9),
+              )
+              : math.min(
+                _maxAirTicks,
+                math.max(_minAirTicks, 1.2 + cum.last * 4.0),
+              );
       final duration = base * scale;
       _runs.add(
         _BallRun(
@@ -209,10 +218,7 @@ class PitchAnimator extends ChangeNotifier {
       while (end + 1 < path.length && segOwner(end + 1) == owner) {
         end++;
       }
-      groups.add((
-        owner: owner,
-        points: path.sublist(start - 1, end + 1),
-      ));
+      groups.add((owner: owner, points: path.sublist(start - 1, end + 1)));
       start = end + 1;
     }
     return groups;

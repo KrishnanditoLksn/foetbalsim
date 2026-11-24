@@ -126,6 +126,7 @@ class MatchSession {
     final (minute, extra) = _clockLabel();
     return extra > 0 ? "$minute+$extra'" : "$minute'";
   }
+
   int get homeGoals => _homeGoals;
   int get awayGoals => _awayGoals;
   List<MatchEvent> get events => List.unmodifiable(_events);
@@ -225,15 +226,16 @@ class MatchSession {
 
     final out = _pitch[idx];
     _closeMinutes(out);
-    final replacement = _Slot.fromPlayer(
-      incoming,
-      isHome,
-      out.slotIndex,
-      isHome ? home.formation : away.formation,
-    )
-      ..x = out.x
-      ..y = out.y
-      ..since = _minute;
+    final replacement =
+        _Slot.fromPlayer(
+            incoming,
+            isHome,
+            out.slotIndex,
+            isHome ? home.formation : away.formation,
+          )
+          ..x = out.x
+          ..y = out.y
+          ..since = _minute;
     _pitch[idx] = replacement;
     bench.remove(inId);
     _subsUsed[side]++;
@@ -348,7 +350,8 @@ class MatchSession {
     final minutes = Map<int, int>.from(_minutesPlayed);
     for (final s in _pitch) {
       if (s.active) {
-        minutes[s.player.id] = (minutes[s.player.id] ?? 0) + endMinute - s.since;
+        minutes[s.player.id] =
+            (minutes[s.player.id] ?? 0) + endMinute - s.since;
       }
     }
     return MatchResultData(
@@ -358,7 +361,10 @@ class MatchSession {
       homeGoals: _homeGoals,
       awayGoals: _awayGoals,
       events: List.unmodifiable(_events),
-      stats: MatchStats(home: _counters[0].freeze(), away: _counters[1].freeze()),
+      stats: MatchStats(
+        home: _counters[0].freeze(),
+        away: _counters[1].freeze(),
+      ),
       minutesPlayed: minutes,
       homeScorerNames: List.unmodifiable(_homeScorers),
       awayScorerNames: List.unmodifiable(_awayScorers),
@@ -412,11 +418,7 @@ class MatchSession {
     for (var k = 1; k <= 3; k++) {
       final t = k / 4;
       final lift = math.sin(math.pi * t) * bulge;
-      _recordBall(
-        x0 + dx * t + px * lift,
-        y0 + dy * t + py * lift,
-        owner: -1,
-      );
+      _recordBall(x0 + dx * t + px * lift, y0 + dy * t + py * lift, owner: -1);
     }
   }
 
@@ -471,8 +473,7 @@ class MatchSession {
     final dir = s.isHome ? 1.0 : -1.0;
     final weights = [
       for (final j in mates)
-        math.max(0.05, 0.6 + (_pitch[j].x - s.x) * dir * 4) *
-            (0.5 + _skill(j)),
+        math.max(0.05, 0.6 + (_pitch[j].x - s.x) * dir * 4) * (0.5 + _skill(j)),
     ];
     final j = _weightedPick(mates, weights);
 
@@ -491,8 +492,12 @@ class MatchSession {
       _lastPasser = c;
       _recordPass(c, _pitch[j].x, _pitch[j].y);
       if (_rng.chance(0.12) && (_pitch[j].x - s.x) * dir > 0.12) {
-        _emitChance(s.isHome, 'Umpan terobosan dari ${s.player.lastName} '
-            'ke ${_pitch[j].player.lastName}!', s.player.id);
+        _emitChance(
+          s.isHome,
+          'Umpan terobosan dari ${s.player.lastName} '
+          'ke ${_pitch[j].player.lastName}!',
+          s.player.id,
+        );
       }
       _carrier = j;
       _ballX = _pitch[j].x;
@@ -527,8 +532,12 @@ class MatchSession {
       }
       _lastPasser = c;
       _recordPass(c, _pitch[j].x, _pitch[j].y);
-      _emitChance(home, 'Umpan silang ${s.player.lastName} ke '
-          '${_pitch[j].player.lastName} di kotak penalti.', s.player.id);
+      _emitChance(
+        home,
+        'Umpan silang ${s.player.lastName} ke '
+        '${_pitch[j].player.lastName} di kotak penalti.',
+        s.player.id,
+      );
       _carrier = j;
       _ballX = _pitch[j].x;
       _ballY = _pitch[j].y;
@@ -603,7 +612,9 @@ class MatchSession {
       final crossed = _rng.chance(0.5);
       _emit(
         MatchEventType.goalLineTech,
-        crossed ? 'GOAL-LINE TECH: GOL' : 'GOAL-LINE TECH: BELUM MELEWATI GARIS',
+        crossed
+            ? 'GOAL-LINE TECH: GOL'
+            : 'GOAL-LINE TECH: BELUM MELEWATI GARIS',
         isHome: home,
       );
       if (crossed) {
@@ -614,11 +625,19 @@ class MatchSession {
       return;
     }
 
-    final goalP = _clamp(0.16 + 0.25 * fin + 0.1 * comp - 0.25 * gkRate, 0.04, 0.55);
+    final goalP = _clamp(
+      0.16 + 0.25 * fin + 0.1 * comp - 0.25 * gkRate,
+      0.04,
+      0.55,
+    );
     if (_rng.chance(goalP)) {
       _goal(c);
     } else {
-      _save(c, gkIdx, 'Penyelamatan ${gk.player.lastName}! Tembakan ${s.player.lastName} ditepis.');
+      _save(
+        c,
+        gkIdx,
+        'Penyelamatan ${gk.player.lastName}! Tembakan ${s.player.lastName} ditepis.',
+      );
     }
   }
 
@@ -635,7 +654,9 @@ class MatchSession {
     }
     final assistIdx = _lastPasser;
     final assistId =
-        (assistIdx != null && assistIdx != c && _pitch[assistIdx].isHome == home)
+        (assistIdx != null &&
+                assistIdx != c &&
+                _pitch[assistIdx].isHome == home)
             ? _pitch[assistIdx].player.id
             : null;
     _emit(
@@ -657,12 +678,7 @@ class MatchSession {
     final home = _pitch[c].isHome;
     final gk = _pitch[gkIdx];
     _counters[home ? 1 : 0].saves++;
-    _emit(
-      MatchEventType.save,
-      text,
-      isHome: !home,
-      playerId: gk.player.id,
-    );
+    _emit(MatchEventType.save, text, isHome: !home, playerId: gk.player.id);
     _carrier = gkIdx;
     _lastPasser = null;
   }
@@ -683,7 +699,8 @@ class MatchSession {
     _counters[home ? 0 : 1].onTarget++;
     final gkIdx = _keeperIndex(!home);
     final gk = _pitch[gkIdx];
-    final taker = (a.player.attributes[Attribute.finishing] +
+    final taker =
+        (a.player.attributes[Attribute.finishing] +
             a.player.attributes[Attribute.composure] +
             a.player.attributes[Attribute.technique]) /
         60;
@@ -728,7 +745,9 @@ class MatchSession {
 
     final attackerGoalX = _pitch[attacker].isHome ? 1.0 : 0.0;
     final oneOnOne = (attackerGoalX - _pitch[attacker].x).abs() < 0.1;
-    if (_inBoxFor(attacker) && oneOnOne && _rng.chance(MatchRules.dogsoChance)) {
+    if (_inBoxFor(attacker) &&
+        oneOnOne &&
+        _rng.chance(MatchRules.dogsoChance)) {
       // DOGSO: menggagalkan peluang emas → kartu merah langsung + penalti.
       if (_varReview('kartu merah langsung untuk ${d.player.lastName}')) {
         _sendOff(
@@ -775,12 +794,7 @@ class MatchSession {
     final p = _pitch[idx];
     final home = p.isHome;
     _counters[home ? 0 : 1].red++;
-    _emit(
-      MatchEventType.red,
-      text,
-      isHome: home,
-      playerId: p.player.id,
-    );
+    _emit(MatchEventType.red, text, isHome: home, playerId: p.player.id);
     _closeMinutes(p);
     p.active = false;
     if (_carrier == idx) {
@@ -852,7 +866,9 @@ class MatchSession {
     final overturned = _rng.chance(MatchRules.varOverturnChance);
     _emit(
       MatchEventType.varResult,
-      overturned ? 'VAR: keputusan dibatalkan.' : 'VAR: keputusan dipertahankan.',
+      overturned
+          ? 'VAR: keputusan dibatalkan.'
+          : 'VAR: keputusan dipertahankan.',
     );
     return !overturned;
   }
@@ -1201,18 +1217,26 @@ class MatchSession {
 
   /// Tekanan dari lawan terdekat (rata-rata kemampuan bertahan 3 pemain).
   double _pressure(int c) {
-    final opp = _opponents(c)
-      ..sort(
-        (a, b) => _distTo(a, _pitch[c].x, _pitch[c].y).compareTo(
-          _distTo(b, _pitch[c].x, _pitch[c].y),
-        ),
-      );
+    final opp = _opponents(c)..sort(
+      (a, b) => _distTo(
+        a,
+        _pitch[c].x,
+        _pitch[c].y,
+      ).compareTo(_distTo(b, _pitch[c].x, _pitch[c].y)),
+    );
     final near = opp.take(3).toList();
     if (near.isEmpty) return 0.5;
     var total = 0.0;
     for (final j in near) {
-      total += _skill(j) *
-          (0.6 + 0.4 * _norm(_pitch[j].player, Attribute.tackling, Attribute.positioning));
+      total +=
+          _skill(j) *
+          (0.6 +
+              0.4 *
+                  _norm(
+                    _pitch[j].player,
+                    Attribute.tackling,
+                    Attribute.positioning,
+                  ));
     }
     return total / near.length;
   }
@@ -1267,8 +1291,15 @@ class MatchSession {
     int? assistId,
   }) {
     final (minute, extra) = _clockLabel();
-    _emitAt(minute, type, text,
-        isHome: isHome, playerId: playerId, assistId: assistId, extra: extra);
+    _emitAt(
+      minute,
+      type,
+      text,
+      isHome: isHome,
+      playerId: playerId,
+      assistId: assistId,
+      extra: extra,
+    );
   }
 
   void _emitAt(

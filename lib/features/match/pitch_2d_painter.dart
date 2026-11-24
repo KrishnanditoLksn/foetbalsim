@@ -192,10 +192,8 @@ class Pitch2DPainter extends CustomPainter {
 /// Painter laga live. Digambar ulang langsung oleh [PitchAnimator] lewat
 /// `repaint`, sehingga widget tree tidak dibangun ulang tiap frame.
 class LivePitchPainter extends CustomPainter {
-  LivePitchPainter({
-    required this.animator,
-    required this.toDot,
-  }) : super(repaint: animator);
+  LivePitchPainter({required this.animator, required this.toDot})
+    : super(repaint: animator);
 
   final PitchAnimator animator;
 
@@ -218,8 +216,7 @@ class LivePitchPainter extends CustomPainter {
     canvas.drawPicture(_field!);
 
     final dots = [
-      for (final p in animator.poses)
-        toDot(p, p.dot.index == animator.carrier),
+      for (final p in animator.poses) toDot(p, p.dot.index == animator.carrier),
     ];
     Pitch2DPainter.drawDots(canvas, size, dots);
     Pitch2DPainter.drawBall(canvas, size, animator.ballX, animator.ballY);

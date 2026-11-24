@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
+import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
+import '../../core/widgets/futbol_ui.dart';
 import '../../domain/finance/money_label.dart';
 import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
@@ -37,6 +39,8 @@ class TransferScreen extends ConsumerWidget {
           title: const Text('Pasar Transfer'),
           bottom: TabBar(
             isScrollable: true,
+            // Tanpa celah awal bawaan Material 3 untuk tab yang bisa digeser.
+            tabAlignment: TabAlignment.start,
             tabs: [
               const Tab(text: 'Bursa Hari Ini'),
               const Tab(text: 'Cari Pemain'),
@@ -81,40 +85,76 @@ class _WindowBanner extends StatelessWidget {
   final TransferWindowStatus status;
   final DateTime now;
 
+  static const _rules =
+      'Jendela Eropa: 1 Juli – 31 Agustus dan 1–31 Januari.\n'
+      'Maks ${TransferRules.maxMovesPerWindow} masuk & '
+      '${TransferRules.maxMovesPerWindow} keluar per jendela.\n'
+      'Skuad ${TransferRules.minSquad}–${TransferRules.maxSquad} pemain.\n'
+      'Negosiasi maks ${TransferRules.maxRounds} ronde.';
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final open = status.isOpen;
     final deadline = TransferWindow.isDeadlineDay(now);
-    final text =
+    final color =
+        deadline
+            ? Chalk.red
+            : open
+            ? Chalk.green
+            : theme.colorScheme.onSurfaceVariant;
+    final daysLeft = open ? status.closesOn!.difference(now).inDays : 0;
+    final title =
+        deadline
+            ? 'Hari terakhir bursa transfer'
+            : open
+            ? 'Bursa buka, $daysLeft hari lagi'
+            : 'Bursa transfer tutup';
+    final detail =
         open
-            ? 'Bursa BUKA · sisa ${status.closesOn!.difference(now).inDays} hari '
-                '(tutup ${formatDate(status.closesOn!)})'
-            : 'Bursa TUTUP · dibuka kembali ${formatDate(status.nextOpensOn!)}';
-    return Card(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      color:
-          deadline
-              ? theme.colorScheme.errorContainer
-              : open
-              ? theme.colorScheme.tertiaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
-      child: ListTile(
-        dense: true,
-        leading: Icon(
-          deadline
-              ? Icons.alarm
-              : open
-              ? Icons.lock_open
-              : Icons.lock_clock,
-        ),
-        title: Text(deadline ? 'DEADLINE DAY · $text' : text),
-        subtitle: const Text(
-          'Jendela Eropa: 1 Juli – 31 Agustus dan 1–31 Januari. '
-          'Maks ${TransferRules.maxMovesPerWindow} masuk & '
-          '${TransferRules.maxMovesPerWindow} keluar per jendela, skuad '
-          '${TransferRules.minSquad}–${TransferRules.maxSquad} pemain.',
-        ),
+            ? 'Tutup ${formatDate(status.closesOn!)}'
+            : 'Buka lagi ${formatDate(status.nextOpensOn!)}';
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: color, width: 4)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
+                ),
+                Text(detail, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Ketentuan transfer',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.info_outline, size: 18),
+            onPressed:
+                () => showDialog<void>(
+                  context: context,
+                  builder:
+                      (ctx) => AlertDialog(
+                        title: const Text('Ketentuan transfer'),
+                        content: const Text(_rules),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Tutup'),
+                          ),
+                        ],
+                      ),
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -194,9 +234,10 @@ class _ShortlistTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('$e')),
       data: (set) {
-        final list = (rows.valueOrNull ?? const <PlayerSearchRow>[])
-            .where((r) => set.contains(r.player.id))
-            .toList();
+        final list =
+            (rows.valueOrNull ?? const <PlayerSearchRow>[])
+                .where((r) => set.contains(r.player.id))
+                .toList();
         if (list.isEmpty) {
           return const Center(
             child: Text(
@@ -271,7 +312,8 @@ class _NegotiationTab extends ConsumerWidget {
 
         Widget card(TransferOffer o) {
           final incoming = o.toClubId == ourId;
-          final other = clubs[incoming ? o.fromClubId : o.toClubId]?.name ?? '-';
+          final other =
+              clubs[incoming ? o.fromClubId : o.toClubId]?.name ?? '-';
           final name = names[o.playerId] ?? 'Pemain #${o.playerId}';
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -282,7 +324,10 @@ class _NegotiationTab extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(incoming ? Icons.call_received : Icons.call_made, size: 18),
+                      Icon(
+                        incoming ? Icons.call_received : Icons.call_made,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: InkWell(
@@ -297,9 +342,9 @@ class _NegotiationTab extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      Chip(
-                        label: Text(o.status.label),
-                        visualDensity: VisualDensity.compact,
+                      StatusBadge(
+                        o.status.label,
+                        color: offerStatusColor(o.status),
                       ),
                     ],
                   ),

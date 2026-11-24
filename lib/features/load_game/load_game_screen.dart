@@ -82,7 +82,7 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
       if (!mounted) return;
       Navigator.of(
         context,
-      ).pushNamedAndRemoveUntil(AppRoutes.dashboard, (route) => route.isFirst);
+      ).pushNamedAndRemoveUntil(AppRoutes.dashboard, (_) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

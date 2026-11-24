@@ -3,23 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../core/utils/format_utils.dart';
+import '../../core/widgets/futbol_ui.dart';
 import '../../domain/enums/tactics.dart';
 import '../../domain/match/lineup_builder.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/match_models.dart';
 import '../match/pitch_2d_painter.dart';
+import '../squad/squad_screen.dart';
 
-/// Mengatur formasi, mentalitas, 11 starter, dan 7 cadangan. Perubahan
-/// langsung disimpan ke save.
-class TacticsScreen extends ConsumerStatefulWidget {
+/// Layar Taktik mandiri (rute `/tactics`). Isinya sama dengan tab Taktik
+/// di layar Skuad.
+class TacticsScreen extends StatelessWidget {
   const TacticsScreen({super.key});
 
   @override
-  ConsumerState<TacticsScreen> createState() => _TacticsScreenState();
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Taktik & Lineup')),
+    body: const TacticsView(),
+  );
 }
 
-class _TacticsScreenState extends ConsumerState<TacticsScreen> {
+/// Mengatur formasi, mentalitas, 11 starter, dan 7 cadangan. Perubahan
+/// langsung disimpan ke save.
+class TacticsView extends ConsumerStatefulWidget {
+  const TacticsView({super.key});
+
+  @override
+  ConsumerState<TacticsView> createState() => _TacticsViewState();
+}
+
+class _TacticsViewState extends ConsumerState<TacticsView> {
   /// Indeks starter yang sedang dipilih untuk ditukar. Null = tidak ada.
   int? _selected;
 
@@ -31,84 +46,102 @@ class _TacticsScreenState extends ConsumerState<TacticsScreen> {
     final clubs = ref.watch(allClubsMapProvider).valueOrNull ?? const {};
     final club = state?.clubId == null ? null : clubs[state!.clubId!];
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Taktik & Lineup')),
-      body: lineup.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Gagal memuat skuad: $e')),
-        data: (l) {
-          final formation = tactic?.formation ?? Formation.f442;
-          final mentality = tactic?.mentality ?? Mentality.balanced;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _Controls(
+    return lineup.when(
+      skipLoadingOnReload: true,
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Gagal memuat skuad: $e')),
+      data: (l) {
+        final formation = tactic?.formation ?? Formation.f442;
+        final mentality = tactic?.mentality ?? Mentality.balanced;
+        const pad = EdgeInsets.symmetric(horizontal: 20);
+        return ListView(
+          padding: const EdgeInsets.only(top: 14, bottom: 24),
+          children: [
+            Padding(
+              padding: pad,
+              child: _Controls(
                 formation: formation,
                 mentality: mentality,
                 onFormation: (f) => _changeFormation(f),
-                onMentality: (m) => _save(
-                  formation: formation,
-                  mentality: m,
-                  starters: l.starters,
-                  bench: l.bench,
-                ),
+                onMentality:
+                    (m) => _save(
+                      formation: formation,
+                      mentality: m,
+                      starters: l.starters,
+                      bench: l.bench,
+                    ),
                 onAuto: () => _auto(formation, mentality),
               ),
-              const SizedBox(height: 12),
-              AspectRatio(
-                aspectRatio: 105 / 68,
-                child: CustomPaint(
-                  painter: Pitch2DPainter(
-                    dots: [
-                      for (var i = 0; i < l.starters.length; i++)
-                        PitchDot(
-                          x: formation.slots[i].depth,
-                          y: formation.slots[i].lateral,
-                          fill: club != null
-                              ? colorFromHex(club.primaryColor)
-                              : Colors.blue,
-                          stroke: club != null
-                              ? colorFromHex(club.secondaryColor)
-                              : Colors.white,
-                          label: '${i + 1}',
-                          name: _shortName(l.starters[i]),
-                        ),
-                    ],
+            ),
+            const SizedBox(height: 14),
+            Padding(
+              padding: pad,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: AspectRatio(
+                  aspectRatio: 105 / 68,
+                  child: CustomPaint(
+                    painter: Pitch2DPainter(
+                      dots: [
+                        for (var i = 0; i < l.starters.length; i++)
+                          PitchDot(
+                            x: formation.slots[i].depth,
+                            y: formation.slots[i].lateral,
+                            fill:
+                                club != null
+                                    ? colorFromHex(club.primaryColor)
+                                    : Colors.blue,
+                            stroke:
+                                _selected == i
+                                    ? Chalk.yellow
+                                    : club != null
+                                    ? colorFromHex(club.secondaryColor)
+                                    : Colors.white,
+                            label: '${i + 1}',
+                            name: _shortName(l.starters[i]),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                _selected == null
-                    ? 'Ketuk pemain untuk memilih, lalu ketuk pemain lain untuk menukar.'
-                    : 'Pilih pemain lain (starter atau cadangan) untuk menukar.',
-                style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: pad,
+              child: _SwapHint(
+                active: _selected != null,
+                selectedName:
+                    _selected == null ? null : l.starters[_selected!].fullName,
+                onCancel: () => setState(() => _selected = null),
               ),
-              const SizedBox(height: 8),
-              Text('Starter', style: Theme.of(context).textTheme.titleMedium),
-              for (var i = 0; i < l.starters.length; i++)
-                _PlayerRow(
-                  leading: formation.slots[i].label,
-                  player: l.starters[i],
-                  selected: _selected == i,
-                  onTap: () => _tapStarter(i, formation, mentality, l),
-                ),
-              const SizedBox(height: 12),
-              Text(
-                'Cadangan (${l.bench.length}/${LineupBuilder.benchCount})',
-                style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Padding(
+              padding: pad,
+              child: SectionHeader('Sebelas pertama'),
+            ),
+            for (var i = 0; i < l.starters.length; i++)
+              PlayerListCard(
+                player: l.starters[i],
+                leading: _SlotLabel(formation.slots[i].label),
+                selected: _selected == i,
+                onTap: () => _tapStarter(i, formation, mentality, l),
               ),
-              for (var i = 0; i < l.bench.length; i++)
-                _PlayerRow(
-                  leading: '${i + 1}',
-                  player: l.bench[i],
-                  selected: false,
-                  onTap: () => _tapBench(i, formation, mentality, l),
-                ),
-            ],
-          );
-        },
-      ),
+            Padding(
+              padding: pad,
+              child: SectionHeader(
+                'Cadangan (${l.bench.length} dari ${LineupBuilder.benchCount})',
+              ),
+            ),
+            for (var i = 0; i < l.bench.length; i++)
+              PlayerListCard(
+                player: l.bench[i],
+                leading: _SlotLabel('${i + 12}', muted: true),
+                onTap: () => _tapBench(i, formation, mentality, l),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -150,7 +183,16 @@ class _TacticsScreenState extends ConsumerState<TacticsScreen> {
     ({List<Player> starters, List<Player> bench}) l,
   ) {
     final sel = _selected;
-    if (sel == null) return;
+    if (sel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pilih starter dulu, lalu ketuk cadangan untuk menukar.',
+          ),
+        ),
+      );
+      return;
+    }
     final starters = [...l.starters];
     final bench = [...l.bench];
     final out = starters[sel];
@@ -218,6 +260,7 @@ class _TacticsScreenState extends ConsumerState<TacticsScreen> {
   }
 }
 
+/// Kontrol formasi, pilih otomatis, dan mentalitas, langsung di papan.
 class _Controls extends StatelessWidget {
   const _Controls({
     required this.formation,
@@ -235,32 +278,50 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const label = TextStyle(color: Chalk.dim, fontSize: 13);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 12,
-          runSpacing: 8,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Text('Formasi'),
-            DropdownButton<Formation>(
-              value: formation,
-              items: [
-                for (final f in Formation.values)
-                  DropdownMenuItem(value: f, child: Text(f.label)),
-              ],
-              onChanged: (f) {
-                if (f != null) onFormation(f);
-              },
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Formasi', style: label),
+                  DropdownButton<Formation>(
+                    value: formation,
+                    isExpanded: true,
+                    underline: const Divider(color: Chalk.dim),
+                    style: const TextStyle(
+                      fontFamily: Fonts.condensed,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: Chalk.white,
+                      fontFeatures: tabular,
+                    ),
+                    items: [
+                      for (final f in Formation.values)
+                        DropdownMenuItem(value: f, child: Text(f.label)),
+                    ],
+                    onChanged: (f) {
+                      if (f != null) onFormation(f);
+                    },
+                  ),
+                ],
+              ),
             ),
-            FilledButton.tonal(
+            const SizedBox(width: 16),
+            OutlinedButton(
               onPressed: onAuto,
-              child: const Text('Pilih Otomatis (Terbaik)'),
+              child: const Text('Susun otomatis'),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
+        const Text('Mentalitas', style: label),
+        const SizedBox(height: 6),
         SegmentedButton<Mentality>(
           segments: [
             for (final m in Mentality.values)
@@ -275,37 +336,74 @@ class _Controls extends StatelessWidget {
   }
 }
 
-class _PlayerRow extends StatelessWidget {
-  const _PlayerRow({
-    required this.leading,
-    required this.player,
-    required this.selected,
-    required this.onTap,
+/// Petunjuk tukar pemain; berubah menjadi kapur kuning saat mode tukar aktif.
+class _SwapHint extends StatelessWidget {
+  const _SwapHint({
+    required this.active,
+    required this.selectedName,
+    required this.onCancel,
   });
 
-  final String leading;
-  final Player player;
-  final bool selected;
-  final VoidCallback onTap;
+  final bool active;
+  final String? selectedName;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color:
-          selected ? Theme.of(context).colorScheme.primaryContainer : null,
-      child: ListTile(
-        dense: true,
-        onTap: onTap,
-        leading: SizedBox(
-          width: 40,
-          child: Text(leading, textAlign: TextAlign.center),
+    if (!active) {
+      return const Text(
+        'Ketuk pemain di sebelas pertama, lalu ketuk pemain lain untuk '
+        'menukar posisinya.',
+        style: TextStyle(color: Chalk.dim, fontSize: 14),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: Chalk.yellow.withValues(alpha: 0.14),
+        border: const Border(left: BorderSide(color: Chalk.yellow, width: 4)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Menukar $selectedName. Ketuk pemain penggantinya.',
+              style: const TextStyle(
+                color: Chalk.yellow,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onCancel,
+            style: TextButton.styleFrom(foregroundColor: Chalk.yellow),
+            child: const Text('Batal'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Label slot formasi (mis. `DC`) atau nomor cadangan.
+class _SlotLabel extends StatelessWidget {
+  const _SlotLabel(this.text, {this.muted = false});
+
+  final String text;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 32,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: Fonts.condensed,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: muted ? Chalk.dim : Chalk.white,
         ),
-        title: Text(player.fullName),
-        subtitle: Text(
-          '${player.position.label} · Usia ${player.age} · '
-          'Kondisi ${player.condition}%',
-        ),
-        trailing: Text('CA ${player.currentAbility}'),
       ),
     );
   }

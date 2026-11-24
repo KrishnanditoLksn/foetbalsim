@@ -3,33 +3,63 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/router.dart';
+import '../../app/theme.dart';
 import '../../core/utils/format_utils.dart';
+import '../../core/widgets/futbol_ui.dart';
 import '../../domain/enums/position.dart';
 import '../../domain/models/game_models.dart';
+import '../tactics/tactics_screen.dart';
 
-enum _SortField { position, name, age, ca, condition, morale, value }
+/// Tab Skuad: daftar pemain dan taktik dalam satu tempat.
+class SquadScreen extends StatelessWidget {
+  const SquadScreen({super.key, this.initialTab = 0});
 
-class SquadScreen extends ConsumerStatefulWidget {
-  const SquadScreen({super.key});
+  /// 0 = Daftar Skuad, 1 = Taktik.
+  final int initialTab;
 
   @override
-  ConsumerState<SquadScreen> createState() => _SquadScreenState();
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      initialIndex: initialTab,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Skuad'),
+          bottom: const TabBar(
+            tabs: [Tab(text: 'Daftar Skuad'), Tab(text: 'Taktik')],
+          ),
+        ),
+        body: const TabBarView(children: [SquadListView(), TacticsView()]),
+      ),
+    );
+  }
 }
 
-class _SquadScreenState extends ConsumerState<SquadScreen> {
+enum _SortField {
+  ca('kemampuan'),
+  condition('kondisi'),
+  age('usia'),
+  value('nilai pasar'),
+  name('nama'),
+  position('posisi');
+
+  const _SortField(this.label);
+  final String label;
+}
+
+/// Daftar skuad seperti lembar susunan pemain: filter posisi, urutan, dan
+/// satu baris per pemain.
+class SquadListView extends ConsumerStatefulWidget {
+  const SquadListView({super.key});
+
+  @override
+  ConsumerState<SquadListView> createState() => _SquadListViewState();
+}
+
+class _SquadListViewState extends ConsumerState<SquadListView> {
   _SortField _sortField = _SortField.ca;
   bool _ascending = false;
-  Position? _positionFilter; // null = semua posisi
-
-  static const _columns = <(_SortField, String)>[
-    (_SortField.position, 'Posisi'),
-    (_SortField.name, 'Nama'),
-    (_SortField.age, 'Usia'),
-    (_SortField.ca, 'CA'),
-    (_SortField.condition, 'Kondisi'),
-    (_SortField.morale, 'Moral'),
-    (_SortField.value, 'Nilai'),
-  ];
+  PositionGroup? _group; // null = semua posisi
 
   void _sortBy(_SortField field) {
     setState(() {
@@ -45,29 +75,17 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
   List<Player> _applySortAndFilter(List<Player> input) {
     final list =
         input
-            .where(
-              (p) => _positionFilter == null || p.position == _positionFilter,
-            )
+            .where((p) => _group == null || p.position.group == _group)
             .toList();
 
-    int compare(Player a, Player b) {
-      switch (_sortField) {
-        case _SortField.position:
-          return a.position.index.compareTo(b.position.index);
-        case _SortField.name:
-          return a.fullName.compareTo(b.fullName);
-        case _SortField.age:
-          return a.age.compareTo(b.age);
-        case _SortField.ca:
-          return a.currentAbility.compareTo(b.currentAbility);
-        case _SortField.condition:
-          return a.condition.compareTo(b.condition);
-        case _SortField.morale:
-          return a.morale.compareTo(b.morale);
-        case _SortField.value:
-          return a.marketValue.compareTo(b.marketValue);
-      }
-    }
+    int compare(Player a, Player b) => switch (_sortField) {
+      _SortField.position => a.position.index.compareTo(b.position.index),
+      _SortField.name => a.fullName.compareTo(b.fullName),
+      _SortField.age => a.age.compareTo(b.age),
+      _SortField.ca => a.currentAbility.compareTo(b.currentAbility),
+      _SortField.condition => a.condition.compareTo(b.condition),
+      _SortField.value => a.marketValue.compareTo(b.marketValue),
+    };
 
     list.sort((a, b) => _ascending ? compare(a, b) : compare(b, a));
     return list;
@@ -75,92 +93,61 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(gameStateProvider).valueOrNull;
-    final clubId = state?.clubId;
+    final clubId = ref.watch(gameStateProvider).valueOrNull?.clubId;
+    if (clubId == null) return const Center(child: Text('Belum ada klub.'));
+    final squad = ref.watch(squadProvider(clubId));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Skuad')),
-      body:
-          clubId == null
-              ? const Center(child: Text('Belum ada klub.'))
-              : _buildBody(ref.watch(squadProvider(clubId))),
-    );
-  }
-
-  Widget _buildBody(AsyncValue<List<Player>> squad) {
     return squad.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat skuad: $e')),
+      error: (e, _) => Center(child: Text('Skuad gagal dimuat: $e')),
       data: (players) {
         final rows = _applySortAndFilter(players);
         return Column(
           children: [
+            _FilterBar(
+              group: _group,
+              counts: {
+                for (final g in PositionGroup.values)
+                  g: players.where((p) => p.position.group == g).length,
+              },
+              total: players.length,
+              onGroup: (g) => setState(() => _group = g),
+            ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
               child: Row(
                 children: [
-                  const Text('Posisi: '),
-                  const SizedBox(width: 8),
-                  DropdownButton<Position?>(
-                    value: _positionFilter,
-                    items: [
-                      const DropdownMenuItem<Position?>(
-                        value: null,
-                        child: Text('Semua'),
-                      ),
-                      for (final pos in Position.values)
-                        DropdownMenuItem<Position?>(
-                          value: pos,
-                          child: Text(pos.label),
-                        ),
-                    ],
-                    onChanged: (v) => setState(() => _positionFilter = v),
+                  Expanded(
+                    child: Text(
+                      '${rows.length} pemain',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Chalk.dim, fontSize: 13),
+                    ),
                   ),
-                  const Spacer(),
-                  Text('${rows.length} pemain'),
+                  _SortMenu(
+                    field: _sortField,
+                    ascending: _ascending,
+                    onSelected: _sortBy,
+                  ),
                 ],
               ),
             ),
+            const Divider(),
             Expanded(
-              child: SingleChildScrollView(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    showCheckboxColumn: false,
-                    sortColumnIndex: _columns.indexWhere(
-                      (c) => c.$1 == _sortField,
+              child: ListView.separated(
+                padding: const EdgeInsets.only(bottom: 16),
+                itemCount: rows.length,
+                separatorBuilder: (_, _) => const Divider(indent: 20),
+                itemBuilder:
+                    (context, i) => PlayerListCard(
+                      player: rows[i],
+                      onTap:
+                          () => Navigator.of(
+                            context,
+                          ).pushNamed(AppRoutes.player, arguments: rows[i].id),
                     ),
-                    sortAscending: _ascending,
-                    columns: [
-                      for (final (field, label) in _columns)
-                        DataColumn(
-                          label: Text(label),
-                          numeric:
-                              field != _SortField.position &&
-                              field != _SortField.name,
-                          onSort: (_, __) => _sortBy(field),
-                        ),
-                    ],
-                    rows: [
-                      for (final p in rows)
-                        DataRow(
-                          onSelectChanged:
-                              (_) => Navigator.of(
-                                context,
-                              ).pushNamed(AppRoutes.player, arguments: p.id),
-                          cells: [
-                            DataCell(Text(p.position.label)),
-                            DataCell(Text(p.fullName)),
-                            DataCell(Text('${p.age}')),
-                            DataCell(_StarsCell(ca: p.currentAbility)),
-                            DataCell(Text('${p.condition}%')),
-                            DataCell(Text('${p.morale}')),
-                            DataCell(Text(formatMoney(p.marketValue))),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
               ),
             ),
           ],
@@ -170,24 +157,217 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
   }
 }
 
-class _StarsCell extends StatelessWidget {
-  const _StarsCell({required this.ca});
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({
+    required this.group,
+    required this.counts,
+    required this.total,
+    required this.onGroup,
+  });
 
-  final int ca;
+  final PositionGroup? group;
+  final Map<PositionGroup, int> counts;
+  final int total;
+  final ValueChanged<PositionGroup?> onGroup;
 
   @override
   Widget build(BuildContext context) {
-    final stars = caToStars(ca);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 1; i <= 5; i++)
-          Icon(
-            i <= stars ? Icons.star : Icons.star_border,
-            size: 16,
-            color: Colors.amber.shade700,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      child: Row(
+        children: [
+          ChoiceChip(
+            label: Text('Semua ($total)'),
+            selected: group == null,
+            showCheckmark: false,
+            onSelected: (_) => onGroup(null),
           ),
-      ],
+          for (final g in PositionGroup.values) ...[
+            const SizedBox(width: 6),
+            ChoiceChip(
+              label: Text('${positionGroupShort(g)} (${counts[g] ?? 0})'),
+              selected: group == g,
+              showCheckmark: false,
+              side: BorderSide(
+                color:
+                    group == g
+                        ? positionColor(g)
+                        : Theme.of(context).colorScheme.outlineVariant,
+              ),
+              selectedColor: positionColor(g).withValues(alpha: 0.18),
+              onSelected: (_) => onGroup(group == g ? null : g),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SortMenu extends StatelessWidget {
+  const _SortMenu({
+    required this.field,
+    required this.ascending,
+    required this.onSelected,
+  });
+
+  final _SortField field;
+  final bool ascending;
+  final ValueChanged<_SortField> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_SortField>(
+      tooltip: 'Ubah urutan',
+      onSelected: onSelected,
+      itemBuilder:
+          (_) => [
+            for (final f in _SortField.values)
+              CheckedPopupMenuItem(
+                value: f,
+                checked: f == field,
+                child: Text('Urut ${f.label}'),
+              ),
+          ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                'Urut ${field.label}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              ascending ? Icons.arrow_upward : Icons.arrow_downward,
+              size: 16,
+              color: Chalk.dim,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Satu baris pemain: posisi, nama dan usia, kondisi, kemampuan (CA), dan
+/// nilai pasar.
+class PlayerListCard extends StatelessWidget {
+  const PlayerListCard({
+    super.key,
+    required this.player,
+    this.onTap,
+    this.leading,
+    this.selected = false,
+  });
+
+  final Player player;
+  final VoidCallback? onTap;
+
+  /// Widget tambahan sebelum [PositionBadge] (mis. label slot formasi).
+  final Widget? leading;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = player;
+    final accent = Theme.of(context).colorScheme.primary;
+    return Material(
+      color: selected ? accent.withValues(alpha: 0.16) : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: selected ? accent : Colors.transparent,
+                width: 4,
+              ),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 10, 20, 10),
+          child: Row(
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 6)],
+              PositionBadge(p.position),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            p.fullName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (p.isTransferListed) ...[
+                          const SizedBox(width: 6),
+                          const Tooltip(
+                            message: 'Masuk daftar jual',
+                            child: Icon(
+                              Icons.sell_outlined,
+                              size: 15,
+                              color: Chalk.yellow,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Wrap: di baris sempit (mis. taktik) bar turun ke baris
+                    // berikutnya alih-alih overflow.
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 2,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '${p.age} th',
+                          style: const TextStyle(
+                            color: Chalk.dim,
+                            fontSize: 13,
+                          ),
+                        ),
+                        ConditionBar(p.condition, width: 40),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  RatingPill(p.currentAbility),
+                  const SizedBox(height: 3),
+                  Text(
+                    formatMoney(p.marketValue),
+                    style: const TextStyle(
+                      color: Chalk.dim,
+                      fontSize: 12,
+                      fontFeatures: tabular,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

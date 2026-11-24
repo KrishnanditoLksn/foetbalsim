@@ -102,7 +102,7 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
     }
     Navigator.of(
       context,
-    ).pushNamedAndRemoveUntil(AppRoutes.dashboard, (route) => route.isFirst);
+    ).pushNamedAndRemoveUntil(AppRoutes.dashboard, (_) => false);
   }
 
   @override
