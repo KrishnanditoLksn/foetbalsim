@@ -1,3 +1,4 @@
+import '../../domain/generators/world_generator.dart';
 import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
@@ -10,6 +11,7 @@ import '../../domain/match/match_engine_2d.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/match_models.dart';
 import '../../domain/models/season_models.dart';
+import '../../domain/models/transfer_models.dart';
 import '../../domain/season/fixture_generator.dart';
 import '../../domain/season/league_table.dart';
 import '../../domain/season/quick_match_simulator.dart';
@@ -21,9 +23,13 @@ import '../repositories/game_state_repository.dart';
 import '../repositories/inbox_repository.dart';
 import '../repositories/player_repository.dart';
 import '../repositories/tactics_repository.dart';
+import '../repositories/transfer_repository.dart';
+import 'transfer_market_service.dart';
 import 'transfer_service.dart';
 
-enum ContinueStop { blockingAction, matchDay, seasonOver, dayLimit }
+// ContinueStop dan DayReport didefinisikan di domain (season_models.dart) dan
+// diekspor ulang agar pemakai GameEngine tetap bisa mengaksesnya dari sini.
+export '../../domain/models/season_models.dart' show ContinueStop, DayReport;
 
 class ContinueResult {
   const ContinueResult({required this.daysAdvanced, required this.stop});
@@ -103,7 +109,8 @@ class GameEngine {
       _inbox = InboxRepository(_db),
       _states = GameStateRepository(_db),
       _tactics = TacticsRepository(_db),
-      _transfers = TransferService(_db);
+      _transfers = TransferService(_db),
+      _market = TransferMarketService(_db);
 
   final AppDatabase _db;
   final ClubRepository _clubs;
@@ -113,6 +120,7 @@ class GameEngine {
   final GameStateRepository _states;
   final TacticsRepository _tactics;
   final TransferService _transfers;
+  final TransferMarketService _market;
 
   static const int maxDaysPerContinue = 120;
   static const int recoveryPerDay = 5;
@@ -136,11 +144,19 @@ class GameEngine {
     for (final league in leagues) {
       final clubs = await _clubs.clubsByLeague(league.id);
       final ids = clubs.map((c) => c.id).toList()..sort();
-      final saturdays = SeasonCalendar.roundSaturdays(2 * (ids.length - 1));
+      // Liga tingkat 1 selesai di batas LaLiga; tingkat 2 lebih awal (playoff).
+      final last = league.tier == 1
+          ? SeasonCalendar.lastLeagueRound(SeasonCalendar.firstSeasonYear)
+          : SeasonCalendar.lastSecondTierRound(SeasonCalendar.firstSeasonYear);
+      final roundDates = SeasonCalendar.roundDates(
+        startYear: SeasonCalendar.firstSeasonYear,
+        rounds: 2 * (ids.length - 1),
+        last: last,
+      );
       final list = FixtureGenerator.generate(
         leagueId: league.id,
         clubIds: ids,
-        roundSaturdays: saturdays,
+        roundSaturdays: roundDates,
         startId: nextId,
       );
       nextId += list.length;
@@ -213,45 +229,83 @@ class GameEngine {
 
   // --- CONTINUE --------------------------------------------------------------
 
-  /// Maju hari demi hari sampai ada tindakan, hari laga tim kita, musim
-  /// selesai, atau batas [maxDays] tercapai.
+  /// LANJUTKAN = H+1 (README_FASE3 bagian A). Satu panggilan memajukan tepat
+  /// satu hari, kecuali ada tindakan pending, hari laga tim kita, atau musim
+  /// selesai: dalam kasus itu tanggal tidak berubah dan alasannya dikembalikan.
+  Future<DayReport> advanceOneDay() async {
+    final s = await status();
+    final date = s.date;
+    if (s.pendingActions.isNotEmpty) {
+      return DayReport(
+        date: date,
+        advanced: false,
+        stop: ContinueStop.blockingAction,
+        notes: const [],
+      );
+    }
+    if (s.todayFixture != null) {
+      return DayReport(
+        date: date,
+        advanced: false,
+        stop: ContinueStop.matchDay,
+        notes: const [],
+      );
+    }
+    if (s.seasonOver) {
+      return DayReport(
+        date: date,
+        advanced: false,
+        stop: ContinueStop.seasonOver,
+        notes: const [],
+      );
+    }
+
+    final next = date.add(const Duration(days: 1));
+    await _db.transaction(() async {
+      await _setDate(next);
+      await _processDay(next, s.clubId);
+    });
+    return DayReport(
+      date: next,
+      advanced: true,
+      stop: null,
+      notes: await _dayNotes(next, s.clubId),
+    );
+  }
+
+  /// Ringkasan "Hari Ini": hasil laga lain dan pesan inbox yang masuk pada
+  /// tanggal [date].
+  Future<List<String>> _dayNotes(DateTime date, String? clubId) async {
+    final notes = <String>[];
+    for (final f in await _fixtures.onDate(date)) {
+      if (!f.played || (clubId != null && f.involves(clubId))) continue;
+      final o = await _outcome(f);
+      notes.add('${o.homeName} ${o.homeGoals}-${o.awayGoals} ${o.awayName}');
+    }
+    for (final m in await _inbox.all()) {
+      if (m.date == date) notes.add(m.title);
+    }
+    return notes;
+  }
+
+  /// Menjalankan LANJUTKAN berulang (mode cepat dan tes). Berhenti pada
+  /// tindakan, hari laga tim kita, musim selesai, atau batas [maxDays].
   Future<ContinueResult> continueGame({
     int maxDays = maxDaysPerContinue,
   }) async {
     var advanced = 0;
     while (true) {
-      final s = await status();
-      if (s.pendingActions.isNotEmpty) {
-        return ContinueResult(
-          daysAdvanced: advanced,
-          stop: ContinueStop.blockingAction,
-        );
+      final report = await advanceOneDay();
+      if (!report.advanced) {
+        return ContinueResult(daysAdvanced: advanced, stop: report.stop!);
       }
-      if (s.todayFixture != null) {
-        return ContinueResult(
-          daysAdvanced: advanced,
-          stop: ContinueStop.matchDay,
-        );
-      }
-      if (s.seasonOver) {
-        return ContinueResult(
-          daysAdvanced: advanced,
-          stop: ContinueStop.seasonOver,
-        );
-      }
+      advanced++;
       if (advanced >= maxDays) {
         return ContinueResult(
           daysAdvanced: advanced,
           stop: ContinueStop.dayLimit,
         );
       }
-
-      final next = s.date.add(const Duration(days: 1));
-      await _db.transaction(() async {
-        await _setDate(next);
-        await _processDay(next, s.clubId);
-      });
-      advanced++;
     }
   }
 
@@ -291,7 +345,7 @@ class GameEngine {
     }
 
     if (clubId != null) {
-      await _transfers.processDay(date: d, seed: seed, ourClubId: clubId);
+      await _market.processDay(date: d, seed: seed, ourClubId: clubId);
     }
   }
 
@@ -461,7 +515,7 @@ class GameEngine {
         r.fixtureId,
         entry.key,
       );
-      final loss = (full * entry.value / 90).round();
+      final loss = (full * entry.value / r.matchMinutes).round();
       await (_db.update(_db.players)..where((t) => t.id.equals(p.id))).write(
         PlayersCompanion(condition: Value(math.max(0, p.condition - loss))),
       );
@@ -474,17 +528,68 @@ class GameEngine {
   Future<ClubTactic?> tactics(String clubId) => _tactics.load(clubId);
 
   /// Tawaran transfer untuk layanan UI (ajukan, daftar jual, shortlist).
-  Future<void> placeBid(int playerId, int fee) async {
-    final state = await _states.load();
-    if (state == null || state.clubId == null) {
-      throw StateError('Belum ada klub.');
-    }
+  Future<void> placeBid(
+    int playerId,
+    int fee, {
+    int installmentYears = 1,
+    int sellOnPct = 0,
+  }) async {
+    final state = await _ourState();
     await _transfers.placeBid(
       ourClubId: state.clubId!,
       now: state.currentDate,
       playerId: playerId,
       fee: fee,
+      seed: state.seed,
+      installmentYears: installmentYears,
+      sellOnPct: sellOnPct,
     );
+  }
+
+  /// Harga minta untuk klub kita, gaji yang diharapkan, dan alasan bila
+  /// pemain tidak bisa ditawar saat ini.
+  Future<TransferQuote> transferQuote(int playerId) async {
+    final state = await _ourState();
+    return _transfers.quote(
+      playerId: playerId,
+      ourClubId: state.clubId!,
+      now: state.currentDate,
+      seed: state.seed,
+    );
+  }
+
+  /// Menjawab negosiasi (kontra, tawaran final, kontrak, tawaran masuk).
+  /// Pesan inbox yang terkait ikut diselesaikan, sehingga hasilnya sama
+  /// baik dijawab dari Inbox maupun dari tab Negosiasi.
+  Future<void> respondToOffer(int offerId, String choice) async {
+    for (final m in await _inbox.pendingActions()) {
+      final head = m.payload?.split('|').first;
+      if (head == 'offer:$offerId') {
+        await resolveMessage(m, choice);
+        return;
+      }
+    }
+    final state = await _ourState();
+    await _transfers.respond(
+      offerId: offerId,
+      choice: choice,
+      date: state.currentDate,
+      ourClubId: state.clubId!,
+    );
+  }
+
+  Future<List<PlayerInterest>> interestsFor(int playerId) =>
+      _transfers.interestsFor(playerId);
+
+  Future<List<TransferNewsItem>> transferNews({int limit = 100}) =>
+      TransferRepository(_db).recentNews(limit: limit);
+
+  Future<GameState> _ourState() async {
+    final state = await _states.load();
+    if (state == null || state.clubId == null) {
+      throw StateError('Belum ada klub.');
+    }
+    return state;
   }
 
   Future<void> setListed(int playerId, bool listed) =>
@@ -495,7 +600,7 @@ class GameEngine {
     await _transfers.setShortlisted(
       playerId,
       value,
-      state?.currentDate ?? DateTime.utc(2025, 7, 1),
+      state?.currentDate ?? WorldGenerator.seasonStart,
     );
   }
 
@@ -503,6 +608,7 @@ class GameEngine {
 
   Future<void> resolveMessage(InboxMessage m, String choice) async {
     if (m.actionType == InboxActionType.incomingTransferOffer ||
+        m.actionType == InboxActionType.counterOffer ||
         m.actionType == InboxActionType.contractNegotiation) {
       final state = await _states.load();
       await _transfers.resolveAction(
@@ -510,6 +616,7 @@ class GameEngine {
         choice: choice,
         date: state!.currentDate,
         ourClubId: state.clubId!,
+        seed: state.seed,
       );
       await _inbox.resolve(m.id, choice);
       return;

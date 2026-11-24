@@ -2,6 +2,7 @@
 /// - pending: menunggu respons klub penjual (1–2 hari).
 /// - awaitingContract: menunggu keputusan kita (tawaran masuk) atau
 ///   kesepakatan kontrak pemain (tawaran keluar yang diterima klub penjual).
+/// - countered: penjual memberi kontra-tawaran, menunggu jawaban kita.
 /// - completed: transfer selesai dan pemain pindah klub.
 /// - rejected: ditolak klub penjual.
 /// - failed: pemain menolak kontrak yang diajukan.
@@ -9,6 +10,7 @@
 enum TransferOfferStatus {
   pending('Menunggu'),
   awaitingContract('Negosiasi kontrak'),
+  countered('Kontra-tawaran'),
   completed('Selesai'),
   rejected('Ditolak'),
   failed('Gagal'),

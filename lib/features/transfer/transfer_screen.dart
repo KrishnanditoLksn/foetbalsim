@@ -6,43 +6,51 @@ import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../core/utils/date_format.dart';
 import '../../domain/finance/money_label.dart';
+import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../domain/transfer/transfer_rules.dart';
 import '../../domain/transfer/transfer_window.dart';
 import '../player_search/player_search_view.dart';
+import 'transfer_flow.dart';
 
-/// Pasar transfer: jendela Eropa, cari pemain, shortlist, tawaran, dan
-/// aktivitas bursa liga.
+/// Pasar transfer (README_FASE3 bagian D): Bursa Hari Ini, Cari Pemain,
+/// Shortlist, Negosiasi, dan Riwayat.
 class TransferScreen extends ConsumerWidget {
-  const TransferScreen({super.key});
+  const TransferScreen({super.key, this.initialTab = 0});
+
+  /// Indeks tab awal (3 = Negosiasi).
+  final int initialTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameStateProvider).valueOrNull;
-    final now = state?.currentDate ?? DateTime.utc(2025, 7, 1);
+    final now = state?.currentDate ?? WorldGenerator.seasonStart;
     final window = TransferWindow.status(now);
+    final offers = ref.watch(clubOffersProvider).valueOrNull ?? const [];
+    final active = offers.where((o) => o.isActive).length;
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
+      initialIndex: initialTab,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Pasar Transfer'),
-          bottom: const TabBar(
+          bottom: TabBar(
             isScrollable: true,
             tabs: [
-              Tab(text: 'Cari Pemain'),
-              Tab(text: 'Shortlist'),
-              Tab(text: 'Tawaran'),
-              Tab(text: 'Aktivitas Bursa'),
+              const Tab(text: 'Bursa Hari Ini'),
+              const Tab(text: 'Cari Pemain'),
+              const Tab(text: 'Shortlist'),
+              Tab(text: active == 0 ? 'Negosiasi' : 'Negosiasi ($active)'),
+              const Tab(text: 'Riwayat'),
             ],
           ),
           actions: [
             IconButton(
-              tooltip: 'Layar penuh',
+              tooltip: 'Cari pemain layar penuh',
               icon: const Icon(Icons.open_in_new),
               onPressed:
-                  () => Navigator.of(
-                    context,
-                  ).pushNamed(AppRoutes.playerSearch),
+                  () => Navigator.of(context).pushNamed(AppRoutes.playerSearch),
             ),
           ],
         ),
@@ -52,9 +60,10 @@ class TransferScreen extends ConsumerWidget {
             const Expanded(
               child: TabBarView(
                 children: [
+                  _MarketTab(),
                   PlayerSearchView(),
                   _ShortlistTab(),
-                  _OffersTab(),
+                  _NegotiationTab(),
                   _HistoryTab(),
                 ],
               ),
@@ -76,6 +85,7 @@ class _WindowBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final open = status.isOpen;
+    final deadline = TransferWindow.isDeadlineDay(now);
     final text =
         open
             ? 'Bursa BUKA · sisa ${status.closesOn!.difference(now).inDays} hari '
@@ -84,17 +94,90 @@ class _WindowBanner extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
       color:
-          open
+          deadline
+              ? theme.colorScheme.errorContainer
+              : open
               ? theme.colorScheme.tertiaryContainer
               : theme.colorScheme.surfaceContainerHighest,
       child: ListTile(
         dense: true,
-        leading: Icon(open ? Icons.lock_open : Icons.lock_clock),
-        title: Text(text),
+        leading: Icon(
+          deadline
+              ? Icons.alarm
+              : open
+              ? Icons.lock_open
+              : Icons.lock_clock,
+        ),
+        title: Text(deadline ? 'DEADLINE DAY · $text' : text),
         subtitle: const Text(
-          'Jendela Eropa: 1 Juli – 31 Agustus dan 1–31 Januari.',
+          'Jendela Eropa: 1 Juli – 31 Agustus dan 1–31 Januari. '
+          'Maks ${TransferRules.maxMovesPerWindow} masuk & '
+          '${TransferRules.maxMovesPerWindow} keluar per jendela, skuad '
+          '${TransferRules.minSquad}–${TransferRules.maxSquad} pemain.',
         ),
       ),
+    );
+  }
+}
+
+/// Berita bursa: rumor, transfer AI, tawaran pemain, dan info deadline.
+class _MarketTab extends ConsumerWidget {
+  const _MarketTab();
+
+  static IconData _iconOf(String kind) => switch (kind) {
+    'deal' => Icons.swap_horiz,
+    'rumour' => Icons.record_voice_over,
+    'offer' => Icons.local_offer,
+    'deadline' => Icons.alarm,
+    _ => Icons.article,
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final news = ref.watch(transferNewsProvider);
+    final now = ref.watch(gameStateProvider).valueOrNull?.currentDate;
+    return news.when(
+      skipLoadingOnReload: true,
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('$e')),
+      data: (list) {
+        if (list.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Belum ada berita bursa. Rumor dan transfer muncul setiap hari '
+                'selama jendela transfer buka.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        final items = <Widget>[];
+        DateTime? day;
+        for (final n in list) {
+          if (n.date != day) {
+            day = n.date;
+            items.add(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  n.date == now ? 'Hari ini' : formatDate(n.date),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            );
+          }
+          items.add(
+            ListTile(
+              dense: true,
+              leading: Icon(_iconOf(n.kind)),
+              title: Text(n.body),
+            ),
+          );
+        }
+        return ListView(children: items);
+      },
     );
   }
 }
@@ -107,6 +190,7 @@ class _ShortlistTab extends ConsumerWidget {
     final ids = ref.watch(shortlistProvider);
     final rows = ref.watch(playerSearchRowsProvider);
     return ids.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('$e')),
       data: (set) {
@@ -132,7 +216,8 @@ class _ShortlistTab extends ConsumerWidget {
                 title: Text(r.player.fullName),
                 subtitle: Text(
                   '${r.player.position.label} · ${r.clubName} · '
-                  'CA ${r.player.currentAbility}',
+                  'CA ${r.player.currentAbility} · '
+                  '${moneyLabel(r.player.marketValue)}',
                 ),
                 trailing: IconButton(
                   tooltip: 'Hapus dari shortlist',
@@ -151,55 +236,124 @@ class _ShortlistTab extends ConsumerWidget {
   }
 }
 
-class _OffersTab extends ConsumerWidget {
-  const _OffersTab();
+/// Semua negosiasi klub kita: yang berjalan (dengan tombol aksi sesuai
+/// ronde) dan yang sudah selesai (dengan alasan bila gagal).
+class _NegotiationTab extends ConsumerWidget {
+  const _NegotiationTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offers = ref.watch(clubOffersProvider);
     final rows = ref.watch(playerSearchRowsProvider).valueOrNull ?? const [];
     final clubs = ref.watch(allClubsMapProvider).valueOrNull ?? const {};
-    final state = ref.watch(gameStateProvider).valueOrNull;
-    final ourId = state?.clubId;
+    final ourId = ref.watch(gameStateProvider).valueOrNull?.clubId;
+    final names = {for (final r in rows) r.player.id: r.player.fullName};
 
     return offers.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('$e')),
       data: (list) {
-        if (list.isEmpty) {
-          return const Center(child: Text('Belum ada tawaran.'));
+        if (list.isEmpty || ourId == null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Belum ada negosiasi. Ajukan tawaran dari detail pemain saat '
+                'jendela transfer buka.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
         }
-        String nameOf(int playerId) {
-          for (final r in rows) {
-            if (r.player.id == playerId) return r.player.fullName;
-          }
-          return 'Pemain #$playerId';
+        final active = list.where((o) => o.isActive).toList();
+        final done = list.where((o) => !o.isActive).take(30).toList();
+
+        Widget card(TransferOffer o) {
+          final incoming = o.toClubId == ourId;
+          final other = clubs[incoming ? o.fromClubId : o.toClubId]?.name ?? '-';
+          final name = names[o.playerId] ?? 'Pemain #${o.playerId}';
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(incoming ? Icons.call_received : Icons.call_made, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: InkWell(
+                          onTap:
+                              () => Navigator.of(context).pushNamed(
+                                AppRoutes.player,
+                                arguments: o.playerId,
+                              ),
+                          child: Text(
+                            name,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ),
+                      ),
+                      Chip(
+                        label: Text(o.status.label),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    '${incoming ? 'Tawaran dari' : 'Ke'} $other · '
+                    '${formatDate(o.createdDate)}',
+                  ),
+                  Text(offerSummary(o)),
+                  if (o.reason != null)
+                    Text(
+                      o.reason!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  if (o.isActive) ...[
+                    const SizedBox(height: 4),
+                    OfferActions(offer: o, ourClubId: ourId, playerName: name),
+                  ],
+                ],
+              ),
+            ),
+          );
         }
 
         return ListView(
+          padding: const EdgeInsets.only(bottom: 16),
           children: [
-            for (final o in list)
-              ListTile(
-                title: Text(
-                  o.fromClubId == ourId
-                      ? 'Tawaran untuk ${nameOf(o.playerId)}'
-                      : 'Tawaran masuk: ${nameOf(o.playerId)}',
-                ),
-                subtitle: Text(
-                  '${moneyLabel(o.fee)} · '
-                  '${clubs[o.fromClubId == ourId ? o.toClubId : o.fromClubId]?.name ?? '-'} · '
-                  '${formatDate(o.createdDate)}',
-                ),
-                trailing: Chip(
-                  label: Text(o.status.label),
-                  visualDensity: VisualDensity.compact,
-                ),
+            _SectionTitle('Berjalan (${active.length})'),
+            if (active.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Tidak ada negosiasi berjalan.'),
               ),
+            for (final o in active) card(o),
+            if (done.isNotEmpty) _SectionTitle('Selesai (${done.length})'),
+            for (final o in done) card(o),
           ],
         );
       },
     );
   }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+    child: Text(text, style: Theme.of(context).textTheme.titleSmall),
+  );
 }
 
 class _HistoryTab extends ConsumerWidget {
@@ -210,6 +364,7 @@ class _HistoryTab extends ConsumerWidget {
     final history = ref.watch(transferHistoryProvider);
     final clubs = ref.watch(allClubsMapProvider).valueOrNull ?? const {};
     return history.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('$e')),
       data: (list) {

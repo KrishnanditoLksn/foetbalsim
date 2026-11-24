@@ -48,6 +48,29 @@ void main() {
     await first.customStatement('DROP TABLE transfer_offers');
     await first.customStatement('DROP TABLE transfer_history');
     await first.customStatement('DROP TABLE shortlist');
+    // Kolom dan tabel v4 juga dibuang, supaya save benar-benar berbentuk v2.
+    await first.customStatement(
+      'ALTER TABLE players DROP COLUMN locked_until',
+    );
+    await first.customStatement(
+      'ALTER TABLE game_states DROP COLUMN season_start_year',
+    );
+    await first.customStatement(
+      'ALTER TABLE fixtures DROP COLUMN season_start_year',
+    );
+    await first.customStatement('ALTER TABLE fixtures DROP COLUMN stage');
+    await first.customStatement('ALTER TABLE fixtures DROP COLUMN leg');
+    for (final t in [
+      'club_ai_profiles',
+      'transfer_interests',
+      'transfer_news',
+      'market_memory',
+      'seasons',
+      'season_archive',
+      'honours',
+    ]) {
+      await first.customStatement('DROP TABLE $t');
+    }
     await first.customStatement('PRAGMA user_version = 2');
     await first.close();
 

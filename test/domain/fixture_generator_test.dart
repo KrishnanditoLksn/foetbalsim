@@ -3,34 +3,67 @@ import 'package:futbol/domain/models/season_models.dart';
 import 'package:futbol/domain/season/fixture_generator.dart';
 import 'package:futbol/domain/season/season_calendar.dart';
 
-List<Fixture> _build(int teams, {String league = 'x'}) {
+const _year = SeasonCalendar.firstSeasonYear;
+
+/// Tanggal pekan sesuai tingkat liga, sama seperti GameEngine._createSchedule.
+List<DateTime> _dates(int rounds, {int tier = 1}) => SeasonCalendar.roundDates(
+  startYear: _year,
+  rounds: rounds,
+  last: tier == 1
+      ? SeasonCalendar.lastLeagueRound(_year)
+      : SeasonCalendar.lastSecondTierRound(_year),
+);
+
+List<Fixture> _build(int teams, {String league = 'x', int tier = 1}) {
   final ids = List<String>.generate(teams, (i) => 'club$i');
   final rounds = 2 * (teams - 1);
   return FixtureGenerator.generate(
     leagueId: league,
     clubIds: ids,
-    roundSaturdays: SeasonCalendar.roundSaturdays(rounds),
+    roundSaturdays: _dates(rounds, tier: tier),
     startId: 1,
   );
 }
 
 void main() {
   group('Kalender', () {
-    test('pekan 1 adalah Sabtu 16 Agustus 2025', () {
-      final sats = SeasonCalendar.roundSaturdays(3);
-      expect(sats.first, DateTime.utc(2025, 8, 16));
-      expect(sats.first.weekday, DateTime.saturday);
+    test('pekan 1 adalah Sabtu 15 Agustus 2026', () {
+      final dates = _dates(3);
+      expect(dates.first, DateTime.utc(2026, 8, 15));
+      expect(dates.first.weekday, DateTime.saturday);
     });
 
-    test('tidak ada pekan di masa libur musim dingin', () {
-      final sats = SeasonCalendar.roundSaturdays(42);
-      for (final d in sats) {
+    test('LaLiga: 38 pekan Sabtu, tanpa libur musim dingin', () {
+      final dates = _dates(38);
+      expect(dates.length, 38);
+      for (final d in dates) {
+        expect(d.weekday, DateTime.saturday, reason: '$d');
         expect(SeasonCalendar.isWinterBreak(d), isFalse, reason: '$d');
       }
       // Pekan berurutan dipisah 7 hari, kecuali saat libur (lompatan lebih).
-      for (var i = 1; i < sats.length; i++) {
-        expect(sats[i].difference(sats[i - 1]).inDays >= 7, isTrue);
+      for (var i = 1; i < dates.length; i++) {
+        expect(dates[i].difference(dates[i - 1]).inDays >= 7, isTrue);
       }
+      expect(dates.last.isAfter(SeasonCalendar.lastLeagueRound(_year)), isFalse);
+    });
+
+    test('Hypermotion: 42 pekan berurutan dalam musim (boleh midweek)', () {
+      final dates = _dates(42, tier: 2);
+      expect(dates.length, 42);
+      for (var i = 0; i < dates.length; i++) {
+        final d = dates[i];
+        expect(SeasonCalendar.isWinterBreak(d), isFalse, reason: '$d');
+        expect(
+          d.weekday == DateTime.saturday || d.weekday == DateTime.wednesday,
+          isTrue,
+          reason: '$d',
+        );
+        if (i > 0) expect(d.isAfter(dates[i - 1]), isTrue, reason: '$d');
+      }
+      expect(
+        dates.last.isAfter(SeasonCalendar.lastSecondTierRound(_year)),
+        isFalse,
+      );
     });
   });
 
@@ -42,11 +75,10 @@ void main() {
     });
 
     test('Hypermotion 22 tim → 462 laga, 42 pekan', () {
-      final list = _build(22);
+      final list = _build(22, tier: 2);
       expect(list.length, 462);
       expect(list.map((f) => f.round).reduce((a, b) => a > b ? a : b), 42);
     });
-
     test('tiap tim main tepat sekali per pekan', () {
       final list = _build(20);
       for (var round = 1; round <= 38; round++) {
@@ -63,7 +95,7 @@ void main() {
     });
 
     test('tiap pasangan bertemu sekali di kandang dan sekali di tandang', () {
-      final list = _build(22);
+      final list = _build(22, tier: 2);
       final pairs = <String>{};
       for (final f in list) {
         final key = '${f.homeClubId}>${f.awayClubId}';

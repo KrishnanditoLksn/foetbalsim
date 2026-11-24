@@ -5,6 +5,7 @@ import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../core/utils/date_format.dart';
+import '../../domain/season/season_calendar.dart';
 import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../data/services/game_engine.dart';
@@ -49,7 +50,9 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Card(
                   child: ListTile(
-                    title: Text(formatDateWithDay(s.date)),
+                    title: Text(
+                      '${formatDateWithDay(s.date)} · Musim ${SeasonCalendar.label(SeasonCalendar.firstSeasonYear)}',
+                    ),
                     subtitle: Text(
                       club == null
                           ? '-'
@@ -58,6 +61,8 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                const _DayCard(),
                 const SizedBox(height: 12),
                 _NextMatchCard(status: s, clubId: clubId),
                 const SizedBox(height: 12),
@@ -151,6 +156,39 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+/// Kartu "Hari Ini": ringkasan hari terakhir yang dilewati LANJUTKAN.
+class _DayCard extends ConsumerWidget {
+  const _DayCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final report = ref.watch(lastDayReportProvider);
+    if (report == null) return const SizedBox.shrink();
+    final notes = report.notes.take(5).toList();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              report.advanced
+                  ? 'Hari Ini · ${formatDate(report.date)}'
+                  : 'Tidak ada hari baru',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            if (notes.isEmpty)
+              const Text('Tidak ada kejadian penting.')
+            else
+              for (final n in notes) Text('• $n'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _NextMatchCard extends ConsumerWidget {
   const _NextMatchCard({required this.status, required this.clubId});
 
@@ -219,23 +257,23 @@ class _ActionButton extends ConsumerWidget {
     }
     return FilledButton(
       onPressed: busy ? null : () => _continue(context, ref),
-      child: const Text('CONTINUE'),
+      child: const Text('LANJUTKAN'),
     );
   }
 
+  /// LANJUTKAN = tepat satu hari. Alasan berhenti ditampilkan bila tanggal
+  /// tidak berubah; ringkasan hari ditampilkan di kartu "Hari Ini".
   Future<void> _continue(BuildContext context, WidgetRef ref) async {
-    final result = await GameActions.continueGame(ref);
-    if (result == null || !context.mounted) return;
-    final reason = switch (result.stop) {
+    final report = await GameActions.advanceDay(ref);
+    if (report == null || !context.mounted) return;
+    if (report.advanced) return;
+    final reason = switch (report.stop) {
       ContinueStop.blockingAction => 'Ada keputusan yang perlu Anda ambil.',
       ContinueStop.matchDay => 'Hari pertandingan tim Anda.',
       ContinueStop.seasonOver => 'Musim selesai.',
-      ContinueStop.dayLimit =>
-        'Batas ${GameEngine.maxDaysPerContinue} hari tercapai.',
+      ContinueStop.dayLimit || null => '',
     };
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${result.daysAdvanced} hari berjalan. $reason')),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(reason)));
   }
 
   Future<void> _playMatch(BuildContext context, WidgetRef ref) async {

@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_actions.dart';
@@ -7,9 +10,11 @@ import '../../core/utils/format_utils.dart';
 import '../../data/services/game_engine.dart';
 import '../../domain/enums/tactics.dart';
 import '../../domain/match/match_engine_2d.dart';
+import '../../domain/match/match_rules.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/match_models.dart';
 import 'pitch_2d_painter.dart';
+import 'pitch_animator.dart';
 
 /// Laga tim kita secara live di lapangan 2D. Kecepatan maksimal 2x.
 class MatchScreen extends ConsumerStatefulWidget {
@@ -21,15 +26,27 @@ class MatchScreen extends ConsumerStatefulWidget {
 
 class _MatchScreenState extends ConsumerState<MatchScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _anim = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1000),
-  )..addStatusListener(_onAnimStatus);
+  /// Ticker setiap frame: menggerakkan [PitchAnimator] dengan waktu nyata.
+  /// Simulasi (per menit) tetap di engine; ticker hanya menghaluskan tampilan.
+  late final Ticker _ticker = createTicker(_onTick);
+  final PitchAnimator _animator = PitchAnimator();
+  Duration _lastTick = Duration.zero;
+
+  /// Jam permainan dalam satuan tick simulasi (6 tick = 1 menit permainan).
+  /// Pada 1x satu menit permainan berlalu per detik nyata.
+  static const double _ticksPerSecond = 6;
+  static const double _maxFrameSeconds = 0.1;
+  double _clock = 0;
+  TickFrame? _tickFrame;
+  int _shownMinute = 0;
+
+  /// Banner peristiwa penting (offside, penalti, VAR, GLT, kartu merah).
+  String? _bannerText;
+  int _bannerTick = -100;
 
   MatchSession? _session;
   MatchSetup? _setup;
   Map<int, Player> _players = {};
-  MinuteFrame? _frame;
   String? _error;
   bool _playing = false;
   bool _ourHome = true;
@@ -45,7 +62,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
 
   @override
   void dispose() {
-    _anim.dispose();
+    _ticker.dispose();
+    _animator.dispose();
     super.dispose();
   }
 
@@ -70,6 +88,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           away: setup.away,
         );
       });
+      final session = _session!;
+      _animator.snap(
+        session.currentDots(),
+        ballX: session.ballX,
+        ballY: session.ballY,
+        carrier: session.carrierIndex,
+      );
+      _lastTick = Duration.zero;
+      _ticker.start();
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
     }
@@ -77,61 +104,80 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
 
   // --- Pemutaran -------------------------------------------------------------
 
-  void _onAnimStatus(AnimationStatus status) {
-    if (status != AnimationStatus.completed || !_playing) return;
+  /// Dipanggil setiap frame. Saat bola sudah sampai ujung lintasan menit ini
+  /// dan permainan berjalan, engine maju satu menit.
+  void _onTick(Duration elapsed) {
+    final dt = math.min(
+      (elapsed - _lastTick).inMicroseconds / 1e6,
+      _maxFrameSeconds,
+    );
+    _lastTick = elapsed;
     final session = _session;
     if (session == null) return;
-    if (session.finished) {
-      setState(() => _playing = false);
-      return;
-    }
-    _stepMinute();
-  }
 
-  void _stepMinute() {
-    final session = _session!;
-    final frame = session.step();
-    _anim.duration = Duration(milliseconds: (1000 / _speed).round());
-    setState(() => _frame = frame);
-    _anim.forward(from: 0);
+    // Jam permainan berjalan sendiri dengan waktu nyata × kecepatan. Tick
+    // simulasi diambil dari jam, sehingga logika tidak bergantung pada
+    // frame rate maupun pada animasi.
+    if (_playing) _clock += dt * _speed * _ticksPerSecond;
+
+    // Tick ke-k mengisi rentang jam [k-1, k). Jam tepat di batas tick cukup
+    // dengan tick sebelumnya, sehingga simulasi tidak berjalan saat jeda.
+    final needed = _clock.ceil();
+    while (session.tick < needed && !session.finished) {
+      final frame = session.stepTick();
+      _tickFrame = frame;
+      _animator.setTick(
+        from: frame.from,
+        to: frame.to,
+        path: frame.ballPath,
+        carrier: frame.carrierIndex,
+        tickStart: (frame.tick - 1).toDouble(),
+        offsideX: frame.offsideX,
+      );
+      _noteBanner(frame.events, session.tick);
+    }
+
+    // Jeda babak: berhenti tepat di akhir babak pertama.
+    if (session.isHalfTimeBreak && _playing) {
+      _playing = false;
+      _clock = session.tick.toDouble();
+    }
+    if (session.finished && _playing) _playing = false;
+
+    if (_tickFrame != null) _animator.update(_clock);
+
+    // Komentar, menit, dan statistik cukup diperbarui sekali per menit.
+    if (session.minute != _shownMinute) {
+      _shownMinute = session.minute;
+      setState(() {});
+    }
   }
 
   void _togglePlay() {
     final session = _session;
     if (session == null || session.finished) return;
-    if (_playing) {
-      _anim.stop();
-      setState(() => _playing = false);
-      return;
-    }
-    setState(() => _playing = true);
-    if (_frame != null && _anim.value < 1) {
-      _anim.duration = Duration(milliseconds: (1000 / _speed).round());
-      _anim.forward();
-    } else {
-      _stepMinute();
-    }
+    setState(() => _playing = !_playing);
   }
 
   void _skipToEnd() {
     final session = _session;
     if (session == null) return;
-    _anim.stop();
-    MinuteFrame? last;
+    setState(() => _playing = false);
     while (!session.finished) {
-      last = session.step();
+      session.stepTick();
     }
-    setState(() {
-      _playing = false;
-      _frame = last ?? _frame;
-    });
-    _anim.value = 1;
+    _clock = session.tick.toDouble();
+    _tickFrame = null;
+    _animator.snap(
+      session.currentDots(),
+      ballX: session.ballX,
+      ballY: session.ballY,
+      carrier: session.carrierIndex,
+    );
+    setState(() => _shownMinute = session.minute);
   }
 
-  void _setSpeed(int speed) {
-    setState(() => _speed = speed);
-    _anim.duration = Duration(milliseconds: (1000 / speed).round());
-  }
+  void _setSpeed(int speed) => setState(() => _speed = speed);
 
   // --- Intervensi ------------------------------------------------------------
 
@@ -151,13 +197,45 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     } on StateError catch (e) {
       return e.message;
     }
+    _animator.retarget(session.currentDots(), carrier: session.carrierIndex);
     setState(() {});
     return null;
+  }
+
+  /// Menyimpan banner untuk peristiwa penting (offside, penalti, VAR, dll.).
+  void _noteBanner(List<MatchEvent> events, int tick) {
+    const banners = {
+      MatchEventType.offside,
+      MatchEventType.penalty,
+      MatchEventType.dive,
+      MatchEventType.varReview,
+      MatchEventType.varResult,
+      MatchEventType.goalLineTech,
+      MatchEventType.red,
+    };
+    for (final e in events) {
+      if (banners.contains(e.type)) {
+        _bannerText = e.text;
+        _bannerTick = tick;
+      }
+    }
   }
 
   Future<void> _openSubs() async {
     final session = _session;
     if (session == null || session.finished) return;
+    try {
+      session.openSubWindow(_ourHome);
+    } on StateError catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+      return;
+    }
+    // Kesempatan pergantian adalah kesempatan berhenti: jam ditahan.
+    final wasPlaying = _playing;
+    setState(() => _playing = false);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -169,6 +247,13 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             onSubstitute: _substitute,
           ),
     );
+    _resumeAfterSubs(wasPlaying);
+  }
+
+  void _resumeAfterSubs(bool wasPlaying) {
+    _session?.closeSubWindow();
+    if (!mounted) return;
+    setState(() => _playing = wasPlaying && !(_session?.finished ?? true));
   }
 
   Future<void> _finish() async {
@@ -299,18 +384,39 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           ),
         ),
         Text(
-          session.minute == 0 ? 'Belum mulai' : "${session.minute}'",
+          session.minute == 0 ? 'Belum mulai' : session.clockText,
           style: theme.textTheme.labelLarge,
         ),
+        if (session.isHalfTimeBreak)
+          _Banner(text: 'JEDA BABAK PERTAMA · Pergantian bebas', color: theme.colorScheme.secondaryContainer)
+        else if (_bannerText != null &&
+            session.tick - _bannerTick <= 4)
+          _Banner(text: _bannerText!, color: theme.colorScheme.tertiaryContainer),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: AspectRatio(
             aspectRatio: 105 / 68,
-            child: CustomPaint(
-              painter: Pitch2DPainter(
-                dots: _dotsFor(session, homeClub, awayClub),
-                ballX: _ballX(session),
-                ballY: session.ballY,
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: LivePitchPainter(
+                  animator: _animator,
+                  toDot: (pose, hasBall) {
+                    final d = pose.dot;
+                    final club = d.isHome ? homeClub : awayClub;
+                    return PitchDot(
+                      x: pose.x,
+                      y: pose.y,
+                      fill: club != null
+                          ? colorFromHex(club.primaryColor)
+                          : (d.isHome ? Colors.blue : Colors.red),
+                      stroke: club != null
+                          ? colorFromHex(club.secondaryColor)
+                          : Colors.white,
+                      label: '${d.shirt}',
+                      name: hasBall ? _players[d.playerId]?.lastName : null,
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -342,7 +448,10 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             OutlinedButton.icon(
               onPressed: session.finished ? null : _openSubs,
               icon: const Icon(Icons.swap_horiz),
-              label: Text('Ganti (${session.subsLeft(_ourHome)})'),
+              label: Text(
+                'Ganti · Subs ${session.subsUsed(_ourHome)}/${MatchSession.maxSubs}'
+                ' · Jendela ${session.windowsUsed(_ourHome)}/${MatchRules.maxSubWindows}',
+              ),
             ),
           ],
         ),
@@ -405,43 +514,30 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     );
   }
 
-  double _ballX(MatchSession session) {
-    final f = _frame;
-    if (f == null || _anim.value >= 1) return session.ballX;
-    return f.ballFromX + (session.ballX - f.ballFromX) * _anim.value;
-  }
+}
 
-  /// Posisi pemain: interpolasi dari posisi awal menit ke posisi akhir.
-  List<PitchDot> _dotsFor(MatchSession session, Club? home, Club? away) {
-    final frame = _frame;
-    final from = {for (final d in frame?.from ?? const <PlayerDot>[]) d.index: d};
-    final t = _anim.value;
-    final carrier = session.carrierIndex;
-    final result = <PitchDot>[];
-    for (final d in session.currentDots()) {
-      final f = from[d.index];
-      final x = f == null ? d.x : f.x + (d.x - f.x) * t;
-      final y = f == null ? d.y : f.y + (d.y - f.y) * t;
-      final club = d.isHome ? home : away;
-      final fill = club != null
-          ? colorFromHex(club.primaryColor)
-          : (d.isHome ? Colors.blue : Colors.red);
-      final stroke = club != null
-          ? colorFromHex(club.secondaryColor)
-          : Colors.white;
-      final player = _players[d.playerId];
-      result.add(
-        PitchDot(
-          x: x,
-          y: y,
-          fill: fill,
-          stroke: stroke,
-          label: '${d.shirt}',
-          name: d.index == carrier ? player?.lastName : null,
-        ),
-      );
-    }
-    return result;
+/// Banner singkat di atas lapangan untuk peristiwa penting.
+class _Banner extends StatelessWidget {
+  const _Banner({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+    );
   }
 }
 
@@ -488,7 +584,7 @@ class _EventTile extends StatelessWidget {
     return ListTile(
       dense: true,
       leading: Text(
-        "${event.minute}'",
+        event.label,
         style: Theme.of(context).textTheme.labelLarge,
       ),
       title: Text(event.text, style: style),

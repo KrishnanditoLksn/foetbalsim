@@ -54,6 +54,27 @@ class InboxMessage {
   bool get needsAction => actionType != InboxActionType.none && !resolved;
 }
 
+/// Alasan LANJUTKAN berhenti.
+enum ContinueStop { blockingAction, matchDay, seasonOver, dayLimit }
+
+/// Ringkasan satu klik LANJUTKAN (H+1). [advanced] false berarti tanggal
+/// tidak berubah dan [stop] menjelaskan alasannya.
+class DayReport {
+  const DayReport({
+    required this.date,
+    required this.advanced,
+    required this.stop,
+    required this.notes,
+  });
+
+  final DateTime date;
+  final bool advanced;
+  final ContinueStop? stop;
+
+  /// Kartu "Hari Ini": hasil laga lain dan pesan inbox pada hari itu.
+  final List<String> notes;
+}
+
 class LeagueTableRow {
   const LeagueTableRow({
     required this.clubId,

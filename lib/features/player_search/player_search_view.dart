@@ -6,6 +6,7 @@ import '../../app/router.dart';
 import '../../core/utils/format_utils.dart';
 import '../../domain/enums/position.dart';
 import '../../domain/models/game_models.dart';
+import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
 import '../../domain/transfer/player_search.dart';
 
@@ -27,9 +28,10 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
     final rows = ref.watch(playerSearchRowsProvider);
     final state = ref.watch(gameStateProvider).valueOrNull;
     final leagues = ref.watch(leaguesProvider).valueOrNull ?? const <League>[];
-    final now = state?.currentDate ?? DateTime.utc(2025, 7, 1);
+    final now = state?.currentDate ?? WorldGenerator.seasonStart;
 
     return rows.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Gagal memuat pemain: $e')),
       data: (all) {

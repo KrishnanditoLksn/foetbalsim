@@ -44,6 +44,7 @@ void main() {
     InboxActionType.contractDecision => 'leave',
     InboxActionType.incomingTransferOffer => 'reject',
     InboxActionType.contractNegotiation => 'cancel',
+    InboxActionType.counterOffer => 'cancel',
     InboxActionType.none => '',
   };
 
@@ -81,14 +82,12 @@ void main() {
     throw StateError('payload tanpa min');
   }
 
-  /// Harga minta klub pada awal musim (saat tawaran diajukan).
+  /// Harga minta untuk klub kita saat tawaran diajukan (yang ditampilkan di
+  /// UI), termasuk premi rival lokal. Ditambah 1% sebagai ruang untuk
+  /// perubahan harga harian sampai tanggal respons.
   Future<int> bidFee(Player p) async {
-    final detail = await PlayerRepository(db).detail(p.id);
-    return TransferValuation.askingFee(
-      player: p,
-      contract: detail?.contract,
-      now: WorldGenerator.seasonStart,
-    );
+    final ask = (await engine.transferQuote(p.id)).askingFee;
+    return (ask * 1.01).round();
   }
 
   /// Menyelesaikan sambutan dewan (aksi pertama di awal karier).
@@ -157,7 +156,7 @@ void main() {
   test('tawaran ditolak di luar jendela transfer', () async {
     await resolveWelcome();
     // Majukan sampai bursa musim panas tutup (setelah 31 Agustus).
-    await autoPlay((s) => s.date.isAfter(DateTime.utc(2025, 8, 31)));
+    await autoPlay((s) => s.date.isAfter(DateTime.utc(2026, 8, 31)));
     final status = await engine.status();
     expect(TransferWindow.isOpen(status.date), isFalse);
 

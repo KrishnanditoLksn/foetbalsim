@@ -10,12 +10,14 @@ import 'providers.dart';
 final engineBusyProvider = StateProvider<bool>((ref) => false);
 
 abstract final class GameActions {
-  static Future<ContinueResult?> continueGame(WidgetRef ref) async {
+  /// LANJUTKAN = H+1. Menyimpan ringkasan hari untuk kartu "Hari Ini".
+  static Future<DayReport?> advanceDay(WidgetRef ref) async {
     if (ref.read(engineBusyProvider)) return null;
     ref.read(engineBusyProvider.notifier).state = true;
     try {
-      final result = await ref.read(gameEngineProvider).continueGame();
-      return result;
+      final report = await ref.read(gameEngineProvider).advanceOneDay();
+      ref.read(lastDayReportProvider.notifier).state = report;
+      return report;
     } finally {
       ref.read(worldVersionProvider.notifier).state++;
       ref.read(engineBusyProvider.notifier).state = false;

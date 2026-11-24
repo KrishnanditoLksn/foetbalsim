@@ -10,7 +10,11 @@ import '../../domain/enums/attribute.dart';
 import '../../domain/finance/money_label.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/player_attributes.dart';
+import '../../domain/enums/transfer.dart';
+import '../../domain/generators/world_generator.dart';
+import '../../domain/models/transfer_models.dart';
 import '../../domain/transfer/transfer_window.dart';
+import '../transfer/transfer_flow.dart';
 
 class PlayerDetailScreen extends ConsumerWidget {
   const PlayerDetailScreen({super.key, required this.playerId});
@@ -23,6 +27,7 @@ class PlayerDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Pemain')),
       body: detail.when(
+      skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Gagal memuat pemain: $e')),
         data:
@@ -96,8 +101,10 @@ class _PlayerBody extends ConsumerWidget {
   }
 }
 
-/// Tombol aksi transfer: daftar jual (pemain sendiri) atau ajukan tawaran
-/// dan shortlist (pemain klub lain). Penawaran terkunci di luar jendela.
+/// Panel transfer di detail pemain (README_FASE3 B.5, B.10.6):
+/// - pemain klub lain: harga minta, gaji yang diharapkan, alasan bila tidak
+///   bisa ditawar, tombol tawar, dan negosiasi yang sedang berjalan;
+/// - pemain kita: daftar jual dan klub yang berminat.
 class _TransferActions extends ConsumerWidget {
   const _TransferActions({required this.detail});
 
@@ -105,9 +112,10 @@ class _TransferActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final state = ref.watch(gameStateProvider).valueOrNull;
     final ourId = state?.clubId;
-    final now = state?.currentDate ?? DateTime.utc(2025, 7, 1);
+    final now = state?.currentDate ?? WorldGenerator.seasonStart;
     final p = detail.player;
     final isOurs = p.clubId == ourId;
     final window = TransferWindow.status(now);
@@ -116,10 +124,15 @@ class _TransferActions extends ConsumerWidget {
           p.id,
         );
     final offers = ref.watch(clubOffersProvider).valueOrNull ?? const [];
-    final hasBid = offers.any(
-      (o) => o.playerId == p.id && o.fromClubId == ourId && o.isActive,
-    );
+    TransferOffer? active;
+    for (final o in offers) {
+      if (o.playerId == p.id && o.isActive) {
+        active = o;
+        break;
+      }
+    }
 
+    final lines = <Widget>[];
     final buttons = <Widget>[
       OutlinedButton.icon(
         onPressed:
@@ -130,7 +143,10 @@ class _TransferActions extends ConsumerWidget {
         icon: Icon(shortlisted ? Icons.bookmark : Icons.bookmark_border),
         label: Text(shortlisted ? 'Di Shortlist' : 'Shortlist'),
       ),
-      if (isOurs)
+    ];
+
+    if (isOurs) {
+      buttons.add(
         FilledButton.tonalIcon(
           onPressed:
               () => GameActions.run(
@@ -139,97 +155,92 @@ class _TransferActions extends ConsumerWidget {
               ),
           icon: const Icon(Icons.sell_outlined),
           label: Text(p.isTransferListed ? 'Batal Daftar Jual' : 'Daftar Jual'),
-        )
-      else
-        FilledButton.icon(
-          onPressed:
-              (!window.isOpen || hasBid)
-                  ? null
-                  : () => _bid(
-                    context,
-                    ref,
-                    TransferValuation.askingFee(
-                      player: p,
-                      contract: detail.contract,
-                      now: now,
-                    ),
-                  ),
-          icon: const Icon(Icons.gavel),
-          label: Text(hasBid ? 'Tawaran Diajukan' : 'Ajukan Tawaran'),
         ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(spacing: 8, runSpacing: 8, children: buttons),
-        const SizedBox(height: 6),
-        Text(
-          window.isOpen
-              ? 'Jendela transfer buka (tutup ${formatDate(window.closesOn!)}).'
-              : 'Jendela transfer tutup. Dibuka kembali '
-                  '${formatDate(window.nextOpensOn!)}.',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-    );
-  }
-
-  Future<void> _bid(BuildContext context, WidgetRef ref, int ask) async {
-    final controller = TextEditingController(text: '$ask');
-    final fee = await showDialog<int>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Ajukan tawaran'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Harga yang diminta klub: ${moneyLabel(ask)}'),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Tawaran (€ ribu)',
-                    helperText: '1.000 = €1 juta',
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Batal'),
-              ),
-              FilledButton(
-                onPressed:
-                    () => Navigator.pop(ctx, int.tryParse(controller.text.trim())),
-                child: const Text('Kirim'),
-              ),
-            ],
-          ),
-    );
-    controller.dispose();
-    if (fee == null || !context.mounted) return;
-    try {
-      await GameActions.run(
-        ref,
-        (e) => e.placeBid(detail.player.id, fee),
       );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tawaran dikirim. Respons klub 1–2 hari.')),
+      final interests =
+          ref.watch(playerInterestsProvider(p.id)).valueOrNull ?? const [];
+      lines.add(
+        Text(
+          interests.isEmpty
+              ? 'Belum ada klub yang berminat.'
+              : 'Klub yang berminat:',
+          style: theme.textTheme.labelLarge,
+        ),
+      );
+      for (final i in interests.take(6)) {
+        lines.add(Text('• ${i.clubName} — ${i.levelLabel} (${i.score})'));
+      }
+    } else {
+      final quote = ref.watch(transferQuoteProvider(p.id)).valueOrNull;
+      if (quote != null) {
+        lines.add(
+          Text(
+            'Harga minta: ${moneyLabel(quote.askingFee)}'
+            '${quote.isRival ? ' (premi rival +30%)' : ''} · '
+            'gaji diharapkan ${moneyLabel(quote.expectedWage)}/thn',
+          ),
         );
       }
-    } on StateError catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+      final blocked = active == null ? quote?.blockedReason : null;
+      buttons.add(
+        FilledButton.icon(
+          onPressed:
+              (active != null || quote == null || blocked != null)
+                  ? null
+                  : () => TransferFlow.bid(context, ref, p),
+          icon: const Icon(Icons.gavel),
+          label: Text(
+            active == null
+                ? 'Ajukan Tawaran'
+                : active.status == TransferOfferStatus.pending
+                ? 'Tawaran Diajukan'
+                : 'Negosiasi Berjalan',
+          ),
+        ),
+      );
+      if (blocked != null) {
+        lines.add(
+          Text(blocked, style: TextStyle(color: theme.colorScheme.error)),
+        );
       }
     }
+
+    if (active != null && ourId != null) {
+      lines.add(const SizedBox(height: 4));
+      lines.add(
+        Text(
+          '${active.toClubId == ourId ? 'Tawaran masuk' : 'Negosiasi'}: '
+          '${active.status.label} · ${offerSummary(active)}',
+          style: theme.textTheme.labelLarge,
+        ),
+      );
+      lines.add(
+        OfferActions(offer: active, ourClubId: ourId, playerName: p.fullName),
+      );
+    }
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(spacing: 8, runSpacing: 8, children: buttons),
+            const SizedBox(height: 8),
+            ...lines,
+            const SizedBox(height: 6),
+            Text(
+              window.isOpen
+                  ? 'Jendela transfer buka (tutup ${formatDate(window.closesOn!)}).'
+                  : 'Jendela transfer tutup. Dibuka kembali '
+                      '${formatDate(window.nextOpensOn!)}.',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

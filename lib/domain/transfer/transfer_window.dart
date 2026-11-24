@@ -1,6 +1,5 @@
-import 'dart:math' as math;
-
 import '../models/game_models.dart';
+import 'valuation.dart';
 
 /// Status jendela transfer pada tanggal tertentu.
 class TransferWindowStatus {
@@ -15,12 +14,21 @@ class TransferWindowStatus {
   final DateTime? nextOpensOn; // ada bila tidak [isOpen]
 }
 
-/// Aturan jendela transfer Eropa:
+/// Aturan jendela transfer Eropa (README_SEASON_CALENDAR §2):
 /// - Musim panas: 1 Juli – 31 Agustus
 /// - Musim dingin: 1 Januari – 31 Januari
 abstract final class TransferWindow {
   static bool isOpen(DateTime d) =>
       (d.month == 7 || d.month == 8) || d.month == 1;
+
+  /// Tiga hari terakhir jendela (Deadline Day, README_FASE3 B.8).
+  static bool isDeadlineDay(DateTime d) {
+    if (!isOpen(d)) return false;
+    final closes = status(d).closesOn;
+    if (closes == null) return false;
+    final left = closes.difference(DateTime.utc(d.year, d.month, d.day)).inDays;
+    return left >= 0 && left <= 2;
+  }
 
   static TransferWindowStatus status(DateTime d) {
     final utc = DateTime.utc(d.year, d.month, d.day);
@@ -47,37 +55,23 @@ abstract final class TransferWindow {
   }
 }
 
-/// Valuasi harga dan ekspektasi gaji sebuah pemain.
+/// Valuasi harga dan ekspektasi gaji (kompatibilitas; logika di
+/// [DynamicValuation]).
 abstract final class TransferValuation {
-  /// Harga minimum yang diterima klub penjual (€K).
-  /// Pemain di daftar jual lebih murah; kontrak panjang menaikkan harga.
+  /// Harga minta klub penjual (€K) pada kondisi normal.
   static int askingFee({
     required Player player,
     required Contract? contract,
     required DateTime now,
-  }) {
-    final listed = player.isTransferListed;
-    var fee = player.marketValue * (listed ? 1.0 : 1.2);
-    if (contract != null) {
-      final yearsLeft = contract.endDate.difference(now).inDays / 365;
-      if (yearsLeft < 1) fee *= 0.8;
-      if (yearsLeft >= 3) fee *= 1.05;
-    }
-    return _round(fee);
-  }
+  }) => DynamicValuation.askingFee(
+    player: player,
+    contract: contract,
+    now: now,
+  );
 
-  /// Gaji per tahun yang diharapkan pemain (€K), mengikuti rumus generator
-  /// gaji sehingga konsisten dengan kontrak awal.
-  static int expectedWage(Player p) {
-    final ageFactor = p.age < 23 ? 0.6 : 1.0;
-    final raw = (p.currentAbility / 100) * (p.currentAbility / 100) *
-        400 *
-        ageFactor;
-    return math.max(5, (raw / 5).round() * 5);
-  }
+  /// Gaji per tahun yang diharapkan pemain (€K).
+  static int expectedWage(Player p) => DynamicValuation.expectedWage(p);
 
   /// Tawaran dianggap wajar bila tidak kurang dari ask × 0,95.
   static bool fairFee(int offered, int asking) => offered * 100 >= asking * 95;
-
-  static int _round(double v) => (v / 10).round() * 10;
 }

@@ -9,6 +9,7 @@ import '../data/repositories/tactics_repository.dart';
 import '../data/repositories/transfer_repository.dart';
 import '../data/repositories/world_repository.dart';
 import '../data/services/game_engine.dart';
+import '../data/services/transfer_service.dart';
 import '../domain/generators/seed_catalog.dart';
 import '../domain/match/lineup_builder.dart';
 import '../domain/models/game_models.dart';
@@ -29,6 +30,9 @@ final currentDatabaseProvider = StateProvider<AppDatabase?>((ref) => null);
 
 /// Slot save yang sedang aktif (1–3).
 final activeSaveSlotProvider = StateProvider<int?>((ref) => null);
+
+/// Ringkasan LANJUTKAN terakhir (kartu "Hari Ini" di dashboard).
+final lastDayReportProvider = StateProvider<DayReport?>((ref) => null);
 
 /// Naik setiap kali data permainan berubah. Provider yang membaca data
 /// permainan menonton angka ini agar otomatis dihitung ulang.
@@ -116,6 +120,28 @@ final transferHistoryProvider = FutureProvider<List<TransferRecord>>((ref) {
 final shortlistProvider = FutureProvider<Set<int>>((ref) {
   ref.watch(worldVersionProvider);
   return ref.watch(transferRepositoryProvider).shortlistIds();
+});
+
+/// Harga minta untuk klub kita dan apakah pemain bisa ditawar sekarang.
+final transferQuoteProvider = FutureProvider.family<TransferQuote, int>((
+  ref,
+  playerId,
+) {
+  ref.watch(worldVersionProvider);
+  return ref.watch(gameEngineProvider).transferQuote(playerId);
+});
+
+/// Klub yang berminat pada seorang pemain (README_FASE3 B.10.6).
+final playerInterestsProvider =
+    FutureProvider.family<List<PlayerInterest>, int>((ref, playerId) {
+      ref.watch(worldVersionProvider);
+      return ref.watch(gameEngineProvider).interestsFor(playerId);
+    });
+
+/// Berita bursa terbaru (rumor, transfer, tawaran AI, deadline).
+final transferNewsProvider = FutureProvider<List<TransferNewsItem>>((ref) {
+  ref.watch(worldVersionProvider);
+  return ref.watch(gameEngineProvider).transferNews();
 });
 final clubByIdProvider = FutureProvider.family<Club?, String>((ref, clubId) {
   ref.watch(worldVersionProvider);

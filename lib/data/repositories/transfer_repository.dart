@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 
 import '../../domain/enums/transfer.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../domain/transfer/club_ai_profile.dart';
+import '../../domain/transfer/interest_engine.dart';
 import '../database/app_database.dart';
 
 /// Query tawaran transfer, riwayat transfer, shortlist, dan arus dana klub.
@@ -20,6 +22,8 @@ class TransferRepository {
     required TransferOfferStatus status,
     required DateTime createdDate,
     required DateTime? responseDate,
+    int installmentYears = 1,
+    int sellOnPct = 0,
   }) {
     return _db
         .into(_db.transferOffers)
@@ -32,6 +36,8 @@ class TransferRepository {
             status: status,
             createdDate: createdDate,
             responseDate: Value(responseDate),
+            installmentYears: Value(installmentYears),
+            sellOnPct: Value(sellOnPct),
           ),
         );
   }
@@ -85,11 +91,17 @@ class TransferRepository {
     int id, {
     required TransferOfferStatus status,
     DateTime? responseDate,
+    int? fee,
+    int? round,
+    String? reason,
   }) {
     return (_db.update(_db.transferOffers)..where((t) => t.id.equals(id))).write(
       TransferOffersCompanion(
         status: Value(status),
         responseDate: Value(responseDate),
+        fee: fee == null ? const Value.absent() : Value(fee),
+        round: round == null ? const Value.absent() : Value(round),
+        reason: reason == null ? const Value.absent() : Value(reason),
       ),
     );
   }
@@ -122,6 +134,26 @@ class TransferRepository {
             type: r.type,
           ),
         );
+  }
+
+  /// Jumlah pemain yang masuk ke / keluar dari [clubId] sejak [since].
+  Future<({int incoming, int outgoing})> movesSince(
+    String clubId,
+    DateTime since,
+  ) async {
+    final rows =
+        await (_db.select(_db.transferHistory)..where(
+          (t) =>
+              t.date.isBiggerOrEqualValue(since) &
+              (t.fromClubId.equals(clubId) | t.toClubId.equals(clubId)),
+        )).get();
+    var incoming = 0;
+    var outgoing = 0;
+    for (final r in rows) {
+      if (r.toClubId == clubId) incoming++;
+      if (r.fromClubId == clubId) outgoing++;
+    }
+    return (incoming: incoming, outgoing: outgoing);
   }
 
   /// Riwayat terbaru lebih dulu.
@@ -187,9 +219,151 @@ class TransferRepository {
     );
   }
 
+  // --- Profil AI ---------------------------------------------------------------
+
+  Future<ClubAiProfile?> profileFor(String clubId) async {
+    final r = await (_db.select(_db.clubAiProfiles)
+      ..where((t) => t.clubId.equals(clubId))).getSingleOrNull();
+    return r == null ? null : _mapProfile(r);
+  }
+
+  Future<void> saveProfile(ClubAiProfile p) {
+    return _db
+        .into(_db.clubAiProfiles)
+        .insertOnConflictUpdate(
+          ClubAiProfilesCompanion.insert(
+            clubId: p.clubId,
+            personality: p.personality.name,
+            ambition: p.ambition,
+            riskTolerance: p.riskTolerance,
+            negotiationSkill: p.negotiationSkill,
+            sellingWillingness: p.sellingWillingness,
+            youthFocus: p.youthFocus,
+          ),
+        );
+  }
+
+  static ClubAiProfile _mapProfile(ClubAiProfileRow r) => ClubAiProfile(
+    clubId: r.clubId,
+    personality: ClubPersonality.values.byName(r.personality),
+    ambition: r.ambition,
+    riskTolerance: r.riskTolerance,
+    negotiationSkill: r.negotiationSkill,
+    sellingWillingness: r.sellingWillingness,
+    youthFocus: r.youthFocus,
+  );
+
+  // --- Minat ------------------------------------------------------------------
+
+  Future<void> upsertInterest({
+    required String clubId,
+    required int playerId,
+    required int score,
+    required InterestLevel level,
+    required DateTime date,
+  }) {
+    return _db
+        .into(_db.transferInterests)
+        .insertOnConflictUpdate(
+          TransferInterestsCompanion.insert(
+            clubId: clubId,
+            playerId: playerId,
+            score: score,
+            level: level.name,
+            updatedDate: date,
+          ),
+        );
+  }
+
+  /// Klub yang berminat pada pemain, skor tertinggi lebih dulu.
+  Future<List<(String, int, InterestLevel)>> interestsForPlayer(int playerId) async {
+    final rows = await (_db.select(_db.transferInterests)
+          ..where((t) => t.playerId.equals(playerId))
+          ..orderBy([(t) => OrderingTerm.desc(t.score)]))
+        .get();
+    return [
+      for (final r in rows)
+        (r.clubId, r.score, InterestLevel.values.byName(r.level)),
+    ];
+  }
+
+  Future<void> deleteInterestsBelow(int minScore) {
+    return (_db.delete(_db.transferInterests)
+          ..where((t) => t.score.isSmallerThanValue(minScore)))
+        .go();
+  }
+
+  // --- Berita -----------------------------------------------------------------
+
+  Future<void> addNews({
+    required DateTime date,
+    required String kind,
+    required String body,
+    String clubIds = '',
+  }) {
+    return _db
+        .into(_db.transferNews)
+        .insert(
+          TransferNewsCompanion.insert(
+            date: date,
+            kind: kind,
+            body: body,
+            clubIds: Value(clubIds),
+          ),
+        );
+  }
+
+  Future<List<String>> newsOn(DateTime date) async {
+    final rows = await (_db.select(_db.transferNews)
+          ..where((t) => t.date.equals(date))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
+    return [for (final r in rows) r.body];
+  }
+
+  /// Berita bursa terbaru lebih dulu.
+  Future<List<TransferNewsItem>> recentNews({int limit = 100}) async {
+    final rows = await (_db.select(_db.transferNews)
+          ..orderBy([(t) => OrderingTerm.desc(t.id)])
+          ..limit(limit))
+        .get();
+    return [
+      for (final r in rows)
+        TransferNewsItem(date: r.date.toUtc(), kind: r.kind, body: r.body),
+    ];
+  }
+
+  // --- Memori pasar -----------------------------------------------------------
+
+  Future<int> memory(String key) async {
+    final r = await (_db.select(_db.marketMemory)
+      ..where((t) => t.key.equals(key))).getSingleOrNull();
+    return r?.value ?? 0;
+  }
+
+  Future<void> setMemory(String key, int value) {
+    return _db
+        .into(_db.marketMemory)
+        .insertOnConflictUpdate(
+          MarketMemoryCompanion.insert(key: key, value: value),
+        );
+  }
+
+  /// Semua entri memori yang kuncinya diawali [prefix].
+  Future<Map<String, int>> memoryWithPrefix(String prefix) async {
+    final rows = await (_db.select(_db.marketMemory)
+          ..where((t) => t.key.like('$prefix%')))
+        .get();
+    return {for (final r in rows) r.key: r.value};
+  }
+
+  Future<void> deleteMemory(String key) =>
+      (_db.delete(_db.marketMemory)..where((t) => t.key.equals(key))).go();
+
   static const List<TransferOfferStatus> _activeStatuses = [
     TransferOfferStatus.pending,
     TransferOfferStatus.awaitingContract,
+    TransferOfferStatus.countered,
   ];
 
   static TransferOffer _mapOffer(TransferOfferRow r) => TransferOffer(
@@ -201,5 +375,10 @@ class TransferRepository {
     status: r.status,
     createdDate: r.createdDate.toUtc(),
     responseDate: r.responseDate?.toUtc(),
+    round: r.round,
+    // Kolom lama berisi 1 sebagai bawaan; nilai di luar opsi dianggap langsung.
+    installmentYears: r.installmentYears.clamp(1, 3),
+    sellOnPct: r.sellOnPct,
+    reason: r.reason,
   );
 }
