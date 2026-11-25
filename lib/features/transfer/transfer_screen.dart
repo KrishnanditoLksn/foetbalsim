@@ -348,7 +348,7 @@ class _NegotiationTab extends ConsumerWidget {
                         ),
                       ),
                       StatusBadge(
-                        o.status.label,
+                        offerStatusLabel(o, ourId),
                         color: offerStatusColor(o.status),
                       ),
                     ],

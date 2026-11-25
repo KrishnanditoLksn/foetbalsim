@@ -307,6 +307,7 @@ class StatFigure extends StatelessWidget {
     this.value,
     this.child,
     this.color,
+    this.labelLines = 1,
   }) : assert(value != null || child != null);
 
   final String label;
@@ -315,6 +316,9 @@ class StatFigure extends StatelessWidget {
   /// Isi pengganti [value] (mis. [FormDots]).
   final Widget? child;
   final Color? color;
+
+  /// Baris maksimal label (2 untuk layar sempit dengan teks besar).
+  final int labelLines;
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +346,7 @@ class StatFigure extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          maxLines: 1,
+          maxLines: labelLines,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 13, color: Chalk.dim),
         ),

@@ -130,10 +130,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
   }
 
   void _submit() => _act(
-    () => GameActions.call(
-      ref,
-      (e) => e.negotiate(widget.offerId, _draft!),
-    ),
+    () => GameActions.call(ref, (e) => e.negotiate(widget.offerId, _draft!)),
   );
 
   void _acceptAnchor() => _act(
@@ -194,15 +191,20 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
     final room = _room;
     final accent = AppTheme.accentFor(ref.watch(ourClubProvider));
     final canEnd = room != null && _outcome == null && room.session.isActive;
+    // Ponsel lanskap: app bar lebih tipis agar isi mendapat ruang.
+    final short = MediaQuery.sizeOf(context).height < 480;
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: short ? 46 : null,
         title: const Text('Ruang negosiasi'),
         actions: [
           if (canEnd)
             TextButton(
               onPressed: _busy ? null : _endTalks,
               child: Text(
-                room.mode == NegotiationMode.transferSell ? 'Tolak' : 'Batalkan',
+                room.mode == NegotiationMode.transferSell
+                    ? 'Tolak'
+                    : 'Batalkan',
                 style: const TextStyle(color: Chalk.red),
               ),
             ),
@@ -241,73 +243,154 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
     );
   }
 
+  /// Tata letak menurut ukuran layar:
+  /// - lebar ≥ 720 dp (tablet, ponsel lanskap): dua kolom, kiri pemain &
+  ///   agen & riwayat, kanan angka & kontrol tawaran;
+  /// - selain itu satu kolom, maksimal 640 dp di tengah;
+  /// - tinggi < 700 dp (mis. OPPO A57 360×640): header pemain dan panel agen
+  ///   diringkas agar kontrol tawaran cepat terlihat.
   Widget _body(NegotiationRoom room, Color accent) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final size = MediaQuery.sizeOf(context);
+        // Teks sistem yang diperbesar memakan tinggi seperti layar pendek.
+        final scale = MediaQuery.textScalerOf(context).scale(1);
+        final compact = size.height / scale < 700;
+        final wide = box.maxWidth >= 720;
+        final s = room.session;
+        final side = box.maxWidth < 360 ? 16.0 : 20.0;
+
+        final identity = <Widget>[
+          _PlayerLine(room: room, compact: compact),
+          SizedBox(height: compact ? 14 : 22),
+          _AgentBoard(session: s, accent: accent, compact: compact),
+        ];
+        final history = <Widget>[
+          SectionHeader('Riwayat (${s.log.length})'),
+          _History(log: s.log, agentName: room.agent.name, accent: accent),
+        ];
+        final controls = _controls(room, accent, compact: compact);
+
+        if (wide) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: ListView(
+                      padding: EdgeInsets.fromLTRB(side, 4, 12, 24),
+                      children: [...identity, ...history],
+                    ),
+                  ),
+                  const VerticalDivider(width: 1, color: Chalk.line),
+                  Expanded(
+                    flex: 6,
+                    child: ListView(
+                      padding: EdgeInsets.fromLTRB(16, 8, side, 24),
+                      children: controls,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(side, 4, side, 24),
+              children: [
+                ...identity,
+                SizedBox(height: compact ? 14 : 20),
+                ...controls,
+                ...history,
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Angka utama dan kontrol tawaran.
+  List<Widget> _controls(
+    NegotiationRoom room,
+    Color accent, {
+    required bool compact,
+  }) {
     final s = room.session;
     final draft = _draft!;
     final anchor = AgentNegotiator.anchorOffer(s, draft);
     final problem = _fundsProblem(room, draft);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-      children: [
-        _PlayerLine(room: room),
-        const SizedBox(height: 22),
-        _AgentBoard(session: s, accent: accent),
-        const SizedBox(height: 20),
-        StatStrip(
-          children: [
-            StatFigure(
-              label: _anchorLabel(room.mode),
-              value: moneyLabel(anchor.amount),
-              color: accent,
-            ),
-            StatFigure(label: 'Tawaran Anda', value: moneyLabel(draft.amount)),
-            switch (room.mode) {
-              NegotiationMode.transferBuy => StatFigure(
-                label: 'Anggaran transfer',
-                value: moneyLabel(room.transferBudget),
-              ),
-              NegotiationMode.transferSell => StatFigure(
-                label: 'Nilai pasar',
-                value: moneyLabel(room.player.marketValue),
-              ),
-              NegotiationMode.contract => StatFigure(
-                label: 'Durasi disukai',
-                value: '${s.preferredYears} thn',
-              ),
-            },
-          ],
-        ),
-        if (_outcome == null) ...[
-          const SectionHeader('Tawaran Anda'),
-          _OfferEditor(
-            mode: room.mode,
-            draft: draft,
-            preferredYears: s.preferredYears,
-            controller: _amount,
-            onAmountTyped: (v) => setState(() => _draft = draft.copyWith(amount: v)),
-            onNudge: _nudge,
-            onChanged: _update,
+    return [
+      StatStrip(
+        children: [
+          StatFigure(
+            label: _anchorLabel(room.mode),
+            value: moneyLabel(anchor.amount),
+            color: accent,
+            labelLines: 2,
           ),
-          if (problem != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              problem,
-              style: const TextStyle(
-                color: Chalk.red,
-                fontWeight: FontWeight.w600,
-              ),
+          StatFigure(
+            label: 'Tawaran Anda',
+            value: moneyLabel(draft.amount),
+            labelLines: 2,
+          ),
+          switch (room.mode) {
+            NegotiationMode.transferBuy => StatFigure(
+              label: 'Anggaran',
+              value: moneyLabel(room.transferBudget),
+              labelLines: 2,
             ),
-          ],
+            NegotiationMode.transferSell => StatFigure(
+              label: 'Nilai pasar',
+              value: moneyLabel(room.player.marketValue),
+              labelLines: 2,
+            ),
+            NegotiationMode.contract => StatFigure(
+              label: 'Durasi disukai',
+              value: '${s.preferredYears} thn',
+              labelLines: 2,
+            ),
+          },
+        ],
+      ),
+      if (_outcome == null) ...[
+        SectionHeader(
+          'Tawaran Anda',
+          padding: EdgeInsets.fromLTRB(0, compact ? 16 : 22, 0, 6),
+        ),
+        _OfferEditor(
+          mode: room.mode,
+          draft: draft,
+          preferredYears: s.preferredYears,
+          controller: _amount,
+          onAmountTyped:
+              (v) => setState(() => _draft = draft.copyWith(amount: v)),
+          onNudge: _nudge,
+          onChanged: _update,
+        ),
+        if (problem != null) ...[
           const SizedBox(height: 10),
           Text(
-            _tradeOffHint(room.mode),
-            style: const TextStyle(color: Chalk.dim, fontSize: 13, height: 1.35),
+            problem,
+            style: const TextStyle(
+              color: Chalk.red,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
-        SectionHeader('Riwayat (${s.log.length})'),
-        _History(log: s.log, agentName: room.agent.name, accent: accent),
+        const SizedBox(height: 10),
+        Text(
+          _tradeOffHint(room.mode),
+          style: const TextStyle(color: Chalk.dim, fontSize: 13, height: 1.35),
+        ),
       ],
-    );
+    ];
   }
 
   static String _anchorLabel(NegotiationMode m) => switch (m) {
@@ -334,9 +417,12 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
 /// Identitas pemain: garis warna klub di kiri, nama besar, lalu posisi,
 /// usia, CA, dan apa yang sedang dirundingkan.
 class _PlayerLine extends ConsumerWidget {
-  const _PlayerLine({required this.room});
+  const _PlayerLine({required this.room, this.compact = false});
 
   final NegotiationRoom room;
+
+  /// Layar pendek: nama satu baris, info lain diringkas.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -351,6 +437,63 @@ class _PlayerLine extends ConsumerWidget {
       NegotiationMode.contract =>
         'Kontrak pemain, harga ${moneyLabel(room.offer.fee)} sudah disepakati',
     };
+    if (compact) {
+      return Container(
+        padding: const EdgeInsets.only(left: 12),
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: stripe, width: 4)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${p.firstName} ',
+                          style: const TextStyle(
+                            color: Chalk.dim,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        TextSpan(text: p.lastName),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: Fonts.condensed,
+                      fontSize: 24,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PositionBadge(p.position),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '${p.age} tahun, '),
+                  TextSpan(
+                    text: 'CA ${p.currentAbility}',
+                    style: TextStyle(color: ratingColor(p.currentAbility)),
+                  ),
+                  TextSpan(text: '. $subject'),
+                ],
+              ),
+              style: const TextStyle(color: Chalk.dim, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.only(left: 14),
       decoration: BoxDecoration(
@@ -359,7 +502,10 @@ class _PlayerLine extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(p.firstName, style: const TextStyle(color: Chalk.dim, fontSize: 15)),
+          Text(
+            p.firstName,
+            style: const TextStyle(color: Chalk.dim, fontSize: 15),
+          ),
           Text(
             p.lastName,
             style: const TextStyle(
@@ -394,19 +540,26 @@ class _PlayerLine extends ConsumerWidget {
 /// Elemen utama layar: agen, sisa kesabarannya sebagai coretan kapur, dan
 /// kalimat terakhirnya ditulis besar di papan.
 class _AgentBoard extends StatelessWidget {
-  const _AgentBoard({required this.session, required this.accent});
+  const _AgentBoard({
+    required this.session,
+    required this.accent,
+    this.compact = false,
+  });
 
   final NegotiationSession session;
   final Color accent;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final agent = session.agent;
     final lastLine =
-        session.log.lastWhere(
-          (t) => t.byAgent,
-          orElse: () => const NegotiationTurn(byAgent: true, text: ''),
-        ).text;
+        session.log
+            .lastWhere(
+              (t) => t.byAgent,
+              orElse: () => const NegotiationTurn(byAgent: true, text: ''),
+            )
+            .text;
     final level = AgentNegotiator.levelOf(session.patience);
     final mood = switch (level) {
       PatienceLevel.open => 'masih terbuka berdiskusi',
@@ -414,8 +567,12 @@ class _AgentBoard extends StatelessWidget {
       PatienceLevel.critical => 'satu langkah salah, ia pergi',
       PatienceLevel.gone => 'sudah pergi',
     };
+    final style = 'gaya ${agent.style.label.toLowerCase()}';
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      padding:
+          compact
+              ? const EdgeInsets.fromLTRB(14, 12, 14, 14)
+              : const EdgeInsets.fromLTRB(18, 16, 18, 18),
       decoration: BoxDecoration(
         color: Chalk.boardDeep,
         borderRadius: BorderRadius.circular(4),
@@ -424,21 +581,46 @@ class _AgentBoard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            agent.name,
-            style: const TextStyle(
-              fontFamily: Fonts.condensed,
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              height: 1.1,
+          if (compact)
+            // Nama dan gaya satu baris supaya panel tetap pendek.
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: agent.name),
+                  TextSpan(
+                    text: '  agen, $style',
+                    style: const TextStyle(
+                      fontFamily: Fonts.body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: Chalk.dim,
+                    ),
+                  ),
+                ],
+              ),
+              style: const TextStyle(
+                fontFamily: Fonts.condensed,
+                fontSize: 19,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          else ...[
+            Text(
+              agent.name,
+              style: const TextStyle(
+                fontFamily: Fonts.condensed,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+              ),
             ),
-          ),
-          Text(
-            'Agen pemain, gaya ${agent.style.label.toLowerCase()}',
-            style: const TextStyle(color: Chalk.dim, fontSize: 13),
-          ),
-          const SizedBox(height: 14),
-          _PatienceTally(patience: session.patience),
+            Text(
+              'Agen pemain, $style',
+              style: const TextStyle(color: Chalk.dim, fontSize: 13),
+            ),
+          ],
+          SizedBox(height: compact ? 10 : 14),
+          _PatienceTally(patience: session.patience, height: compact ? 18 : 26),
           const SizedBox(height: 6),
           Text(
             'Kesabaran ${session.patience}%, $mood',
@@ -448,10 +630,14 @@ class _AgentBoard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: compact ? 10 : 16),
           Text(
             '“$lastLine”',
-            style: const TextStyle(fontSize: 19, height: 1.4, color: Chalk.white),
+            style: TextStyle(
+              fontSize: compact ? 16 : 19,
+              height: compact ? 1.35 : 1.4,
+              color: Chalk.white,
+            ),
           ),
         ],
       ),
@@ -468,9 +654,10 @@ Color _levelColor(PatienceLevel l) => switch (l) {
 /// Kesabaran sebagai turus kapur: 20 coretan (5% per coretan) dalam empat
 /// ikat. Coretan yang hilang memudar saat agen kehilangan kesabaran.
 class _PatienceTally extends StatelessWidget {
-  const _PatienceTally({required this.patience});
+  const _PatienceTally({required this.patience, this.height = 26});
 
   final int patience;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -487,10 +674,11 @@ class _PatienceTally extends StatelessWidget {
             for (var i = 0; i < 5; i++) ...[
               if (i > 0) const SizedBox(width: 5),
               AnimatedContainer(
-                duration: still ? Duration.zero : const Duration(milliseconds: 450),
+                duration:
+                    still ? Duration.zero : const Duration(milliseconds: 450),
                 curve: Curves.easeOut,
                 width: 4,
-                height: 26,
+                height: height,
                 transform: Matrix4.rotationZ(((g * 5 + i) % 3 - 1) * 0.04),
                 decoration: BoxDecoration(
                   color: g * 5 + i < lit ? color : Chalk.line,
@@ -538,7 +726,9 @@ class _OfferEditor extends StatelessWidget {
           style: scoreStyle(size: 26),
           decoration: InputDecoration(
             labelText:
-                contract ? 'Gaji per tahun (€ ribu)' : 'Biaya transfer (€ ribu)',
+                contract
+                    ? 'Gaji per tahun (€ ribu)'
+                    : 'Biaya transfer (€ ribu)',
             suffixText: moneyLabel(draft.amount),
           ),
           onChanged: (t) => onAmountTyped(int.tryParse(t) ?? 0),
@@ -584,7 +774,8 @@ class _OfferEditor extends StatelessWidget {
           _Choices<int>(
             values: const [1, 2, 3, 4, 5],
             selected: draft.contractYears,
-            label: (v) => v == preferredYears ? '$v tahun (disukai)' : '$v tahun',
+            label:
+                (v) => v == preferredYears ? '$v tahun (disukai)' : '$v tahun',
             onSelected: (v) => onChanged(draft.copyWith(contractYears: v)),
           ),
           const _Label('Peran di skuad'),
@@ -679,7 +870,9 @@ class _HistoryState extends State<_History> {
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: () => setState(() => _all = true),
-              child: Text('Tampilkan ${log.length - shown.length} baris sebelumnya'),
+              child: Text(
+                'Tampilkan ${log.length - shown.length} baris sebelumnya',
+              ),
             ),
           ),
         for (final t in shown)
@@ -688,29 +881,25 @@ class _HistoryState extends State<_History> {
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: Chalk.line)),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 64,
-                  child: Text(
-                    t.byAgent ? first : 'Anda',
+            // Nama pembicara sebaris dengan kalimatnya, supaya tidak butuh
+            // kolom lebar tetap di layar sempit atau teks besar.
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: t.byAgent ? '$first  ' : 'Anda  ',
                     style: TextStyle(
                       color: t.byAgent ? widget.accent : Chalk.dim,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Text(
-                    t.text,
-                    style: TextStyle(
-                      color: t.byAgent ? Chalk.white : Chalk.dim,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ],
+                  TextSpan(text: t.text),
+                ],
+              ),
+              style: TextStyle(
+                color: t.byAgent ? Chalk.white : Chalk.dim,
+                height: 1.35,
+              ),
             ),
           ),
       ],
@@ -734,63 +923,67 @@ class _Outcome extends StatelessWidget {
   Widget build(BuildContext context) {
     final agreed = step.verdict == AgentVerdict.accept;
     final selling = step.response.session.mode == NegotiationMode.transferSell;
-    final note = agreed
-        ? step.summary
-        : selling
-        ? 'Pembeli mundur. Pemain tetap di klub Anda.'
-        : 'Pemain ini baru bisa ditawar lagi seminggu lagi. Agennya akan '
-            'mengingat angka terakhir.';
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 14, 16, 12),
-        decoration: BoxDecoration(
-          color: Chalk.boardDeep,
-          border: Border(
-            top: BorderSide(color: agreed ? Chalk.green : Chalk.red, width: 3),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              agreed ? 'Sepakat' : 'Agen pergi',
-              style: TextStyle(
-                fontFamily: Fonts.condensed,
-                fontSize: 28,
-                height: 1.1,
-                fontWeight: FontWeight.w700,
-                color: agreed ? Chalk.green : Chalk.red,
-              ),
-            ),
-            if (note != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(note, style: const TextStyle(color: Chalk.dim)),
-              ),
-            const SizedBox(height: 10),
-            Row(
+    final note =
+        agreed
+            ? step.summary
+            : selling
+            ? 'Pembeli mundur. Pemain tetap di klub Anda.'
+            : 'Pemain ini baru bisa ditawar lagi seminggu lagi. Agennya akan '
+                'mengingat angka terakhir.';
+    final color = agreed ? Chalk.green : Chalk.red;
+    final short = MediaQuery.sizeOf(context).height < 480;
+    return _BottomPanel(
+      color: Chalk.boardDeep,
+      border: BorderSide(color: color, width: 3),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onBack,
-                    child: const Text('Kembali'),
+                TextSpan(
+                  text: agreed ? 'Sepakat' : 'Agen pergi',
+                  style: TextStyle(
+                    fontFamily: Fonts.condensed,
+                    fontSize: short ? 22 : 28,
+                    height: 1.1,
+                    fontWeight: FontWeight.w700,
+                    color: color,
                   ),
                 ),
-                if (step.continuesToContract) ...[
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: onContinue,
-                      child: const Text('Lanjut ke kontrak'),
-                    ),
-                  ),
-                ],
+                // Di layar pendek keterangan ikut di baris judul.
+                if (note != null && short) TextSpan(text: '  $note'),
               ],
             ),
-          ],
-        ),
+            style: const TextStyle(color: Chalk.dim),
+          ),
+          if (note != null && !short)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(note, style: const TextStyle(color: Chalk.dim)),
+            ),
+          SizedBox(height: short ? 6 : 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onBack,
+                  child: const FittedBox(child: Text('Kembali')),
+                ),
+              ),
+              if (step.continuesToContract) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: onContinue,
+                    child: const FittedBox(child: Text('Lanjut ke kontrak')),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -816,30 +1009,64 @@ class _ActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-        decoration: const BoxDecoration(
-          color: Chalk.board,
-          border: Border(top: BorderSide(color: Chalk.line)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: busy || !canSubmit ? null : onSubmit,
-                child: const Text('Ajukan tawaran'),
-              ),
+    return _BottomPanel(
+      color: Chalk.board,
+      border: const BorderSide(color: Chalk.line),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: busy || !canSubmit ? null : onSubmit,
+              child: const FittedBox(child: Text('Ajukan tawaran')),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: FilledButton(
-                onPressed: busy || !canAccept ? null : onAccept,
-                child: FittedBox(child: Text(acceptLabel)),
-              ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FilledButton(
+              onPressed: busy || !canAccept ? null : onAccept,
+              child: FittedBox(child: Text(acceptLabel)),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Wadah bar bawah: di atas area navigasi sistem, lebih tipis di layar
+/// pendek (mis. lanskap), dan tidak melebar lebih dari 640 dp di tablet.
+class _BottomPanel extends StatelessWidget {
+  const _BottomPanel({
+    required this.child,
+    required this.color,
+    required this.border,
+  });
+
+  final Widget child;
+  final Color color;
+  final BorderSide border;
+
+  @override
+  Widget build(BuildContext context) {
+    final short = MediaQuery.sizeOf(context).height < 480;
+    return Container(
+      decoration: BoxDecoration(color: color, border: Border(top: border)),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                short ? 6 : 10,
+                16,
+                short ? 6 : 10,
+              ),
+              child: child,
+            ),
+          ),
         ),
       ),
     );

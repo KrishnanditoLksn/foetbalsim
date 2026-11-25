@@ -72,7 +72,10 @@ class _BidDialogState extends State<BidDialog> {
         'Di bawah harga minta: kemungkinan dibalas kontra-tawaran.',
         theme.colorScheme.tertiary,
       ),
-      _ => ('Sesuai harga minta: kemungkinan diterima.', theme.colorScheme.primary),
+      _ => (
+        'Sesuai harga minta: kemungkinan diterima.',
+        theme.colorScheme.primary,
+      ),
     };
 
     return AlertDialog(
@@ -123,7 +126,9 @@ class _BidDialogState extends State<BidDialog> {
               for (final pct in TransferRules.sellOnOptions)
                 DropdownMenuItem(
                   value: pct,
-                  child: Text(pct == 0 ? 'Tanpa' : '$pct% penjualan berikutnya'),
+                  child: Text(
+                    pct == 0 ? 'Tanpa' : '$pct% penjualan berikutnya',
+                  ),
                 ),
             ],
             onChanged: (v) => setState(() => _sellOn = v ?? 0),

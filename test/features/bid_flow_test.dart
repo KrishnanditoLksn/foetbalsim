@@ -13,8 +13,9 @@ import 'package:futbol/data/services/game_engine.dart';
 import 'package:futbol/domain/generators/world_generator.dart';
 import 'package:futbol/domain/models/game_models.dart';
 import 'package:futbol/features/player/player_detail_screen.dart';
+import 'package:futbol/features/transfer/transfer_dialogs.dart';
 
-/// Alur UI: detail pemain → Ajukan Tawaran → isi nominal → Kirim.
+/// Alur UI: detail pemain → Ajukan tawaran → isi nominal → Kirim.
 /// Regresi: controller dialog dulu di-dispose saat animasi tutup dialog masih
 /// berjalan, sehingga aplikasi error dan berhenti merespons.
 void main() {
@@ -60,11 +61,11 @@ void main() {
     }
 
     await settle();
-    final bidButton = find.text('Ajukan Tawaran');
+    final bidButton = find.text('Ajukan tawaran');
     await tester.ensureVisible(bidButton);
     await tester.tap(bidButton);
     await settle();
-    expect(find.text('Ajukan tawaran'), findsOneWidget);
+    expect(find.byType(BidDialog), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), '${target.marketValue}');
     await tester.tap(find.text('Kirim'));
@@ -72,11 +73,14 @@ void main() {
 
     // Dialog tertutup tanpa exception dan tawaran tersimpan.
     expect(tester.takeException(), isNull);
-    expect(find.text('Ajukan tawaran'), findsNothing);
+    expect(find.byType(BidDialog), findsNothing);
     final offers = await tester.runAsync(
       () => TransferRepository(db).offersFor('real-madrid'),
     );
     expect(offers!.any((o) => o.playerId == target.id), isTrue);
-    expect(find.text('Tawaran Diajukan'), findsOneWidget);
+    expect(
+      find.textContaining('Menunggu respons klub penjual'),
+      findsOneWidget,
+    );
   });
 }

@@ -8,7 +8,9 @@ import '../../core/utils/date_format.dart';
 import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../core/widgets/futbol_ui.dart';
+import '../../data/database/app_database.dart' show NegotiationSessionRow;
 import '../../data/repositories/player_repository.dart';
+import '../../data/services/transfer_service.dart' show TransferQuote;
 import '../../domain/enums/attribute.dart';
 import '../../domain/finance/money_label.dart';
 import '../../domain/models/game_models.dart';
@@ -16,6 +18,7 @@ import '../../domain/models/player_attributes.dart';
 import '../../domain/enums/transfer.dart';
 import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../domain/transfer/agent_negotiator.dart';
 import '../../domain/transfer/transfer_window.dart';
 import '../transfer/transfer_flow.dart';
 
@@ -215,9 +218,11 @@ class _Ability extends StatelessWidget {
   }
 }
 
-/// Panel transfer di detail pemain (README_FASE3 B.5, B.10.6):
+/// Panel transfer di detail pemain, mengikuti alur Ruang Negosiasi:
+/// - semua pemain: agen pemain (nama & gaya) dan negosiasi yang sedang
+///   berjalan beserta sisa kesabaran agen, dengan tombol ke Ruang Negosiasi;
 /// - pemain klub lain: harga minta, gaji yang diharapkan, alasan bila tidak
-///   bisa ditawar, tombol tawar, dan negosiasi yang sedang berjalan;
+///   bisa ditawar (termasuk jeda 1 minggu setelah agen walk-out), tombol tawar;
 /// - pemain kita: daftar jual dan klub yang berminat.
 class _TransferActions extends ConsumerWidget {
   const _TransferActions({required this.detail});
@@ -226,7 +231,6 @@ class _TransferActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final state = ref.watch(gameStateProvider).valueOrNull;
     final ourId = state?.clubId;
     final now = state?.currentDate ?? WorldGenerator.seasonStart;
@@ -237,29 +241,143 @@ class _TransferActions extends ConsumerWidget {
             const <int>{})
         .contains(p.id);
     final offers = ref.watch(clubOffersProvider).valueOrNull ?? const [];
-    TransferOffer? active;
-    for (final o in offers) {
-      if (o.playerId == p.id && o.isActive) {
-        active = o;
-        break;
+    final sessions =
+        ref.watch(activeNegotiationsProvider).valueOrNull ?? const {};
+    final active = [
+      for (final o in offers)
+        if (o.playerId == p.id && o.isActive) o,
+    ];
+    final agent =
+        state == null
+            ? null
+            : AgentProfile.forPlayer(seed: state.seed, playerId: p.id);
+
+    final children = <Widget>[];
+
+    // Harga dan gaji (pemain klub lain).
+    TransferQuote? quote;
+    if (!isOurs) {
+      quote = ref.watch(transferQuoteProvider(p.id)).valueOrNull;
+      if (quote != null) {
+        children.add(
+          StatStrip(
+            children: [
+              StatFigure(
+                label:
+                    quote.isRival ? 'Harga minta, premi rival' : 'Harga minta',
+                value: moneyLabel(quote.askingFee),
+                labelLines: 2,
+              ),
+              StatFigure(
+                label: 'Gaji diharapkan per tahun',
+                value: moneyLabel(quote.expectedWage),
+                labelLines: 2,
+              ),
+            ],
+          ),
+        );
+        children.add(const SizedBox(height: 14));
       }
     }
 
-    final lines = <Widget>[];
-    final buttons = <Widget>[
-      OutlinedButton.icon(
-        onPressed:
-            () => GameActions.run(
-              ref,
-              (e) => e.setShortlisted(p.id, !shortlisted),
-            ),
-        icon: Icon(shortlisted ? Icons.bookmark : Icons.bookmark_border),
-        label: Text(shortlisted ? 'Di Shortlist' : 'Shortlist'),
-      ),
-    ];
+    // Agen pemain.
+    if (agent != null) {
+      // Satu kalimat: "Agen Luis Ferreira, gaya keras kepala".
+      children.add(
+        Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'Agen '),
+              TextSpan(
+                text: agent.name,
+                style: const TextStyle(
+                  color: Chalk.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              TextSpan(text: ', gaya ${agent.style.label.toLowerCase()}'),
+            ],
+          ),
+          style: const TextStyle(color: Chalk.dim),
+        ),
+      );
+    }
 
+    // Negosiasi yang sedang berjalan.
+    if (ourId != null) {
+      for (final o in active) {
+        children.add(
+          _ActiveNegotiation(
+            offer: o,
+            incoming: o.isIncomingFor(ourId),
+            session: sessions[o.id],
+            ourClubId: ourId,
+            playerName: p.fullName,
+          ),
+        );
+      }
+    }
+
+    // Alasan tidak bisa ditawar (mis. jeda walk-out agen).
+    final blocked = active.isEmpty ? quote?.blockedReason : null;
+    if (blocked != null) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Text(
+            blocked,
+            style: const TextStyle(
+              color: Chalk.red,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Klub yang berminat (pemain kita).
     if (isOurs) {
-      buttons.add(
+      final interests =
+          ref.watch(playerInterestsProvider(p.id)).valueOrNull ?? const [];
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Text(
+            interests.isEmpty
+                ? 'Belum ada klub yang berminat.'
+                : 'Klub yang berminat',
+            style: const TextStyle(color: Chalk.dim),
+          ),
+        ),
+      );
+      for (final i in interests.take(6)) {
+        children.add(
+          _InfoRow(
+            label: i.clubName,
+            labelColor: Chalk.white,
+            child: Text(
+              '${i.levelLabel}, skor ${i.score}',
+              textAlign: TextAlign.end,
+              style: const TextStyle(color: Chalk.dim),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Tombol.
+    final buttons = <Widget>[
+      if (!isOurs)
+        OutlinedButton.icon(
+          onPressed:
+              () => GameActions.run(
+                ref,
+                (e) => e.setShortlisted(p.id, !shortlisted),
+              ),
+          icon: Icon(shortlisted ? Icons.bookmark : Icons.bookmark_border),
+          label: Text(shortlisted ? 'Di shortlist' : 'Shortlist'),
+        ),
+      if (isOurs)
         FilledButton.tonalIcon(
           onPressed:
               () => GameActions.run(
@@ -267,85 +385,162 @@ class _TransferActions extends ConsumerWidget {
                 (e) => e.setListed(p.id, !p.isTransferListed),
               ),
           icon: const Icon(Icons.sell_outlined),
-          label: Text(p.isTransferListed ? 'Batal Daftar Jual' : 'Daftar Jual'),
-        ),
-      );
-      final interests =
-          ref.watch(playerInterestsProvider(p.id)).valueOrNull ?? const [];
-      lines.add(
-        Text(
-          interests.isEmpty
-              ? 'Belum ada klub yang berminat.'
-              : 'Klub yang berminat:',
-          style: theme.textTheme.labelLarge,
-        ),
-      );
-      for (final i in interests.take(6)) {
-        lines.add(Text('• ${i.clubName} — ${i.levelLabel} (${i.score})'));
-      }
-    } else {
-      final quote = ref.watch(transferQuoteProvider(p.id)).valueOrNull;
-      if (quote != null) {
-        lines.add(
-          Text(
-            'Harga minta: ${moneyLabel(quote.askingFee)}'
-            '${quote.isRival ? ' (premi rival +30%)' : ''} · '
-            'gaji diharapkan ${moneyLabel(quote.expectedWage)}/thn',
+          label: Text(
+            p.isTransferListed
+                ? 'Batalkan daftar jual'
+                : 'Masukkan daftar jual',
           ),
-        );
-      }
-      final blocked = active == null ? quote?.blockedReason : null;
-      buttons.add(
+        )
+      else if (active.isEmpty)
         FilledButton.icon(
           onPressed:
-              (active != null || quote == null || blocked != null)
+              (quote == null || blocked != null)
                   ? null
                   : () => TransferFlow.bid(context, ref, p),
           icon: const Icon(Icons.gavel),
-          label: Text(
-            active == null
-                ? 'Ajukan Tawaran'
-                : active.status == TransferOfferStatus.pending
-                ? 'Tawaran Diajukan'
-                : 'Negosiasi Berjalan',
-          ),
+          label: const Text('Ajukan tawaran'),
         ),
-      );
-      if (blocked != null) {
-        lines.add(
-          Text(blocked, style: TextStyle(color: theme.colorScheme.error)),
-        );
-      }
-    }
-
-    if (active != null && ourId != null) {
-      lines.add(const SizedBox(height: 4));
-      lines.add(
-        Text(
-          '${active.toClubId == ourId ? 'Tawaran masuk' : 'Negosiasi'}: '
-          '${active.status.label} · ${offerSummary(active)}',
-          style: theme.textTheme.labelLarge,
-        ),
-      );
-      lines.add(
-        OfferActions(offer: active, ourClubId: ourId, playerName: p.fullName),
-      );
-    }
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ...lines,
-        const SizedBox(height: 10),
+        ...children,
+        const SizedBox(height: 12),
         Wrap(spacing: 8, runSpacing: 8, children: buttons),
         const SizedBox(height: 8),
         Text(
           window.isOpen
               ? 'Bursa buka sampai ${formatDate(window.closesOn!)}.'
               : 'Bursa tutup, buka lagi ${formatDate(window.nextOpensOn!)}.',
-          style: theme.textTheme.bodySmall,
+          style: const TextStyle(color: Chalk.dim, fontSize: 13),
         ),
       ],
+    );
+  }
+}
+
+/// Satu baris label–isi yang dipisah garis kapur.
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.label,
+    required this.child,
+    this.labelColor = Chalk.dim,
+  });
+
+  final String label;
+  final Widget child;
+  final Color labelColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Chalk.line)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(label, style: TextStyle(color: labelColor)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(flex: 3, child: child),
+        ],
+      ),
+    );
+  }
+}
+
+/// Negosiasi yang berjalan untuk pemain ini: dengan siapa, nominal, status,
+/// sisa kesabaran agen bila sesi Ruang Negosiasi sudah dibuka, lalu tombol.
+class _ActiveNegotiation extends ConsumerWidget {
+  const _ActiveNegotiation({
+    required this.offer,
+    required this.incoming,
+    required this.session,
+    required this.ourClubId,
+    required this.playerName,
+  });
+
+  final TransferOffer offer;
+  final bool incoming;
+  final NegotiationSessionRow? session;
+  final String ourClubId;
+  final String playerName;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final otherId = incoming ? offer.fromClubId : offer.toClubId;
+    final other = ref.watch(clubByIdProvider(otherId)).valueOrNull?.name ?? '';
+    final title =
+        incoming
+            ? 'Tawaran $other'
+            : offer.status == TransferOfferStatus.awaitingContract
+            ? 'Harga disepakati dengan $other'
+            : 'Negosiasi dengan $other';
+    final s = session;
+    final patienceColor =
+        s == null
+            ? Chalk.dim
+            : switch (AgentNegotiator.levelOf(s.patience)) {
+              PatienceLevel.open => Chalk.green,
+              PatienceLevel.impatient => Chalk.yellow,
+              _ => Chalk.red,
+            };
+    final statusColor = offerStatusColor(offer.status);
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: Chalk.boardDeep,
+        borderRadius: BorderRadius.circular(4),
+        border: Border(left: BorderSide(color: statusColor, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(width: 8),
+              StatusBadge(
+                offerStatusLabel(offer, ourClubId),
+                color: statusColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(offerSummary(offer), style: scoreStyle(size: 20)),
+          if (s != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Tawar-menawar berjalan, kesabaran agen ${s.patience}%',
+                style: TextStyle(
+                  color: patienceColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          const SizedBox(height: 6),
+          OfferActions(
+            offer: offer,
+            ourClubId: ourClubId,
+            playerName: playerName,
+            session: s,
+          ),
+        ],
+      ),
     );
   }
 }

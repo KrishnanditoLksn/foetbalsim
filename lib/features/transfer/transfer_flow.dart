@@ -88,7 +88,9 @@ abstract final class TransferFlow {
   /// Membuka Ruang Negosiasi untuk satu tawaran (kontra-tawaran, tawaran
   /// masuk, atau kontrak).
   static Future<void> openRoom(BuildContext context, int offerId) =>
-      Navigator.of(context).pushNamed(AppRoutes.negotiationRoom, arguments: offerId);
+      Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.negotiationRoom, arguments: offerId);
 }
 
 /// Tombol aksi untuk satu negosiasi, sesuai status dan arah tawaran.
@@ -179,3 +181,9 @@ Color offerStatusColor(TransferOfferStatus s) => switch (s) {
 /// Teks ringkas satu tawaran: nominal dan syarat pembayarannya.
 String offerSummary(TransferOffer o) =>
     TransferService.termsLabel(o.fee, o.installmentYears, o.sellOnPct);
+
+/// Label status tawaran dari sudut pandang klub kita. Tawaran masuk yang
+/// masih berjalan disimpan sebagai `awaitingContract`, tetapi bagi user itu
+/// adalah tawaran yang menunggu jawaban, bukan negosiasi kontrak.
+String offerStatusLabel(TransferOffer o, String ourClubId) =>
+    o.isActive && o.isIncomingFor(ourClubId) ? 'Tawaran masuk' : o.status.label;
