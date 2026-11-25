@@ -11,7 +11,7 @@ typedef BidTerms = ({int fee, int installmentYears, int sellOnPct});
 // tepat setelah `showDialog` kembali membuat aplikasi error saat dialog
 // masih dianimasikan.
 
-/// Dialog tawaran ronde 1: biaya, cicilan, dan sell-on clause, dengan
+/// Dialog tawaran pertama: biaya, cicilan, dan sell-on clause, dengan
 /// perkiraan respons penjual sesuai ketentuan negosiasi.
 class BidDialog extends StatefulWidget {
   const BidDialog({
@@ -158,8 +158,8 @@ class _BidDialogState extends State<BidDialog> {
             ),
           const SizedBox(height: 8),
           Text(
-            'Negosiasi maksimal ${TransferRules.maxRounds} ronde: tawaran → '
-            'kontra-tawaran → tawaran final. Respons dalam 1–2 hari.',
+            'Respons dalam 1–2 hari. Bila belum cocok, agen pemain mengajak '
+            'Anda tawar-menawar di Ruang Negosiasi.',
             style: theme.textTheme.bodySmall,
           ),
         ],
@@ -179,164 +179,6 @@ class _BidDialogState extends State<BidDialog> {
                   ))
                   : null,
           child: const Text('Kirim'),
-        ),
-      ],
-    );
-  }
-}
-
-/// Dialog satu nominal (€K): kontra untuk tawaran masuk atau tawaran final.
-class FeeDialog extends StatefulWidget {
-  const FeeDialog({
-    super.key,
-    required this.title,
-    required this.message,
-    required this.initialFee,
-    this.helper,
-    this.confirmLabel = 'Kirim',
-  });
-
-  final String title;
-  final String message;
-  final int initialFee;
-  final String? helper;
-  final String confirmLabel;
-
-  @override
-  State<FeeDialog> createState() => _FeeDialogState();
-}
-
-class _FeeDialogState extends State<FeeDialog> {
-  late final TextEditingController _fee = TextEditingController(
-    text: '${widget.initialFee}',
-  );
-
-  @override
-  void dispose() {
-    _fee.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final fee = int.tryParse(_fee.text.trim()) ?? 0;
-    return AlertDialog(
-      title: Text(widget.title),
-      scrollable: true,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(widget.message),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _fee,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: 'Nominal (€ ribu)',
-              helperText: widget.helper,
-              helperMaxLines: 3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(fee > 0 ? '= ${moneyLabel(fee)}' : ''),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          onPressed: fee > 0 ? () => Navigator.pop<int>(context, fee) : null,
-          child: Text(widget.confirmLabel),
-        ),
-      ],
-    );
-  }
-}
-
-/// Dialog kontrak pemain: gaji per tahun (€K) dan durasi 1–5 tahun.
-class ContractDialog extends StatefulWidget {
-  const ContractDialog({
-    super.key,
-    required this.playerName,
-    required this.minWage,
-  });
-
-  final String playerName;
-  final int minWage; // €K per tahun
-
-  @override
-  State<ContractDialog> createState() => _ContractDialogState();
-}
-
-class _ContractDialogState extends State<ContractDialog> {
-  late final TextEditingController _wage = TextEditingController(
-    text: '${widget.minWage}',
-  );
-  int _years = 3;
-
-  @override
-  void dispose() {
-    _wage.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final wage = int.tryParse(_wage.text.trim()) ?? 0;
-    return AlertDialog(
-      title: const Text('Negosiasi kontrak'),
-      scrollable: true,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(widget.playerName, style: theme.textTheme.titleMedium),
-          Text('Gaji yang diharapkan minimal ${moneyLabel(widget.minWage)}/tahun.'),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _wage,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(labelText: 'Gaji per tahun (€ ribu)'),
-          ),
-          if (wage > 0 && wage < widget.minWage)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Di bawah ekspektasi: pemain akan menolak.',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
-          const SizedBox(height: 12),
-          Text('Durasi kontrak', style: theme.textTheme.labelLarge),
-          const SizedBox(height: 4),
-          SegmentedButton<int>(
-            segments: [
-              for (var y = 1; y <= 5; y++)
-                ButtonSegment(value: y, label: Text('$y th')),
-            ],
-            selected: {_years},
-            showSelectedIcon: false,
-            onSelectionChanged: (s) => setState(() => _years = s.first),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Kembali'),
-        ),
-        FilledButton(
-          onPressed:
-              wage > 0
-                  ? () => Navigator.pop<String>(context, 'wage:$wage|years:$_years')
-                  : null,
-          child: const Text('Ajukan kontrak'),
         ),
       ],
     );

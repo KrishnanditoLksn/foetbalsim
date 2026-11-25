@@ -11,6 +11,7 @@ import '../features/player_search/player_search_screen.dart';
 import '../features/squad/squad_screen.dart';
 import '../features/start/start_screen.dart';
 import '../features/tactics/tactics_screen.dart';
+import '../features/transfer/negotiation_room_screen.dart';
 import '../features/transfer/transfer_screen.dart';
 
 abstract final class AppRoutes {
@@ -27,6 +28,9 @@ abstract final class AppRoutes {
   static const String transfer = '/transfer';
   static const String playerSearch = '/player-search';
 
+  /// Ruang Negosiasi; argumen: id tawaran (`int`).
+  static const String negotiationRoom = '/negotiation-room';
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final WidgetBuilder builder = switch (settings.name) {
       start => (_) => const StartScreen(),
@@ -42,6 +46,8 @@ abstract final class AppRoutes {
       match => (_) => const MatchScreen(),
       transfer => (_) => const TransferScreen(),
       playerSearch => (_) => const PlayerSearchScreen(),
+      negotiationRoom =>
+        (_) => NegotiationRoomScreen(offerId: settings.arguments as int),
       _ => (_) => const StartScreen(),
     };
     return MaterialPageRoute<void>(builder: builder, settings: settings);

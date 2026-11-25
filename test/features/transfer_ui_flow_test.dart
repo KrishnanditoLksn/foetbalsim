@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:futbol/app/providers.dart';
+import 'package:futbol/app/router.dart';
 import 'package:futbol/data/database/app_database.dart';
 import 'package:futbol/data/repositories/inbox_repository.dart';
 import 'package:futbol/data/repositories/player_repository.dart';
@@ -17,11 +18,13 @@ import 'package:futbol/domain/enums/transfer.dart';
 import 'package:futbol/domain/generators/world_generator.dart';
 import 'package:futbol/domain/models/game_models.dart';
 import 'package:futbol/domain/models/season_models.dart';
+import 'package:futbol/domain/transfer/agent_negotiator.dart';
 import 'package:futbol/features/inbox/inbox_screen.dart';
+import 'package:futbol/features/transfer/negotiation_room_screen.dart';
 import 'package:futbol/features/transfer/transfer_screen.dart';
 
-/// Alur UI negosiasi lanjutan. Semua dialog di sini dulu membuang
-/// TextEditingController saat dialog masih dianimasikan (aplikasi error).
+/// Alur UI Ruang Negosiasi (README_NEGOTIATION_ROOM F): dari Inbox dan tab
+/// Negosiasi sampai sepakat, termasuk layar ponsel 360 dp.
 const _us = 'real-madrid';
 const _seller = 'getafe';
 
@@ -50,7 +53,7 @@ void main() {
       (await tester.runAsync(fn)) as T;
 
   Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 12; i++) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 50)),
       );
@@ -62,13 +65,30 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [currentDatabaseProvider.overrideWith((ref) => db)],
-        child: MaterialApp(home: screen),
+        child: MaterialApp(
+          home: screen,
+          onGenerateRoute: AppRoutes.onGenerateRoute,
+        ),
       ),
     );
     await settle(tester);
   }
 
-  /// Pemain penjual bernilai ≥ €3 jt dengan tawaran 85% → kontra-tawaran.
+  Future<void> tapText(WidgetTester tester, String text) async {
+    final finder = find.text(text);
+    await tester.ensureVisible(finder.last);
+    await tester.tap(finder.last);
+    await settle(tester);
+  }
+
+  /// Ponsel tinggi agar seluruh isi ruangan ter-build tanpa digulir.
+  void tallPhone(WidgetTester tester) {
+    tester.view.physicalSize = const Size(400, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+  }
+
+  /// Pemain Getafe bernilai ≥ €3 jt, tawaran 85% → kontra-tawaran.
   Future<(Player, int)> countered(WidgetTester tester) => io(tester, () async {
     final squad = await PlayerRepository(db).squad(_seller);
     squad.sort((a, b) => a.marketValue.compareTo(b.marketValue));
@@ -83,50 +103,81 @@ void main() {
       fee: (ask * 0.85).round(),
       seed: 99,
     );
-    await svc.resolveDueBids(date: start.add(const Duration(days: 2)), ourClubId: _us, seed: 99);
+    await svc.resolveDueBids(
+      date: start.add(const Duration(days: 2)),
+      ourClubId: _us,
+      seed: 99,
+    );
     final offer = (await TransferRepository(db).offersFor(_us)).firstWhere(
       (o) => o.playerId == p.id,
     );
     return (p, offer.id);
   });
 
-  testWidgets('Inbox: kontra-tawaran → tawaran final', (tester) async {
+  testWidgets('Inbox → Ruang Negosiasi → ajukan tawaran (layar 360 dp)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     await setUpWorld(tester);
     final (p, offerId) = await countered(tester);
-    expect(
-      (await io(tester, () => TransferRepository(db).offerById(offerId)))!.status,
-      TransferOfferStatus.countered,
-    );
 
     await show(tester, const InboxScreen());
     await tester.tap(find.text('Kontra-tawaran: ${p.fullName}'));
     await settle(tester);
-    await tester.tap(find.text('Tawaran final'));
+    await tester.tap(find.text('Masuk ruang negosiasi'));
     await settle(tester);
-    await tester.tap(find.text('Kirim tawaran final'));
+
+    expect(find.byType(NegotiationRoomScreen), findsOneWidget);
+    final agent = AgentProfile.forPlayer(seed: 99, playerId: p.id);
+    expect(find.text(agent.name), findsOneWidget);
+    expect(find.text('Patokan agen'), findsOneWidget);
+    expect(find.textContaining('Kesabaran 100%'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Ajukan tawaran'));
     await settle(tester);
 
     expect(tester.takeException(), isNull);
     final offer = await io(tester, () => TransferRepository(db).offerById(offerId));
-    expect(offer!.status, TransferOfferStatus.pending);
-    expect(offer.round, 3);
+    // Kontra dari agen: tawaran masih berjalan, pesan inbox belum selesai.
+    expect(offer!.isActive, isTrue);
+    expect(find.textContaining('Kesabaran 100%'), findsNothing);
+    final pending = await io(tester, () => InboxRepository(db).pendingActions());
+    expect(
+      pending.any((m) => m.actionType == InboxActionType.counterOffer),
+      isTrue,
+    );
   });
 
-  testWidgets('Negosiasi: ajukan kontrak sampai pemain pindah', (tester) async {
+  testWidgets('Tab Negosiasi: sepakat harga lalu kontrak sampai pemain pindah', (
+    tester,
+  ) async {
+    tallPhone(tester);
     await setUpWorld(tester);
     final (p, offerId) = await countered(tester);
-    await io(
-      tester,
-      () => svc.respond(offerId: offerId, choice: 'accept', date: start, ourClubId: _us),
-    );
 
     await show(tester, const TransferScreen(initialTab: 3));
     expect(find.text(p.fullName), findsWidgets);
-    await tester.tap(find.widgetWithText(FilledButton, 'Ajukan kontrak'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Negosiasi'));
     await settle(tester);
-    // "Negosiasi kontrak" juga label chip status, jadi cari di dalam dialog.
-    expect(find.widgetWithText(AlertDialog, 'Negosiasi kontrak'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Ajukan kontrak').last);
+    expect(find.byType(NegotiationRoomScreen), findsOneWidget);
+
+    await tester.tap(find.byWidgetPredicate(
+      (w) => w is FilledButton && w.child is FittedBox,
+    ));
+    await settle(tester);
+    expect(find.text('Sepakat'), findsOneWidget);
+    expect(
+      (await io(tester, () => TransferRepository(db).offerById(offerId)))!.status,
+      TransferOfferStatus.awaitingContract,
+    );
+
+    await tapText(tester, 'Lanjut ke kontrak');
+    expect(find.text('Gaji diminta agen'), findsOneWidget);
+    await tester.tap(find.byWidgetPredicate(
+      (w) => w is FilledButton && w.child is FittedBox,
+    ));
     await settle(tester);
 
     expect(tester.takeException(), isNull);
@@ -134,7 +185,10 @@ void main() {
     expect(moved!.clubId, _us);
   });
 
-  testWidgets('Inbox: kontra untuk tawaran masuk menjual pemain', (tester) async {
+  testWidgets('Inbox: tawaran masuk ditawar di Ruang Negosiasi lalu dijual', (
+    tester,
+  ) async {
+    tallPhone(tester);
     await setUpWorld(tester);
     final (p, offerId) = await io(tester, () async {
       final ours = await PlayerRepository(db).squad(_us);
@@ -169,16 +223,29 @@ void main() {
     await show(tester, const InboxScreen());
     await tester.tap(find.text('Tawaran masuk: ${p.fullName}'));
     await settle(tester);
-    await tester.tap(find.text('Kontra'));
+    await tester.tap(find.text('Masuk ruang negosiasi'));
     await settle(tester);
-    expect(find.text('Ajukan harga'), findsOneWidget);
-    await tester.tap(find.text('Kirim'));
+    expect(find.text('Tawaran pembeli'), findsOneWidget);
+
+    // Minta 8% lebih tinggi: pembeli menaikkan tawaran atau langsung setuju.
+    await tester.enterText(find.byType(TextField), '1080');
     await settle(tester);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Ajukan tawaran'));
+    await settle(tester);
+    if (find.text('Sepakat').evaluate().isEmpty) {
+      await tester.tap(find.byWidgetPredicate(
+        (w) => w is FilledButton && w.child is FittedBox,
+      ));
+      await settle(tester);
+    }
 
     expect(tester.takeException(), isNull);
+    expect(find.text('Sepakat'), findsOneWidget);
     final offer = await io(tester, () => TransferRepository(db).offerById(offerId));
     expect(offer!.status, TransferOfferStatus.completed);
     final moved = await io(tester, () => PlayerRepository(db).byId(p.id));
     expect(moved!.clubId, 'sevilla');
+    final pending = await io(tester, () => InboxRepository(db).pendingActions());
+    expect(pending.where((m) => m.payload == 'offer:$offerId'), isEmpty);
   });
 }

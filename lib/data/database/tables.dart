@@ -306,3 +306,26 @@ class Honours extends Table {
   TextColumn get clubId => text()();
   IntColumn get playerId => integer().nullable()();
 }
+
+/// Sesi tawar-menawar di Ruang Negosiasi (v5, README_NEGOTIATION_ROOM D).
+///
+/// Satu baris per tawaran per mode (biaya transfer lalu kontrak memakai
+/// tawaran yang sama). Sesi aktif dihapus saat tawarannya selesai; sesi
+/// walk-out disimpan untuk jeda 1 minggu dan ingatan agen pada negosiasi
+/// berikutnya dengan pemain yang sama.
+@DataClassName('NegotiationSessionRow')
+class NegotiationSessions extends Table {
+  IntColumn get offerId => integer()();
+  TextColumn get mode => text()(); // NegotiationMode.name
+  IntColumn get playerId => integer()();
+  TextColumn get status => text()(); // NegotiationStatus.name
+  IntColumn get patience => integer()();
+  IntColumn get anchorValue => integer()();
+  IntColumn get limitValue => integer()();
+  TextColumn get extras => text()(); // JSON: syarat agen, tawaran terakhir, riwayat
+  DateTimeColumn get updatedDate => dateTime()();
+  DateTimeColumn get cooldownUntil => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {offerId, mode};
+}

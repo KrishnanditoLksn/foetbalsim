@@ -17,6 +17,7 @@ part 'app_database.g.dart';
 ///     dan kolom baru pada Players, TransferOffers, GameStates, Fixtures.
 /// v3: ClubTactics, TransferOffers, TransferHistory, Shortlist, dan kolom
 ///     Players.isTransferListed (Fase 3). Save v1/v2 dimigrasi otomatis.
+/// v5: NegotiationSessions (Ruang Negosiasi).
 @DriftDatabase(
   tables: [
     Nations,
@@ -38,13 +39,14 @@ part 'app_database.g.dart';
     Seasons,
     SeasonArchive,
     Honours,
+    NegotiationSessions,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -95,6 +97,9 @@ class AppDatabase extends _$AppDatabase {
             'UPDATE fixtures SET season_start_year = 2025 WHERE date < 1782864000',
           );
         }
+      }
+      if (from < 5) {
+        await m.createTable(negotiationSessions);
       }
     },
   );

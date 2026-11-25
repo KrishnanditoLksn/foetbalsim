@@ -421,9 +421,8 @@ class TransferMarketService {
           title: 'Tawaran masuk: ${p.fullName}',
           body: '${buyer.name} menawar ${p.fullName} dengan ${moneyLabel(fee)}'
               '${listed ? '' : ' (pemain tidak didaftar jual)'}. '
-              'Terima, tolak, atau ajukan harga lain (maks. '
-              '${moneyLabel((fee * TransferRules.counterTolerance).round())} '
-              'masih diterima pembeli).',
+              'Terima, tolak, atau tawar harga lewat agen pemain di Ruang '
+              'Negosiasi.',
           isRead: false,
           actionType: InboxActionType.incomingTransferOffer,
           payload: 'offer:$offerId',

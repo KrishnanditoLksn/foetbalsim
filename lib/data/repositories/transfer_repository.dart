@@ -92,29 +92,97 @@ class TransferRepository {
     required TransferOfferStatus status,
     DateTime? responseDate,
     int? fee,
-    int? round,
+    int? installmentYears,
+    int? sellOnPct,
     String? reason,
-  }) {
-    return (_db.update(_db.transferOffers)..where((t) => t.id.equals(id))).write(
+  }) async {
+    await (_db.update(_db.transferOffers)..where((t) => t.id.equals(id))).write(
       TransferOffersCompanion(
         status: Value(status),
         responseDate: Value(responseDate),
         fee: fee == null ? const Value.absent() : Value(fee),
-        round: round == null ? const Value.absent() : Value(round),
+        installmentYears:
+            installmentYears == null
+                ? const Value.absent()
+                : Value(installmentYears),
+        sellOnPct: sellOnPct == null ? const Value.absent() : Value(sellOnPct),
         reason: reason == null ? const Value.absent() : Value(reason),
       ),
     );
+    if (!_activeStatuses.contains(status)) await _pruneSessions();
   }
 
   /// Membatalkan tawaran aktif lain untuk pemain yang sudah berpindah klub.
-  Future<void> withdrawActiveOffers(int playerId, {int? exceptId}) {
-    return (_db.update(_db.transferOffers)..where(
+  Future<void> withdrawActiveOffers(int playerId, {int? exceptId}) async {
+    await (_db.update(_db.transferOffers)..where(
       (t) =>
           t.playerId.equals(playerId) &
           t.status.isInValues(_activeStatuses) &
           (exceptId == null ? const Constant(true) : t.id.isNotValue(exceptId)),
     )).write(
       const TransferOffersCompanion(status: Value(TransferOfferStatus.withdrawn)),
+    );
+    await _pruneSessions();
+  }
+
+  // --- Sesi negosiasi ----------------------------------------------------------
+
+  Future<NegotiationSessionRow?> session(int offerId, String mode) {
+    return (_db.select(_db.negotiationSessions)..where(
+      (t) => t.offerId.equals(offerId) & t.mode.equals(mode),
+    )).getSingleOrNull();
+  }
+
+  /// Sesi yang masih berjalan untuk tawaran-tawaran ini (indikator di tab
+  /// Negosiasi).
+  Future<List<NegotiationSessionRow>> activeSessions() {
+    return (_db.select(_db.negotiationSessions)
+      ..where((t) => t.status.equals('active'))).get();
+  }
+
+  Future<void> saveSession(NegotiationSessionsCompanion row) =>
+      _db.into(_db.negotiationSessions).insertOnConflictUpdate(row);
+
+  Future<void> deleteSession(int offerId, String mode) {
+    return (_db.delete(_db.negotiationSessions)..where(
+      (t) => t.offerId.equals(offerId) & t.mode.equals(mode),
+    )).go();
+  }
+
+  /// Walk-out terakhir agen pemain [playerId] pada mode [mode]: dipakai untuk
+  /// jeda 1 minggu dan ingatan agen.
+  Future<NegotiationSessionRow?> lastWalkOut(int playerId, String mode) async {
+    final rows = await (_db.select(_db.negotiationSessions)
+          ..where(
+            (t) =>
+                t.playerId.equals(playerId) &
+                t.mode.equals(mode) &
+                t.status.equals('walkedOut'),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.updatedDate)])
+          ..limit(1))
+        .get();
+    return rows.firstOrNull;
+  }
+
+  /// Jeda walk-out yang masih berlaku untuk pemain (mode apa pun).
+  Future<NegotiationSessionRow?> activeCooldown(int playerId, DateTime now) async {
+    final rows = await (_db.select(_db.negotiationSessions)..where(
+      (t) =>
+          t.playerId.equals(playerId) &
+          t.status.equals('walkedOut') &
+          t.cooldownUntil.isBiggerThanValue(now),
+    )).get();
+    return rows.firstOrNull;
+  }
+
+  /// Sesi milik tawaran yang sudah selesai dihapus, kecuali catatan
+  /// walk-out (disimpan untuk jeda dan ingatan agen).
+  Future<void> _pruneSessions() {
+    return _db.customStatement(
+      "DELETE FROM negotiation_sessions WHERE status <> 'walkedOut' AND "
+      'offer_id NOT IN (SELECT id FROM transfer_offers WHERE status IN '
+      "('pending', 'awaitingContract', 'countered'))",
     );
   }
 
@@ -375,7 +443,6 @@ class TransferRepository {
     status: r.status,
     createdDate: r.createdDate.toUtc(),
     responseDate: r.responseDate?.toUtc(),
-    round: r.round,
     // Kolom lama berisi 1 sebagai bawaan; nilai di luar opsi dianggap langsung.
     installmentYears: r.installmentYears.clamp(1, 3),
     sellOnPct: r.sellOnPct,

@@ -124,6 +124,14 @@ final clubOffersProvider = FutureProvider<List<TransferOffer>>((ref) async {
   return ref.watch(transferRepositoryProvider).offersFor(clubId);
 });
 
+/// Sesi Ruang Negosiasi yang masih berjalan, per id tawaran.
+final activeNegotiationsProvider =
+    FutureProvider<Map<int, NegotiationSessionRow>>((ref) async {
+      ref.watch(worldVersionProvider);
+      final rows = await ref.watch(transferRepositoryProvider).activeSessions();
+      return {for (final r in rows) r.offerId: r};
+    });
+
 final transferHistoryProvider = FutureProvider<List<TransferRecord>>((ref) {
   ref.watch(worldVersionProvider);
   return ref.watch(transferRepositoryProvider).history();

@@ -8544,6 +8544,528 @@ class HonoursCompanion extends UpdateCompanion<HonourRow> {
   }
 }
 
+class $NegotiationSessionsTable extends NegotiationSessions
+    with TableInfo<$NegotiationSessionsTable, NegotiationSessionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NegotiationSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _offerIdMeta =
+      const VerificationMeta('offerId');
+  @override
+  late final GeneratedColumn<int> offerId = GeneratedColumn<int>(
+      'offer_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+      'mode', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _patienceMeta =
+      const VerificationMeta('patience');
+  @override
+  late final GeneratedColumn<int> patience = GeneratedColumn<int>(
+      'patience', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _anchorValueMeta =
+      const VerificationMeta('anchorValue');
+  @override
+  late final GeneratedColumn<int> anchorValue = GeneratedColumn<int>(
+      'anchor_value', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _limitValueMeta =
+      const VerificationMeta('limitValue');
+  @override
+  late final GeneratedColumn<int> limitValue = GeneratedColumn<int>(
+      'limit_value', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _extrasMeta = const VerificationMeta('extras');
+  @override
+  late final GeneratedColumn<String> extras = GeneratedColumn<String>(
+      'extras', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _updatedDateMeta =
+      const VerificationMeta('updatedDate');
+  @override
+  late final GeneratedColumn<DateTime> updatedDate = GeneratedColumn<DateTime>(
+      'updated_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _cooldownUntilMeta =
+      const VerificationMeta('cooldownUntil');
+  @override
+  late final GeneratedColumn<DateTime> cooldownUntil =
+      GeneratedColumn<DateTime>('cooldown_until', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        offerId,
+        mode,
+        playerId,
+        status,
+        patience,
+        anchorValue,
+        limitValue,
+        extras,
+        updatedDate,
+        cooldownUntil
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'negotiation_sessions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<NegotiationSessionRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('offer_id')) {
+      context.handle(_offerIdMeta,
+          offerId.isAcceptableOrUnknown(data['offer_id']!, _offerIdMeta));
+    } else if (isInserting) {
+      context.missing(_offerIdMeta);
+    }
+    if (data.containsKey('mode')) {
+      context.handle(
+          _modeMeta, mode.isAcceptableOrUnknown(data['mode']!, _modeMeta));
+    } else if (isInserting) {
+      context.missing(_modeMeta);
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('patience')) {
+      context.handle(_patienceMeta,
+          patience.isAcceptableOrUnknown(data['patience']!, _patienceMeta));
+    } else if (isInserting) {
+      context.missing(_patienceMeta);
+    }
+    if (data.containsKey('anchor_value')) {
+      context.handle(
+          _anchorValueMeta,
+          anchorValue.isAcceptableOrUnknown(
+              data['anchor_value']!, _anchorValueMeta));
+    } else if (isInserting) {
+      context.missing(_anchorValueMeta);
+    }
+    if (data.containsKey('limit_value')) {
+      context.handle(
+          _limitValueMeta,
+          limitValue.isAcceptableOrUnknown(
+              data['limit_value']!, _limitValueMeta));
+    } else if (isInserting) {
+      context.missing(_limitValueMeta);
+    }
+    if (data.containsKey('extras')) {
+      context.handle(_extrasMeta,
+          extras.isAcceptableOrUnknown(data['extras']!, _extrasMeta));
+    } else if (isInserting) {
+      context.missing(_extrasMeta);
+    }
+    if (data.containsKey('updated_date')) {
+      context.handle(
+          _updatedDateMeta,
+          updatedDate.isAcceptableOrUnknown(
+              data['updated_date']!, _updatedDateMeta));
+    } else if (isInserting) {
+      context.missing(_updatedDateMeta);
+    }
+    if (data.containsKey('cooldown_until')) {
+      context.handle(
+          _cooldownUntilMeta,
+          cooldownUntil.isAcceptableOrUnknown(
+              data['cooldown_until']!, _cooldownUntilMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {offerId, mode};
+  @override
+  NegotiationSessionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NegotiationSessionRow(
+      offerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}offer_id'])!,
+      mode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mode'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      patience: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}patience'])!,
+      anchorValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}anchor_value'])!,
+      limitValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}limit_value'])!,
+      extras: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}extras'])!,
+      updatedDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_date'])!,
+      cooldownUntil: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}cooldown_until']),
+    );
+  }
+
+  @override
+  $NegotiationSessionsTable createAlias(String alias) {
+    return $NegotiationSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class NegotiationSessionRow extends DataClass
+    implements Insertable<NegotiationSessionRow> {
+  final int offerId;
+  final String mode;
+  final int playerId;
+  final String status;
+  final int patience;
+  final int anchorValue;
+  final int limitValue;
+  final String extras;
+  final DateTime updatedDate;
+  final DateTime? cooldownUntil;
+  const NegotiationSessionRow(
+      {required this.offerId,
+      required this.mode,
+      required this.playerId,
+      required this.status,
+      required this.patience,
+      required this.anchorValue,
+      required this.limitValue,
+      required this.extras,
+      required this.updatedDate,
+      this.cooldownUntil});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['offer_id'] = Variable<int>(offerId);
+    map['mode'] = Variable<String>(mode);
+    map['player_id'] = Variable<int>(playerId);
+    map['status'] = Variable<String>(status);
+    map['patience'] = Variable<int>(patience);
+    map['anchor_value'] = Variable<int>(anchorValue);
+    map['limit_value'] = Variable<int>(limitValue);
+    map['extras'] = Variable<String>(extras);
+    map['updated_date'] = Variable<DateTime>(updatedDate);
+    if (!nullToAbsent || cooldownUntil != null) {
+      map['cooldown_until'] = Variable<DateTime>(cooldownUntil);
+    }
+    return map;
+  }
+
+  NegotiationSessionsCompanion toCompanion(bool nullToAbsent) {
+    return NegotiationSessionsCompanion(
+      offerId: Value(offerId),
+      mode: Value(mode),
+      playerId: Value(playerId),
+      status: Value(status),
+      patience: Value(patience),
+      anchorValue: Value(anchorValue),
+      limitValue: Value(limitValue),
+      extras: Value(extras),
+      updatedDate: Value(updatedDate),
+      cooldownUntil: cooldownUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cooldownUntil),
+    );
+  }
+
+  factory NegotiationSessionRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NegotiationSessionRow(
+      offerId: serializer.fromJson<int>(json['offerId']),
+      mode: serializer.fromJson<String>(json['mode']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      status: serializer.fromJson<String>(json['status']),
+      patience: serializer.fromJson<int>(json['patience']),
+      anchorValue: serializer.fromJson<int>(json['anchorValue']),
+      limitValue: serializer.fromJson<int>(json['limitValue']),
+      extras: serializer.fromJson<String>(json['extras']),
+      updatedDate: serializer.fromJson<DateTime>(json['updatedDate']),
+      cooldownUntil: serializer.fromJson<DateTime?>(json['cooldownUntil']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'offerId': serializer.toJson<int>(offerId),
+      'mode': serializer.toJson<String>(mode),
+      'playerId': serializer.toJson<int>(playerId),
+      'status': serializer.toJson<String>(status),
+      'patience': serializer.toJson<int>(patience),
+      'anchorValue': serializer.toJson<int>(anchorValue),
+      'limitValue': serializer.toJson<int>(limitValue),
+      'extras': serializer.toJson<String>(extras),
+      'updatedDate': serializer.toJson<DateTime>(updatedDate),
+      'cooldownUntil': serializer.toJson<DateTime?>(cooldownUntil),
+    };
+  }
+
+  NegotiationSessionRow copyWith(
+          {int? offerId,
+          String? mode,
+          int? playerId,
+          String? status,
+          int? patience,
+          int? anchorValue,
+          int? limitValue,
+          String? extras,
+          DateTime? updatedDate,
+          Value<DateTime?> cooldownUntil = const Value.absent()}) =>
+      NegotiationSessionRow(
+        offerId: offerId ?? this.offerId,
+        mode: mode ?? this.mode,
+        playerId: playerId ?? this.playerId,
+        status: status ?? this.status,
+        patience: patience ?? this.patience,
+        anchorValue: anchorValue ?? this.anchorValue,
+        limitValue: limitValue ?? this.limitValue,
+        extras: extras ?? this.extras,
+        updatedDate: updatedDate ?? this.updatedDate,
+        cooldownUntil:
+            cooldownUntil.present ? cooldownUntil.value : this.cooldownUntil,
+      );
+  NegotiationSessionRow copyWithCompanion(NegotiationSessionsCompanion data) {
+    return NegotiationSessionRow(
+      offerId: data.offerId.present ? data.offerId.value : this.offerId,
+      mode: data.mode.present ? data.mode.value : this.mode,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      status: data.status.present ? data.status.value : this.status,
+      patience: data.patience.present ? data.patience.value : this.patience,
+      anchorValue:
+          data.anchorValue.present ? data.anchorValue.value : this.anchorValue,
+      limitValue:
+          data.limitValue.present ? data.limitValue.value : this.limitValue,
+      extras: data.extras.present ? data.extras.value : this.extras,
+      updatedDate:
+          data.updatedDate.present ? data.updatedDate.value : this.updatedDate,
+      cooldownUntil: data.cooldownUntil.present
+          ? data.cooldownUntil.value
+          : this.cooldownUntil,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NegotiationSessionRow(')
+          ..write('offerId: $offerId, ')
+          ..write('mode: $mode, ')
+          ..write('playerId: $playerId, ')
+          ..write('status: $status, ')
+          ..write('patience: $patience, ')
+          ..write('anchorValue: $anchorValue, ')
+          ..write('limitValue: $limitValue, ')
+          ..write('extras: $extras, ')
+          ..write('updatedDate: $updatedDate, ')
+          ..write('cooldownUntil: $cooldownUntil')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(offerId, mode, playerId, status, patience,
+      anchorValue, limitValue, extras, updatedDate, cooldownUntil);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NegotiationSessionRow &&
+          other.offerId == this.offerId &&
+          other.mode == this.mode &&
+          other.playerId == this.playerId &&
+          other.status == this.status &&
+          other.patience == this.patience &&
+          other.anchorValue == this.anchorValue &&
+          other.limitValue == this.limitValue &&
+          other.extras == this.extras &&
+          other.updatedDate == this.updatedDate &&
+          other.cooldownUntil == this.cooldownUntil);
+}
+
+class NegotiationSessionsCompanion
+    extends UpdateCompanion<NegotiationSessionRow> {
+  final Value<int> offerId;
+  final Value<String> mode;
+  final Value<int> playerId;
+  final Value<String> status;
+  final Value<int> patience;
+  final Value<int> anchorValue;
+  final Value<int> limitValue;
+  final Value<String> extras;
+  final Value<DateTime> updatedDate;
+  final Value<DateTime?> cooldownUntil;
+  final Value<int> rowid;
+  const NegotiationSessionsCompanion({
+    this.offerId = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.patience = const Value.absent(),
+    this.anchorValue = const Value.absent(),
+    this.limitValue = const Value.absent(),
+    this.extras = const Value.absent(),
+    this.updatedDate = const Value.absent(),
+    this.cooldownUntil = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NegotiationSessionsCompanion.insert({
+    required int offerId,
+    required String mode,
+    required int playerId,
+    required String status,
+    required int patience,
+    required int anchorValue,
+    required int limitValue,
+    required String extras,
+    required DateTime updatedDate,
+    this.cooldownUntil = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : offerId = Value(offerId),
+        mode = Value(mode),
+        playerId = Value(playerId),
+        status = Value(status),
+        patience = Value(patience),
+        anchorValue = Value(anchorValue),
+        limitValue = Value(limitValue),
+        extras = Value(extras),
+        updatedDate = Value(updatedDate);
+  static Insertable<NegotiationSessionRow> custom({
+    Expression<int>? offerId,
+    Expression<String>? mode,
+    Expression<int>? playerId,
+    Expression<String>? status,
+    Expression<int>? patience,
+    Expression<int>? anchorValue,
+    Expression<int>? limitValue,
+    Expression<String>? extras,
+    Expression<DateTime>? updatedDate,
+    Expression<DateTime>? cooldownUntil,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (offerId != null) 'offer_id': offerId,
+      if (mode != null) 'mode': mode,
+      if (playerId != null) 'player_id': playerId,
+      if (status != null) 'status': status,
+      if (patience != null) 'patience': patience,
+      if (anchorValue != null) 'anchor_value': anchorValue,
+      if (limitValue != null) 'limit_value': limitValue,
+      if (extras != null) 'extras': extras,
+      if (updatedDate != null) 'updated_date': updatedDate,
+      if (cooldownUntil != null) 'cooldown_until': cooldownUntil,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NegotiationSessionsCompanion copyWith(
+      {Value<int>? offerId,
+      Value<String>? mode,
+      Value<int>? playerId,
+      Value<String>? status,
+      Value<int>? patience,
+      Value<int>? anchorValue,
+      Value<int>? limitValue,
+      Value<String>? extras,
+      Value<DateTime>? updatedDate,
+      Value<DateTime?>? cooldownUntil,
+      Value<int>? rowid}) {
+    return NegotiationSessionsCompanion(
+      offerId: offerId ?? this.offerId,
+      mode: mode ?? this.mode,
+      playerId: playerId ?? this.playerId,
+      status: status ?? this.status,
+      patience: patience ?? this.patience,
+      anchorValue: anchorValue ?? this.anchorValue,
+      limitValue: limitValue ?? this.limitValue,
+      extras: extras ?? this.extras,
+      updatedDate: updatedDate ?? this.updatedDate,
+      cooldownUntil: cooldownUntil ?? this.cooldownUntil,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (offerId.present) {
+      map['offer_id'] = Variable<int>(offerId.value);
+    }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (patience.present) {
+      map['patience'] = Variable<int>(patience.value);
+    }
+    if (anchorValue.present) {
+      map['anchor_value'] = Variable<int>(anchorValue.value);
+    }
+    if (limitValue.present) {
+      map['limit_value'] = Variable<int>(limitValue.value);
+    }
+    if (extras.present) {
+      map['extras'] = Variable<String>(extras.value);
+    }
+    if (updatedDate.present) {
+      map['updated_date'] = Variable<DateTime>(updatedDate.value);
+    }
+    if (cooldownUntil.present) {
+      map['cooldown_until'] = Variable<DateTime>(cooldownUntil.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NegotiationSessionsCompanion(')
+          ..write('offerId: $offerId, ')
+          ..write('mode: $mode, ')
+          ..write('playerId: $playerId, ')
+          ..write('status: $status, ')
+          ..write('patience: $patience, ')
+          ..write('anchorValue: $anchorValue, ')
+          ..write('limitValue: $limitValue, ')
+          ..write('extras: $extras, ')
+          ..write('updatedDate: $updatedDate, ')
+          ..write('cooldownUntil: $cooldownUntil, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8568,6 +9090,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SeasonsTable seasons = $SeasonsTable(this);
   late final $SeasonArchiveTable seasonArchive = $SeasonArchiveTable(this);
   late final $HonoursTable honours = $HonoursTable(this);
+  late final $NegotiationSessionsTable negotiationSessions =
+      $NegotiationSessionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8591,7 +9115,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         marketMemory,
         seasons,
         seasonArchive,
-        honours
+        honours,
+        negotiationSessions
       ];
 }
 
@@ -12801,6 +13326,260 @@ typedef $$HonoursTableProcessedTableManager = ProcessedTableManager<
     (HonourRow, BaseReferences<_$AppDatabase, $HonoursTable, HonourRow>),
     HonourRow,
     PrefetchHooks Function()>;
+typedef $$NegotiationSessionsTableCreateCompanionBuilder
+    = NegotiationSessionsCompanion Function({
+  required int offerId,
+  required String mode,
+  required int playerId,
+  required String status,
+  required int patience,
+  required int anchorValue,
+  required int limitValue,
+  required String extras,
+  required DateTime updatedDate,
+  Value<DateTime?> cooldownUntil,
+  Value<int> rowid,
+});
+typedef $$NegotiationSessionsTableUpdateCompanionBuilder
+    = NegotiationSessionsCompanion Function({
+  Value<int> offerId,
+  Value<String> mode,
+  Value<int> playerId,
+  Value<String> status,
+  Value<int> patience,
+  Value<int> anchorValue,
+  Value<int> limitValue,
+  Value<String> extras,
+  Value<DateTime> updatedDate,
+  Value<DateTime?> cooldownUntil,
+  Value<int> rowid,
+});
+
+class $$NegotiationSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $NegotiationSessionsTable> {
+  $$NegotiationSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get offerId => $composableBuilder(
+      column: $table.offerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get mode => $composableBuilder(
+      column: $table.mode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get patience => $composableBuilder(
+      column: $table.patience, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get anchorValue => $composableBuilder(
+      column: $table.anchorValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get limitValue => $composableBuilder(
+      column: $table.limitValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get extras => $composableBuilder(
+      column: $table.extras, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedDate => $composableBuilder(
+      column: $table.updatedDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cooldownUntil => $composableBuilder(
+      column: $table.cooldownUntil, builder: (column) => ColumnFilters(column));
+}
+
+class $$NegotiationSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $NegotiationSessionsTable> {
+  $$NegotiationSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get offerId => $composableBuilder(
+      column: $table.offerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get mode => $composableBuilder(
+      column: $table.mode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get patience => $composableBuilder(
+      column: $table.patience, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get anchorValue => $composableBuilder(
+      column: $table.anchorValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get limitValue => $composableBuilder(
+      column: $table.limitValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get extras => $composableBuilder(
+      column: $table.extras, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedDate => $composableBuilder(
+      column: $table.updatedDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cooldownUntil => $composableBuilder(
+      column: $table.cooldownUntil,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$NegotiationSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NegotiationSessionsTable> {
+  $$NegotiationSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get offerId =>
+      $composableBuilder(column: $table.offerId, builder: (column) => column);
+
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get patience =>
+      $composableBuilder(column: $table.patience, builder: (column) => column);
+
+  GeneratedColumn<int> get anchorValue => $composableBuilder(
+      column: $table.anchorValue, builder: (column) => column);
+
+  GeneratedColumn<int> get limitValue => $composableBuilder(
+      column: $table.limitValue, builder: (column) => column);
+
+  GeneratedColumn<String> get extras =>
+      $composableBuilder(column: $table.extras, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedDate => $composableBuilder(
+      column: $table.updatedDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cooldownUntil => $composableBuilder(
+      column: $table.cooldownUntil, builder: (column) => column);
+}
+
+class $$NegotiationSessionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NegotiationSessionsTable,
+    NegotiationSessionRow,
+    $$NegotiationSessionsTableFilterComposer,
+    $$NegotiationSessionsTableOrderingComposer,
+    $$NegotiationSessionsTableAnnotationComposer,
+    $$NegotiationSessionsTableCreateCompanionBuilder,
+    $$NegotiationSessionsTableUpdateCompanionBuilder,
+    (
+      NegotiationSessionRow,
+      BaseReferences<_$AppDatabase, $NegotiationSessionsTable,
+          NegotiationSessionRow>
+    ),
+    NegotiationSessionRow,
+    PrefetchHooks Function()> {
+  $$NegotiationSessionsTableTableManager(
+      _$AppDatabase db, $NegotiationSessionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NegotiationSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NegotiationSessionsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NegotiationSessionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> offerId = const Value.absent(),
+            Value<String> mode = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<int> patience = const Value.absent(),
+            Value<int> anchorValue = const Value.absent(),
+            Value<int> limitValue = const Value.absent(),
+            Value<String> extras = const Value.absent(),
+            Value<DateTime> updatedDate = const Value.absent(),
+            Value<DateTime?> cooldownUntil = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NegotiationSessionsCompanion(
+            offerId: offerId,
+            mode: mode,
+            playerId: playerId,
+            status: status,
+            patience: patience,
+            anchorValue: anchorValue,
+            limitValue: limitValue,
+            extras: extras,
+            updatedDate: updatedDate,
+            cooldownUntil: cooldownUntil,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int offerId,
+            required String mode,
+            required int playerId,
+            required String status,
+            required int patience,
+            required int anchorValue,
+            required int limitValue,
+            required String extras,
+            required DateTime updatedDate,
+            Value<DateTime?> cooldownUntil = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NegotiationSessionsCompanion.insert(
+            offerId: offerId,
+            mode: mode,
+            playerId: playerId,
+            status: status,
+            patience: patience,
+            anchorValue: anchorValue,
+            limitValue: limitValue,
+            extras: extras,
+            updatedDate: updatedDate,
+            cooldownUntil: cooldownUntil,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$NegotiationSessionsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $NegotiationSessionsTable,
+    NegotiationSessionRow,
+    $$NegotiationSessionsTableFilterComposer,
+    $$NegotiationSessionsTableOrderingComposer,
+    $$NegotiationSessionsTableAnnotationComposer,
+    $$NegotiationSessionsTableCreateCompanionBuilder,
+    $$NegotiationSessionsTableUpdateCompanionBuilder,
+    (
+      NegotiationSessionRow,
+      BaseReferences<_$AppDatabase, $NegotiationSessionsTable,
+          NegotiationSessionRow>
+    ),
+    NegotiationSessionRow,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12843,4 +13622,6 @@ class $AppDatabaseManager {
       $$SeasonArchiveTableTableManager(_db, _db.seasonArchive);
   $$HonoursTableTableManager get honours =>
       $$HonoursTableTableManager(_db, _db.honours);
+  $$NegotiationSessionsTableTableManager get negotiationSessions =>
+      $$NegotiationSessionsTableTableManager(_db, _db.negotiationSessions);
 }

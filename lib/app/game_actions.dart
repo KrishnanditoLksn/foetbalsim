@@ -62,9 +62,16 @@ abstract final class GameActions {
   static Future<void> run(
     WidgetRef ref,
     Future<void> Function(GameEngine engine) action,
+  ) => call(ref, action);
+
+  /// Seperti [run], tetapi mengembalikan hasil aksi (mis. jawaban agen di
+  /// Ruang Negosiasi).
+  static Future<T> call<T>(
+    WidgetRef ref,
+    Future<T> Function(GameEngine engine) action,
   ) async {
     try {
-      await action(ref.read(gameEngineProvider));
+      return await action(ref.read(gameEngineProvider));
     } finally {
       ref.read(worldVersionProvider.notifier).state++;
     }

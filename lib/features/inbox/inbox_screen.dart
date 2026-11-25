@@ -115,8 +115,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     Future<void> submit(String choice) => GameActions.resolve(ref, m, choice);
 
     // Tombol dibangun di dalam builder dialog agar Navigator.pop menutup
-    // dialog, bukan layar Inbox. Dialog lanjutan (kontra, tawaran final,
-    // kontrak) dibuka memakai context layar setelah dialog ini tertutup.
+    // dialog, bukan layar Inbox. Ruang Negosiasi dibuka memakai context
+    // layar setelah dialog ini tertutup.
     final next = await showDialog<_Next>(
       context: context,
       builder: (ctx) {
@@ -165,38 +165,24 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   child: const Text('Tolak'),
                 ),
                 TextButton(
-                  onPressed: () => go(const _Next.counter()),
-                  child: const Text('Kontra'),
-                ),
-                FilledButton(
                   onPressed: () => choose('accept'),
                   child: const Text('Terima'),
                 ),
-              ];
-            case InboxActionType.counterOffer:
-              actions = [
-                TextButton(
-                  onPressed: () => choose('cancel'),
-                  child: const Text('Batalkan'),
-                ),
-                TextButton(
-                  onPressed: () => go(const _Next.finalOffer()),
-                  child: const Text('Tawaran final'),
-                ),
                 FilledButton(
-                  onPressed: () => choose('accept'),
-                  child: const Text('Terima harga'),
+                  onPressed: () => go(const _Next.room()),
+                  child: const Text('Masuk ruang negosiasi'),
                 ),
               ];
-            case InboxActionType.contractNegotiation:
+            case InboxActionType.counterOffer ||
+                InboxActionType.contractNegotiation:
               actions = [
                 TextButton(
                   onPressed: () => choose('cancel'),
                   child: const Text('Batalkan'),
                 ),
                 FilledButton(
-                  onPressed: () => go(const _Next.contract()),
-                  child: const Text('Ajukan kontrak'),
+                  onPressed: () => go(const _Next.room()),
+                  child: const Text('Masuk ruang negosiasi'),
                 ),
               ];
             case InboxActionType.none:
@@ -220,12 +206,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         await Navigator.of(
           context,
         ).pushNamed(AppRoutes.player, arguments: next.playerId);
-      case _NextKind.counter:
-      case _NextKind.finalOffer:
-      case _NextKind.contract:
+      case _NextKind.room:
         final offer = await _offerOf(ref, m);
         if (!context.mounted) return;
-        if (offer == null) {
+        if (offer == null || !offer.isActive) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Negosiasi ini sudah tidak berjalan.'),
@@ -233,26 +217,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           );
           return;
         }
-        if (next.kind == _NextKind.counter) {
-          await TransferFlow.counterIncoming(context, offer, submit);
-        } else if (next.kind == _NextKind.finalOffer) {
-          await TransferFlow.finalOffer(context, offer, submit);
-        } else {
-          final name =
-              (await ref.read(
-                playerDetailProvider(offer.playerId).future,
-              ))?.player.fullName ??
-              'Pemain';
-          if (!context.mounted) return;
-          await TransferFlow.contract(
-            context,
-            ref,
-            offer,
-            name,
-            submit,
-            minWage: _minWageOf(m.payload),
-          );
-        }
+        await TransferFlow.openRoom(context, offer.id);
     }
   }
 
@@ -267,15 +232,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   static int? _playerIdOf(String? payload) {
     if (payload == null || !payload.startsWith('player:')) return null;
     return int.tryParse(payload.substring('player:'.length));
-  }
-
-  /// Membaca bagian min: dari payload pesan negosiasi.
-  static int? _minWageOf(String? payload) {
-    if (payload == null) return null;
-    for (final part in payload.split('|')) {
-      if (part.startsWith('min:')) return int.tryParse(part.substring(4));
-    }
-    return null;
   }
 }
 
@@ -374,7 +330,7 @@ class _MessageCard extends StatelessWidget {
   }
 }
 
-enum _NextKind { choice, player, counter, finalOffer, contract }
+enum _NextKind { choice, player, room }
 
 /// Langkah setelah dialog pesan ditutup.
 class _Next {
@@ -384,16 +340,8 @@ class _Next {
   const _Next.player(int this.playerId)
     : kind = _NextKind.player,
       choice = null;
-  const _Next.counter()
-    : kind = _NextKind.counter,
-      choice = null,
-      playerId = null;
-  const _Next.finalOffer()
-    : kind = _NextKind.finalOffer,
-      choice = null,
-      playerId = null;
-  const _Next.contract()
-    : kind = _NextKind.contract,
+  const _Next.room()
+    : kind = _NextKind.room,
       choice = null,
       playerId = null;
 

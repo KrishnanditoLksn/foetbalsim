@@ -9,7 +9,6 @@ import 'package:futbol/data/repositories/transfer_repository.dart';
 import 'package:futbol/data/repositories/world_repository.dart';
 import 'package:futbol/data/services/game_engine.dart';
 import 'package:futbol/data/services/transfer_service.dart';
-import 'package:futbol/domain/enums/inbox.dart';
 import 'package:futbol/domain/enums/squad_status.dart';
 import 'package:futbol/domain/enums/transfer.dart';
 import 'package:futbol/domain/generators/world_generator.dart';
@@ -107,54 +106,6 @@ void main() {
       ),
       throwsStateError,
     );
-  });
-
-  test('3 ronde: kontra → tawaran final diterima → kontrak → pemain pindah', () async {
-    final p = await target();
-    final ask = await askFor(p);
-    await bid(p, (ask * 0.85).round());
-
-    await resolveOn(2);
-    var offer = await offerOf(p);
-    expect(offer.status, TransferOfferStatus.countered);
-    expect(offer.round, 2);
-    expect(offer.fee, greaterThan((ask * 0.85).round()));
-    final counterMsg = (await engine.inbox()).firstWhere(
-      (m) => m.actionType == InboxActionType.counterOffer && !m.resolved,
-    );
-
-    // Dijawab lewat engine (jalur tab Negosiasi): pesan inbox ikut selesai.
-    final finalFee = TransferRules.finalMinimum(offer.fee);
-    expect(finalFee, lessThan(offer.fee));
-    await engine.respondToOffer(offer.id, 'final:$finalFee');
-    offer = await offerOf(p);
-    expect(offer.status, TransferOfferStatus.pending);
-    expect(offer.round, TransferRules.maxRounds);
-    final after = (await engine.inbox()).firstWhere((m) => m.id == counterMsg.id);
-    expect(after.resolved, isTrue);
-
-    await resolveOn(4);
-    offer = await offerOf(p);
-    expect(offer.status, TransferOfferStatus.awaitingContract);
-
-    final wage = DynamicValuation.expectedWage(p);
-    await engine.respondToOffer(offer.id, 'wage:$wage|years:3');
-    expect((await offerOf(p)).status, TransferOfferStatus.completed);
-    expect((await PlayerRepository(db).byId(p.id))!.clubId, _us);
-  });
-
-  test('tawaran final di bawah 97% dari kontra ditolak dengan alasan', () async {
-    final p = await target();
-    final ask = await askFor(p);
-    await bid(p, (ask * 0.85).round());
-    await resolveOn(2);
-    final offer = await offerOf(p);
-    await engine.respondToOffer(offer.id, 'final:${(offer.fee * 0.90).round()}');
-    await resolveOn(4);
-    final done = await offerOf(p);
-    expect(done.status, TransferOfferStatus.rejected);
-    expect(done.reason, isNotNull);
-    expect(done.isActive, isFalse);
   });
 
   test('tawaran < 70% ditolak, dicatat sebagai lowball, harga awal naik', () async {

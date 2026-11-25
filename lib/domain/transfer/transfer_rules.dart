@@ -10,9 +10,6 @@ abstract final class TransferRules {
   /// Maksimal pemain masuk dan keluar per klub dalam satu jendela.
   static const int maxMovesPerWindow = 6;
 
-  /// Maksimal ronde negosiasi: tawaran → kontra-tawaran → tawaran final.
-  static const int maxRounds = 3;
-
   /// Cicilan: 1 = dibayar langsung, 2 atau 3 = dibagi rata per tahun.
   static const List<int> installmentOptions = [1, 2, 3];
 
@@ -22,16 +19,22 @@ abstract final class TransferRules {
   /// Tawaran di bawah ini (rasio nilai / harga minta) langsung ditolak.
   static const double rejectBelow = 0.70;
 
-  /// Tawaran final diterima bila nilainya ≥ rasio ini dari kontra penjual.
-  static const double finalAcceptAt = 0.97;
+  // --- Ruang Negosiasi (README_NEGOTIATION_ROOM) ----------------------------
 
-  /// Nominal minimum tawaran final yang diterima untuk kontra [counterFee].
-  static int finalMinimum(int counterFee) =>
-      (counterFee * finalAcceptAt / 10).ceil() * 10;
+  /// Setelah agen walk-out, pemain baru bisa ditawar lagi setelah jeda ini.
+  static const Duration walkOutCooldown = Duration(days: 7);
 
-  /// Klausul balik untuk tawaran masuk: klub pembeli menerima kontra kita
-  /// bila tidak lebih dari 5% di atas tawarannya.
-  static const double counterTolerance = 1.05;
+  /// Batas bawah penjual dibanding harga minta: 88% (negosiator lemah) s/d
+  /// 96% (negosiator ulung), digeser gaya agen.
+  static double sellerFloorRatio(int negotiationSkill, double agentShift) =>
+      (0.88 + 0.08 * negotiationSkill / 100 + agentShift).clamp(0.86, 0.98);
+
+  /// Pemain inti tanpa pengganti: penjual tidak turun di bawah ini.
+  static const double indispensableFloor = 1.10;
+
+  /// Batas atas pembeli dibanding tawaran pembukanya (1,05–1,25).
+  static const double minBuyerCeiling = 1.05;
+  static const double maxBuyerCeiling = 1.25;
 
   /// Premi harga untuk transfer antar-rival lokal.
   static const double rivalPremium = 1.30;

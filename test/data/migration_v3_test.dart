@@ -68,6 +68,7 @@ void main() {
       'seasons',
       'season_archive',
       'honours',
+      'negotiation_sessions',
     ]) {
       await first.customStatement('DROP TABLE $t');
     }
@@ -108,5 +109,27 @@ void main() {
     final transfers = TransferRepository(second);
     expect(await transfers.history(), isEmpty);
     expect(await transfers.shortlistIds(), isEmpty);
+  });
+
+  test('save v4 dimigrasi ke v5: tabel NegotiationSessions dibuat', () async {
+    const seed = 777;
+    final world = WorldGenerator.generate(seedJson: seedJson, seed: seed);
+    final state = GameState(
+      currentDate: WorldGenerator.seasonStart,
+      managerName: 'Migrasi v5',
+      clubId: 'real-madrid',
+      seed: seed,
+    );
+    final first = AppDatabase(NativeDatabase(File(dbPath)));
+    await WorldRepository(first).saveWorld(world, state);
+    await first.customStatement('DROP TABLE negotiation_sessions');
+    await first.customStatement('PRAGMA user_version = 4');
+    await first.close();
+
+    final second = AppDatabase(NativeDatabase(File(dbPath)));
+    addTearDown(second.close);
+    final loaded = await GameStateRepository(second).load();
+    expect(loaded!.managerName, 'Migrasi v5');
+    expect(await TransferRepository(second).activeSessions(), isEmpty);
   });
 }

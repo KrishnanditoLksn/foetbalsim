@@ -7,9 +7,11 @@ import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
 import '../../core/widgets/futbol_ui.dart';
+import '../../data/database/app_database.dart' show NegotiationSessionRow;
 import '../../domain/finance/money_label.dart';
 import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../domain/transfer/agent_negotiator.dart';
 import '../../domain/transfer/transfer_rules.dart';
 import '../../domain/transfer/transfer_window.dart';
 import '../player_search/player_search_view.dart';
@@ -90,7 +92,8 @@ class _WindowBanner extends StatelessWidget {
       'Maks ${TransferRules.maxMovesPerWindow} masuk & '
       '${TransferRules.maxMovesPerWindow} keluar per jendela.\n'
       'Skuad ${TransferRules.minSquad}–${TransferRules.maxSquad} pemain.\n'
-      'Negosiasi maks ${TransferRules.maxRounds} ronde.';
+      'Tawar-menawar dengan agen pemain di Ruang Negosiasi. Bila agen '
+      'walk-out, pemain baru bisa ditawar lagi seminggu kemudian.';
 
   @override
   Widget build(BuildContext context) {
@@ -288,6 +291,8 @@ class _NegotiationTab extends ConsumerWidget {
     final rows = ref.watch(playerSearchRowsProvider).valueOrNull ?? const [];
     final clubs = ref.watch(allClubsMapProvider).valueOrNull ?? const {};
     final ourId = ref.watch(gameStateProvider).valueOrNull?.clubId;
+    final sessions =
+        ref.watch(activeNegotiationsProvider).valueOrNull ?? const {};
     final names = {for (final r in rows) r.player.id: r.player.fullName};
 
     return offers.when(
@@ -360,9 +365,16 @@ class _NegotiationTab extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
+                  if (o.isActive && sessions[o.id] != null)
+                    _SessionLine(session: sessions[o.id]!),
                   if (o.isActive) ...[
                     const SizedBox(height: 4),
-                    OfferActions(offer: o, ourClubId: ourId, playerName: name),
+                    OfferActions(
+                      offer: o,
+                      ourClubId: ourId,
+                      playerName: name,
+                      session: sessions[o.id],
+                    ),
                   ],
                 ],
               ),
@@ -385,6 +397,33 @@ class _NegotiationTab extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// Status sesi Ruang Negosiasi yang ditinggal: apa yang dirundingkan dan
+/// sisa kesabaran agen.
+class _SessionLine extends StatelessWidget {
+  const _SessionLine({required this.session});
+
+  final NegotiationSessionRow session;
+
+  @override
+  Widget build(BuildContext context) {
+    final patience = session.patience;
+    final color = switch (AgentNegotiator.levelOf(patience)) {
+      PatienceLevel.open => Chalk.green,
+      PatienceLevel.impatient => Chalk.yellow,
+      _ => Chalk.red,
+    };
+    final subject =
+        session.mode == NegotiationMode.contract.name ? 'kontrak' : 'harga';
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(
+        'Tawar-menawar $subject berjalan, kesabaran agen $patience%',
+        style: TextStyle(color: color, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

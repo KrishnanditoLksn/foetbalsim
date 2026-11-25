@@ -127,7 +127,7 @@ void main() {
     });
   });
 
-  group('Negosiasi multi-ronde (README B.5 & E.4)', () {
+  group('Evaluasi tawaran pertama (README B.5 & E.4)', () {
     test('tawaran di bawah 70% harga minta ditolak', () {
       final r = NegotiationAi.evaluate(
         offer: 6900,
@@ -177,17 +177,6 @@ void main() {
         isIndispensable: true,
       );
       expect(high.verdict, NegotiationVerdict.accept);
-    });
-
-    test('ronde kedua hanya menerima ≥ 97% harga minta', () {
-      final r = NegotiationAi.evaluate(
-        offer: 9600,
-        ask: 10000,
-        seller: _profile(),
-        isIndispensable: false,
-        round: 2,
-      );
-      expect(r.verdict, NegotiationVerdict.reject);
     });
   });
 

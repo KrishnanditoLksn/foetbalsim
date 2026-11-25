@@ -16,24 +16,18 @@ class NegotiationResult {
 /// - 70–99%: counter-offer (mendekati harga minta sesuai `negotiationSkill`).
 /// - ≥ harga minta: diterima.
 /// - Pemain inti tanpa pengganti: butuh ≥ 110% harga minta.
-/// - Ronde kedua (tawaran final setelah counter): hanya diterima bila ≥ 97%
-///   dari [ask]. Untuk tawaran user, [ask] diisi nilai kontra penjual.
+///
+/// Untuk tawaran user, hasil `counter` membuka Ruang Negosiasi
+/// (`AgentNegotiator`); [NegotiationResult.counterFee] hanya dipakai bursa
+/// antar-klub AI.
 abstract final class NegotiationAi {
   static NegotiationResult evaluate({
     required int offer,
     required int ask,
     required ClubAiProfile seller,
     required bool isIndispensable,
-    int round = 1,
   }) {
     final ratio = offer / ask;
-    if (round >= 2) {
-      if (ratio >= 0.97) return const NegotiationResult(NegotiationVerdict.accept);
-      return const NegotiationResult(
-        NegotiationVerdict.reject,
-        reason: 'Kami tidak menurunkan harga lagi.',
-      );
-    }
     if (isIndispensable && ratio < 1.1) {
       return NegotiationResult(
         NegotiationVerdict.reject,

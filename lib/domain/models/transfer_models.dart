@@ -14,7 +14,6 @@ class TransferOffer {
     required this.status,
     required this.createdDate,
     required this.responseDate,
-    this.round = 1,
     this.installmentYears = 1,
     this.sellOnPct = 0,
     this.reason,
@@ -29,9 +28,6 @@ class TransferOffer {
   final DateTime createdDate;
   final DateTime? responseDate;
 
-  /// 1 = tawaran, 2 = kontra-tawaran penjual, 3 = tawaran final.
-  final int round;
-
   /// 1 = dibayar langsung; 2 atau 3 = dicicil per tahun.
   final int installmentYears;
 
@@ -40,6 +36,9 @@ class TransferOffer {
 
   /// Alasan penolakan atau kegagalan (bila ada).
   final String? reason;
+
+  /// Tawaran dari klub lain untuk pemain [ourClubId] (kita penjual).
+  bool isIncomingFor(String ourClubId) => toClubId == ourClubId;
 
   /// Negosiasi masih berjalan (termasuk menunggu jawaban atas kontra).
   bool get isActive =>

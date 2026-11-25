@@ -16,6 +16,7 @@ import '../../domain/season/fixture_generator.dart';
 import '../../domain/season/league_table.dart';
 import '../../domain/season/quick_match_simulator.dart';
 import '../../domain/season/season_calendar.dart';
+import '../../domain/transfer/agent_negotiator.dart';
 import '../database/app_database.dart';
 import '../repositories/club_repository.dart';
 import '../repositories/fixture_repository.dart';
@@ -576,6 +577,71 @@ class GameEngine {
       date: state.currentDate,
       ourClubId: state.clubId!,
     );
+  }
+
+  // --- Ruang Negosiasi ----------------------------------------------------------
+
+  /// Membuka (atau melanjutkan) Ruang Negosiasi untuk satu tawaran.
+  Future<NegotiationRoom> openNegotiation(int offerId) async {
+    final state = await _ourState();
+    return _transfers.openNegotiation(
+      offerId: offerId,
+      ourClubId: state.clubId!,
+      date: state.currentDate,
+      seed: state.seed,
+    );
+  }
+
+  /// Mengajukan satu tawaran ke agen.
+  Future<NegotiationStep> negotiate(int offerId, NegotiationOffer offer) =>
+      _negotiationStep(
+        offerId,
+        (s) => _transfers.submitNegotiationOffer(
+          offerId: offerId,
+          offer: offer,
+          ourClubId: s.clubId!,
+          date: s.currentDate,
+          seed: s.seed,
+        ),
+      );
+
+  /// Menerima patokan agen dengan syarat [terms].
+  Future<NegotiationStep> acceptAgentTerms(
+    int offerId,
+    NegotiationOffer terms,
+  ) => _negotiationStep(
+    offerId,
+    (s) => _transfers.acceptAgentTerms(
+      offerId: offerId,
+      terms: terms,
+      ourClubId: s.clubId!,
+      date: s.currentDate,
+      seed: s.seed,
+    ),
+  );
+
+  /// Pesan inbox negosiasi baru diselesaikan saat sesinya berakhir (sepakat
+  /// atau walk-out), bukan pada tawaran pertama, supaya Inbox tetap bisa
+  /// membawa user kembali ke Ruang Negosiasi. Pesan dikumpulkan sebelum
+  /// langkah dijalankan agar pesan kontrak yang baru dibuat tidak ikut
+  /// diselesaikan.
+  Future<NegotiationStep> _negotiationStep(
+    int offerId,
+    Future<NegotiationStep> Function(GameState s) run,
+  ) async {
+    final state = await _ourState();
+    final messages = [
+      for (final m in await _inbox.pendingActions())
+        if (m.payload?.split('|').first == 'offer:$offerId') m,
+    ];
+    final step = await run(state);
+    if (step.finished) {
+      final choice = step.verdict == AgentVerdict.accept ? 'agreed' : 'walkOut';
+      for (final m in messages) {
+        await _inbox.resolve(m.id, choice);
+      }
+    }
+    return step;
   }
 
   Future<List<PlayerInterest>> interestsFor(int playerId) =>
