@@ -89,15 +89,15 @@ class PlayerRepository {
 
   /// Pemain yang baru pindah terkunci sampai [until] (tidak bolak-balik).
   Future<void> setLockedUntil(int playerId, DateTime? until) {
-    return (_db.update(_db.players)..where((t) => t.id.equals(playerId))).write(
-      PlayersCompanion(lockedUntil: Value(until)),
-    );
+    return (_db.update(_db.players)..where(
+      (t) => t.id.equals(playerId),
+    )).write(PlayersCompanion(lockedUntil: Value(until)));
   }
 
   Future<void> setListed(int playerId, bool listed) {
-    return (_db.update(_db.players)..where((t) => t.id.equals(playerId))).write(
-      PlayersCompanion(isTransferListed: Value(listed)),
-    );
+    return (_db.update(_db.players)..where(
+      (t) => t.id.equals(playerId),
+    )).write(PlayersCompanion(isTransferListed: Value(listed)));
   }
 
   /// Memindahkan pemain ke klub lain beserta kontrak barunya.
@@ -109,7 +109,8 @@ class PlayerRepository {
     required SquadStatus squadStatus,
   }) async {
     await _db.transaction(() async {
-      await (_db.update(_db.players)..where((t) => t.id.equals(playerId))).write(
+      await (_db.update(_db.players)
+        ..where((t) => t.id.equals(playerId))).write(
         PlayersCompanion(
           clubId: Value(clubId),
           isTransferListed: const Value(false),

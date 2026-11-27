@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
-import '../../core/utils/format_utils.dart';
 import '../../core/widgets/futbol_ui.dart';
 import '../../domain/enums/position.dart';
 import '../../domain/models/game_models.dart';
+import '../../l10n/l10n.dart';
 import '../tactics/tactics_screen.dart';
 
 /// Tab Skuad: daftar pemain dan taktik dalam satu tempat.
@@ -24,9 +24,12 @@ class SquadScreen extends StatelessWidget {
       initialIndex: initialTab,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Skuad'),
-          bottom: const TabBar(
-            tabs: [Tab(text: 'Daftar Skuad'), Tab(text: 'Taktik')],
+          title: Text(tr('nav.squad')),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: tr('squad.tabList')),
+              Tab(text: tr('squad.tabTactics')),
+            ],
           ),
         ),
         body: const TabBarView(children: [SquadListView(), TacticsView()]),
@@ -36,15 +39,14 @@ class SquadScreen extends StatelessWidget {
 }
 
 enum _SortField {
-  ca('kemampuan'),
-  condition('kondisi'),
-  age('usia'),
-  value('nilai pasar'),
-  name('nama'),
-  position('posisi');
+  ca,
+  condition,
+  age,
+  value,
+  name,
+  position;
 
-  const _SortField(this.label);
-  final String label;
+  String get label => tr('squad.sort.$name');
 }
 
 /// Daftar skuad seperti lembar susunan pemain: filter posisi, urutan, dan
@@ -94,13 +96,15 @@ class _SquadListViewState extends ConsumerState<SquadListView> {
   @override
   Widget build(BuildContext context) {
     final clubId = ref.watch(gameStateProvider).valueOrNull?.clubId;
-    if (clubId == null) return const Center(child: Text('Belum ada klub.'));
+    if (clubId == null) return Center(child: Text(tr('common.noClub')));
     final squad = ref.watch(squadProvider(clubId));
 
     return squad.when(
       skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Skuad gagal dimuat: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('squad.loadFailed', {'error': '$e'}))),
       data: (players) {
         final rows = _applySortAndFilter(players);
         return Column(
@@ -120,7 +124,7 @@ class _SquadListViewState extends ConsumerState<SquadListView> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${rows.length} pemain',
+                      tr('squad.playerCount', {'n': rows.length}),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: Chalk.dim, fontSize: 13),
@@ -178,7 +182,7 @@ class _FilterBar extends StatelessWidget {
       child: Row(
         children: [
           ChoiceChip(
-            label: Text('Semua ($total)'),
+            label: Text('${tr('searchStatus.all')} ($total)'),
             selected: group == null,
             showCheckmark: false,
             onSelected: (_) => onGroup(null),
@@ -219,7 +223,7 @@ class _SortMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<_SortField>(
-      tooltip: 'Ubah urutan',
+      tooltip: tr('squad.changeSort'),
       onSelected: onSelected,
       itemBuilder:
           (_) => [
@@ -227,7 +231,7 @@ class _SortMenu extends StatelessWidget {
               CheckedPopupMenuItem(
                 value: f,
                 checked: f == field,
-                child: Text('Urut ${f.label}'),
+                child: Text(tr('squad.sortBy', {'field': f.label})),
               ),
           ],
       child: Padding(
@@ -237,7 +241,7 @@ class _SortMenu extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                'Urut ${field.label}',
+                tr('squad.sortBy', {'field': field.label}),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w600),
@@ -316,9 +320,9 @@ class PlayerListCard extends StatelessWidget {
                         ),
                         if (p.isTransferListed) ...[
                           const SizedBox(width: 6),
-                          const Tooltip(
-                            message: 'Masuk daftar jual',
-                            child: Icon(
+                          Tooltip(
+                            message: tr('squad.onTransferList'),
+                            child: const Icon(
                               Icons.sell_outlined,
                               size: 15,
                               color: Chalk.yellow,
@@ -336,7 +340,7 @@ class PlayerListCard extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          '${p.age} th',
+                          tr('common.age', {'n': p.age}),
                           style: const TextStyle(
                             color: Chalk.dim,
                             fontSize: 13,

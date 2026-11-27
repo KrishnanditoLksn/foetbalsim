@@ -1,3 +1,4 @@
+import '../../l10n/l10n.dart';
 import '../enums/position.dart';
 import '../enums/transfer.dart';
 import 'game_models.dart';
@@ -98,25 +99,23 @@ class TransferRecord {
 }
 
 enum PlayerSearchStatus {
-  all('Semua'),
-  forSale('Daftar Jual'),
-  expiringSoon('Kontrak Habis ≤ 6 Bln'),
-  freeAgent('Agen Bebas');
+  all,
+  forSale,
+  expiringSoon,
+  freeAgent;
 
-  const PlayerSearchStatus(this.label);
-  final String label;
+  String get label => tr('searchStatus.$name');
 }
 
 enum PlayerSort {
-  ca('CA'),
-  pa('PA'),
-  age('Usia'),
-  marketValue('Nilai Pasar'),
-  wage('Gaji'),
-  name('Nama');
+  ca,
+  pa,
+  age,
+  marketValue,
+  wage,
+  name;
 
-  const PlayerSort(this.label);
-  final String label;
+  String get label => tr('playerSort.$name');
 }
 
 /// Filter pencarian pemain. Nilai null = tidak dibatasi.

@@ -12,6 +12,7 @@ import '../../domain/enums/squad_status.dart';
 import '../../domain/finance/money_label.dart';
 import '../../domain/transfer/agent_negotiator.dart';
 import '../../domain/transfer/transfer_rules.dart';
+import '../../l10n/l10n.dart';
 
 /// Ruang Negosiasi (README_NEGOTIATION_ROOM C): tawar-menawar langsung
 /// dengan agen pemain untuk biaya transfer atau kontrak.
@@ -93,15 +94,17 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
 
   /// Masalah dana yang membuat tawaran tidak bisa diajukan (null = aman).
   String? _fundsProblem(NegotiationRoom room, NegotiationOffer d) {
-    if (d.amount <= 0) return 'Isi nominal lebih dari nol.';
+    if (d.amount <= 0) return tr('room.amountPositive');
     if (room.mode != NegotiationMode.transferBuy) return null;
     if (d.amount > room.transferBudget) {
-      return 'Melebihi anggaran transfer (${moneyLabel(room.transferBudget)}).';
+      return tr('room.overBudget', {'budget': moneyLabel(room.transferBudget)});
     }
     final upfront = TransferRules.upfront(d.amount, d.installmentYears);
     if (upfront > room.balance) {
-      return 'Pembayaran di muka ${moneyLabel(upfront)} melebihi saldo '
-          '(${moneyLabel(room.balance)}).';
+      return tr('room.overBalance', {
+        'upfront': moneyLabel(upfront),
+        'balance': moneyLabel(room.balance),
+      });
     }
     return null;
   }
@@ -147,22 +150,27 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: Text(selling ? 'Tolak tawaran?' : 'Batalkan negosiasi?'),
+            title: Text(
+              selling ? tr('room.rejectTitle') : tr('room.cancelTitle'),
+            ),
             content: Text(
               selling
-                  ? '${room.counterpartName} akan mundur dan '
-                      '${room.player.fullName} tetap di klub Anda.'
-                  : 'Negosiasi untuk ${room.player.fullName} ditutup. Anda '
-                      'bisa menawar lagi nanti.',
+                  ? tr('room.rejectBody', {
+                    'club': room.counterpartName,
+                    'player': room.player.fullName,
+                  })
+                  : tr('room.cancelBody', {'player': room.player.fullName}),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Lanjut berunding'),
+                child: Text(tr('room.keepTalking')),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(selling ? 'Tolak tawaran' : 'Batalkan negosiasi'),
+                child: Text(
+                  selling ? tr('room.rejectOffer') : tr('room.cancelTalks'),
+                ),
               ),
             ],
           ),
@@ -177,7 +185,11 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
       );
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(selling ? 'Tawaran ditolak.' : 'Negosiasi dibatalkan.'),
+          content: Text(
+            selling
+                ? tr('flow.offerRejected')
+                : tr('flow.negotiationCancelled'),
+          ),
         ),
       );
       navigator.pop();
@@ -196,15 +208,15 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: short ? 46 : null,
-        title: const Text('Ruang negosiasi'),
+        title: Text(tr('room.title')),
         actions: [
           if (canEnd)
             TextButton(
               onPressed: _busy ? null : _endTalks,
               child: Text(
                 room.mode == NegotiationMode.transferSell
-                    ? 'Tolak'
-                    : 'Batalkan',
+                    ? tr('inbox.reject')
+                    : tr('inbox.cancelNegotiation'),
                 style: const TextStyle(color: Chalk.red),
               ),
             ),
@@ -237,7 +249,9 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
       busy: _busy,
       canSubmit: _fundsProblem(room, _draft!) == null,
       canAccept: _fundsProblem(room, anchor) == null,
-      acceptLabel: 'Terima ${moneyLabel(anchor.amount)}',
+      acceptLabel: tr('room.acceptAmount', {
+        'amount': moneyLabel(anchor.amount),
+      }),
       onSubmit: _submit,
       onAccept: _acceptAnchor,
     );
@@ -266,7 +280,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
           _AgentBoard(session: s, accent: accent, compact: compact),
         ];
         final history = <Widget>[
-          SectionHeader('Riwayat (${s.log.length})'),
+          SectionHeader(tr('room.history', {'n': s.log.length})),
           _History(log: s.log, agentName: room.agent.name, accent: accent),
         ];
         final controls = _controls(room, accent, compact: compact);
@@ -336,24 +350,24 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
             labelLines: 2,
           ),
           StatFigure(
-            label: 'Tawaran Anda',
+            label: tr('room.yourOffer'),
             value: moneyLabel(draft.amount),
             labelLines: 2,
           ),
           switch (room.mode) {
             NegotiationMode.transferBuy => StatFigure(
-              label: 'Anggaran',
+              label: tr('room.budget'),
               value: moneyLabel(room.transferBudget),
               labelLines: 2,
             ),
             NegotiationMode.transferSell => StatFigure(
-              label: 'Nilai pasar',
+              label: tr('player.marketValue'),
               value: moneyLabel(room.player.marketValue),
               labelLines: 2,
             ),
             NegotiationMode.contract => StatFigure(
-              label: 'Durasi disukai',
-              value: '${s.preferredYears} thn',
+              label: tr('room.preferredYears'),
+              value: tr('common.yearsShort', {'n': s.preferredYears}),
               labelLines: 2,
             ),
           },
@@ -361,7 +375,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
       ),
       if (_outcome == null) ...[
         SectionHeader(
-          'Tawaran Anda',
+          tr('room.yourOffer'),
           padding: EdgeInsets.fromLTRB(0, compact ? 16 : 22, 0, 6),
         ),
         _OfferEditor(
@@ -394,21 +408,15 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
   }
 
   static String _anchorLabel(NegotiationMode m) => switch (m) {
-    NegotiationMode.transferSell => 'Tawaran pembeli',
-    NegotiationMode.contract => 'Gaji diminta agen',
-    NegotiationMode.transferBuy => 'Patokan agen',
+    NegotiationMode.transferSell => tr('room.anchorSell'),
+    NegotiationMode.contract => tr('room.anchorContract'),
+    NegotiationMode.transferBuy => tr('room.anchorBuy'),
   };
 
   static String _tradeOffHint(NegotiationMode m) => switch (m) {
-    NegotiationMode.transferBuy =>
-      'Pembayaran langsung dan sell-on yang lebih besar membuat agen mau '
-          'menurunkan harga. Patokan di atas sudah menyesuaikan syarat Anda.',
-    NegotiationMode.transferSell =>
-      'Menerima cicilan membuat pembeli mau membayar nominal lebih tinggi; '
-          'meminta sell-on membuatnya menurunkan nominal.',
-    NegotiationMode.contract =>
-      'Peran yang lebih besar dan durasi yang cocok dengan usia pemain '
-          'membuat agen mau menurunkan gaji.',
+    NegotiationMode.transferBuy => tr('room.hintBuy'),
+    NegotiationMode.transferSell => tr('room.hintSell'),
+    NegotiationMode.contract => tr('room.hintContract'),
   };
 }
 
@@ -430,12 +438,15 @@ class _PlayerLine extends ConsumerWidget {
     final club = ref.watch(clubByIdProvider(p.clubId)).valueOrNull;
     final stripe = club == null ? Chalk.line : colorFromHex(club.primaryColor);
     final subject = switch (room.mode) {
-      NegotiationMode.transferBuy =>
-        'Harga transfer dari ${room.counterpartName}',
-      NegotiationMode.transferSell =>
-        'Tawaran ${room.counterpartName} untuk pemain Anda',
-      NegotiationMode.contract =>
-        'Kontrak pemain, harga ${moneyLabel(room.offer.fee)} sudah disepakati',
+      NegotiationMode.transferBuy => tr('room.subjectBuy', {
+        'club': room.counterpartName,
+      }),
+      NegotiationMode.transferSell => tr('room.subjectSell', {
+        'club': room.counterpartName,
+      }),
+      NegotiationMode.contract => tr('room.subjectContract', {
+        'fee': moneyLabel(room.offer.fee),
+      }),
     };
     if (compact) {
       return Container(
@@ -480,7 +491,7 @@ class _PlayerLine extends ConsumerWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: '${p.age} tahun, '),
+                  TextSpan(text: '${tr('common.years', {'n': p.age})}, '),
                   TextSpan(
                     text: 'CA ${p.currentAbility}',
                     style: TextStyle(color: ratingColor(p.currentAbility)),
@@ -522,7 +533,7 @@ class _PlayerLine extends ConsumerWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               PositionBadge(p.position),
-              Text('${p.age} tahun'),
+              Text(tr('common.years', {'n': p.age})),
               Text(
                 'CA ${p.currentAbility}',
                 style: TextStyle(color: ratingColor(p.currentAbility)),
@@ -559,15 +570,10 @@ class _AgentBoard extends StatelessWidget {
               (t) => t.byAgent,
               orElse: () => const NegotiationTurn(byAgent: true, text: ''),
             )
-            .text;
+            .display;
     final level = AgentNegotiator.levelOf(session.patience);
-    final mood = switch (level) {
-      PatienceLevel.open => 'masih terbuka berdiskusi',
-      PatienceLevel.impatient => 'mulai tidak sabar',
-      PatienceLevel.critical => 'satu langkah salah, ia pergi',
-      PatienceLevel.gone => 'sudah pergi',
-    };
-    final style = 'gaya ${agent.style.label.toLowerCase()}';
+    final mood = tr('room.mood.${level.name}');
+    final style = tr('room.style', {'style': agent.style.label.toLowerCase()});
     return Container(
       padding:
           compact
@@ -588,7 +594,7 @@ class _AgentBoard extends StatelessWidget {
                 children: [
                   TextSpan(text: agent.name),
                   TextSpan(
-                    text: '  agen, $style',
+                    text: '  ${tr('room.agentShort', {'style': style})}',
                     style: const TextStyle(
                       fontFamily: Fonts.body,
                       fontSize: 13,
@@ -615,7 +621,7 @@ class _AgentBoard extends StatelessWidget {
               ),
             ),
             Text(
-              'Agen pemain, $style',
+              tr('room.playerAgent', {'style': style}),
               style: const TextStyle(color: Chalk.dim, fontSize: 13),
             ),
           ],
@@ -623,7 +629,7 @@ class _AgentBoard extends StatelessWidget {
           _PatienceTally(patience: session.patience, height: compact ? 18 : 26),
           const SizedBox(height: 6),
           Text(
-            'Kesabaran ${session.patience}%, $mood',
+            tr('room.patience', {'n': session.patience, 'mood': mood}),
             style: TextStyle(
               color: _levelColor(level),
               fontSize: 13,
@@ -665,7 +671,7 @@ class _PatienceTally extends StatelessWidget {
     final color = _levelColor(AgentNegotiator.levelOf(patience));
     final still = MediaQuery.of(context).disableAnimations;
     return Semantics(
-      label: 'Kesabaran agen $patience persen',
+      label: tr('room.patienceSemantics', {'n': patience}),
       excludeSemantics: true,
       child: Row(
         children: [
@@ -727,8 +733,8 @@ class _OfferEditor extends StatelessWidget {
           decoration: InputDecoration(
             labelText:
                 contract
-                    ? 'Gaji per tahun (€ ribu)'
-                    : 'Biaya transfer (€ ribu)',
+                    ? tr('room.wageLabel', {'unit': moneyUnitThousands()})
+                    : tr('bid.feeLabel', {'unit': moneyUnitThousands()}),
             suffixText: moneyLabel(draft.amount),
           ),
           onChanged: (t) => onAmountTyped(int.tryParse(t) ?? 0),
@@ -755,30 +761,39 @@ class _OfferEditor extends StatelessWidget {
           ],
         ),
         if (!contract) ...[
-          const _Label('Pembayaran'),
+          _Label(tr('bid.payment')),
           _Choices<int>(
             values: TransferRules.installmentOptions,
             selected: draft.installmentYears,
-            label: (v) => v == 1 ? 'Langsung' : 'Cicil $v tahun',
+            label:
+                (v) =>
+                    v == 1
+                        ? tr('bid.upfront')
+                        : tr('room.installments', {'n': v}),
             onSelected: (v) => onChanged(draft.copyWith(installmentYears: v)),
           ),
-          const _Label('Sell-on penjualan berikutnya'),
+          _Label(tr('room.sellOnLabel')),
           _Choices<int>(
             values: TransferRules.sellOnOptions,
             selected: draft.sellOnPct,
-            label: (v) => v == 0 ? 'Tanpa' : '$v%',
+            label: (v) => v == 0 ? tr('bid.sellOnNone') : '$v%',
             onSelected: (v) => onChanged(draft.copyWith(sellOnPct: v)),
           ),
         ] else ...[
-          const _Label('Durasi kontrak'),
+          _Label(tr('room.contractLength')),
           _Choices<int>(
             values: const [1, 2, 3, 4, 5],
             selected: draft.contractYears,
             label:
-                (v) => v == preferredYears ? '$v tahun (disukai)' : '$v tahun',
+                (v) =>
+                    v == preferredYears
+                        ? tr('room.yearsPreferred', {
+                          'years': tr('common.years', {'n': v}),
+                        })
+                        : tr('common.years', {'n': v}),
             onSelected: (v) => onChanged(draft.copyWith(contractYears: v)),
           ),
-          const _Label('Peran di skuad'),
+          _Label(tr('room.squadRole')),
           _Choices<SquadStatus>(
             values: const [
               SquadStatus.keyPlayer,
@@ -871,7 +886,7 @@ class _HistoryState extends State<_History> {
             child: TextButton(
               onPressed: () => setState(() => _all = true),
               child: Text(
-                'Tampilkan ${log.length - shown.length} baris sebelumnya',
+                tr('room.showEarlier', {'n': log.length - shown.length}),
               ),
             ),
           ),
@@ -887,13 +902,13 @@ class _HistoryState extends State<_History> {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: t.byAgent ? '$first  ' : 'Anda  ',
+                    text: t.byAgent ? '$first  ' : '${tr('room.you')}  ',
                     style: TextStyle(
                       color: t.byAgent ? widget.accent : Chalk.dim,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  TextSpan(text: t.text),
+                  TextSpan(text: t.display),
                 ],
               ),
               style: TextStyle(
@@ -927,9 +942,8 @@ class _Outcome extends StatelessWidget {
         agreed
             ? step.summary
             : selling
-            ? 'Pembeli mundur. Pemain tetap di klub Anda.'
-            : 'Pemain ini baru bisa ditawar lagi seminggu lagi. Agennya akan '
-                'mengingat angka terakhir.';
+            ? tr('room.buyerLeft')
+            : tr('room.cooldownNote');
     final color = agreed ? Chalk.green : Chalk.red;
     final short = MediaQuery.sizeOf(context).height < 480;
     return _BottomPanel(
@@ -943,7 +957,7 @@ class _Outcome extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: agreed ? 'Sepakat' : 'Agen pergi',
+                  text: agreed ? tr('room.agreed') : tr('room.agentLeft'),
                   style: TextStyle(
                     fontFamily: Fonts.condensed,
                     fontSize: short ? 22 : 28,
@@ -969,7 +983,7 @@ class _Outcome extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: onBack,
-                  child: const FittedBox(child: Text('Kembali')),
+                  child: FittedBox(child: Text(tr('common.back'))),
                 ),
               ),
               if (step.continuesToContract) ...[
@@ -977,7 +991,7 @@ class _Outcome extends StatelessWidget {
                 Expanded(
                   child: FilledButton(
                     onPressed: onContinue,
-                    child: const FittedBox(child: Text('Lanjut ke kontrak')),
+                    child: FittedBox(child: Text(tr('room.toContract'))),
                   ),
                 ),
               ],
@@ -1017,7 +1031,7 @@ class _ActionBar extends StatelessWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: busy || !canSubmit ? null : onSubmit,
-              child: const FittedBox(child: Text('Ajukan tawaran')),
+              child: FittedBox(child: Text(tr('player.makeOffer'))),
             ),
           ),
           const SizedBox(width: 10),
@@ -1088,7 +1102,7 @@ class _Message extends StatelessWidget {
         children: [
           Text(text, textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          OutlinedButton(onPressed: onBack, child: const Text('Kembali')),
+          OutlinedButton(onPressed: onBack, child: Text(tr('common.back'))),
         ],
       ),
     ),

@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/theme.dart';
-import '../../core/utils/date_format.dart';
 import '../../domain/enums/inbox.dart';
 import '../../app/router.dart';
 import '../../domain/models/season_models.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../l10n/l10n.dart';
 import '../transfer/transfer_flow.dart';
 
 enum _InboxFilter { all, action, unread }
@@ -27,14 +27,16 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   Widget build(BuildContext context) {
     final inbox = ref.watch(inboxProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Inbox')),
+      appBar: AppBar(title: Text(tr('nav.inbox'))),
       body: inbox.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Gagal memuat inbox: $e')),
+        error:
+            (e, _) =>
+                Center(child: Text(tr('inbox.loadFailed', {'error': '$e'}))),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(child: Text('Inbox kosong.'));
+            return Center(child: Text(tr('inbox.empty')));
           }
           final action = list.where((m) => m.needsAction).length;
           final unread = list.where((m) => !m.isRead).length;
@@ -60,15 +62,18 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
                   children: [
-                    chip(_InboxFilter.all, 'Semua (${list.length})'),
+                    chip(
+                      _InboxFilter.all,
+                      '${tr('searchStatus.all')} (${list.length})',
+                    ),
                     chip(
                       _InboxFilter.action,
-                      'Menunggu keputusan ($action)',
+                      tr('inbox.filterAction', {'n': action}),
                       color: Chalk.red,
                     ),
                     chip(
                       _InboxFilter.unread,
-                      'Belum dibaca ($unread)',
+                      tr('inbox.filterUnread', {'n': unread}),
                       color: Chalk.blue,
                     ),
                   ],
@@ -81,8 +86,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                         ? Center(
                           child: Text(
                             _filter == _InboxFilter.action
-                                ? 'Tidak ada keputusan yang menunggu.'
-                                : 'Semua pesan sudah dibaca.',
+                                ? tr('inbox.noneAction')
+                                : tr('inbox.allRead'),
                             style: const TextStyle(color: Chalk.dim),
                           ),
                         )
@@ -125,7 +130,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
         final close = TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Tutup'),
+          child: Text(tr('common.close')),
         );
         final List<Widget> actions;
         if (!m.needsAction) {
@@ -134,7 +139,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
             if (playerId != null)
               TextButton(
                 onPressed: () => go(_Next.player(playerId)),
-                child: const Text('Lihat pemain'),
+                child: Text(tr('inbox.viewPlayer')),
               ),
             close,
           ];
@@ -144,33 +149,33 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               actions = [
                 FilledButton(
                   onPressed: () => choose('accept'),
-                  child: const Text('Terima target'),
+                  child: Text(tr('inbox.acceptTarget')),
                 ),
               ];
             case InboxActionType.contractDecision:
               actions = [
                 TextButton(
                   onPressed: () => choose('leave'),
-                  child: const Text('Biarkan pergi'),
+                  child: Text(tr('inbox.letGo')),
                 ),
                 FilledButton(
                   onPressed: () => choose('renew'),
-                  child: const Text('Perpanjang'),
+                  child: Text(tr('inbox.renew')),
                 ),
               ];
             case InboxActionType.incomingTransferOffer:
               actions = [
                 TextButton(
                   onPressed: () => choose('reject'),
-                  child: const Text('Tolak'),
+                  child: Text(tr('inbox.reject')),
                 ),
                 TextButton(
                   onPressed: () => choose('accept'),
-                  child: const Text('Terima'),
+                  child: Text(tr('inbox.accept')),
                 ),
                 FilledButton(
                   onPressed: () => go(const _Next.room()),
-                  child: const Text('Masuk ruang negosiasi'),
+                  child: Text(tr('inbox.enterRoom')),
                 ),
               ];
             case InboxActionType.counterOffer ||
@@ -178,11 +183,11 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               actions = [
                 TextButton(
                   onPressed: () => choose('cancel'),
-                  child: const Text('Batalkan'),
+                  child: Text(tr('inbox.cancelNegotiation')),
                 ),
                 FilledButton(
                   onPressed: () => go(const _Next.room()),
-                  child: const Text('Masuk ruang negosiasi'),
+                  child: Text(tr('inbox.enterRoom')),
                 ),
               ];
             case InboxActionType.none:
@@ -191,8 +196,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         }
 
         return AlertDialog(
-          title: Text(m.title),
-          content: SingleChildScrollView(child: Text(m.body)),
+          title: Text(trText(m.title)),
+          content: SingleChildScrollView(child: Text(trText(m.body))),
           actions: actions,
         );
       },
@@ -211,9 +216,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         if (!context.mounted) return;
         if (offer == null || !offer.isActive) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Negosiasi ini sudah tidak berjalan.'),
-            ),
+            SnackBar(content: Text(tr('err.negotiationInactive'))),
           );
           return;
         }
@@ -293,7 +296,7 @@ class _MessageCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    m.title,
+                    trText(m.title),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: m.isRead ? FontWeight.w400 : FontWeight.w700,
@@ -301,9 +304,9 @@ class _MessageCard extends StatelessWidget {
                   ),
                   if (m.needsAction) ...[
                     const SizedBox(height: 4),
-                    const Text(
-                      'Menunggu keputusan Anda',
-                      style: TextStyle(
+                    Text(
+                      tr('dash.awaitingDecision'),
+                      style: const TextStyle(
                         color: Chalk.red,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -340,10 +343,7 @@ class _Next {
   const _Next.player(int this.playerId)
     : kind = _NextKind.player,
       choice = null;
-  const _Next.room()
-    : kind = _NextKind.room,
-      choice = null,
-      playerId = null;
+  const _Next.room() : kind = _NextKind.room, choice = null, playerId = null;
 
   final _NextKind kind;
   final String? choice;

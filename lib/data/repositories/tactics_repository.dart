@@ -30,9 +30,8 @@ class TacticsRepository {
         );
   }
 
-  static List<int> parseIds(String raw) => raw.isEmpty
-      ? const []
-      : raw.split(',').map(int.parse).toList();
+  static List<int> parseIds(String raw) =>
+      raw.isEmpty ? const [] : raw.split(',').map(int.parse).toList();
 
   static ClubTactic _map(ClubTacticRow r) => ClubTactic(
     clubId: r.clubId,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/router.dart';
+import '../../l10n/l10n.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../fixtures/fixtures_screen.dart';
 import '../inbox/inbox_screen.dart';
@@ -73,25 +74,25 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           onDestinationSelected:
               (i) => ref.read(shellTabProvider.notifier).state = i,
           destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded),
-              label: 'Beranda',
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home_rounded),
+              label: tr('nav.home'),
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups_rounded),
-              label: 'Skuad',
+            NavigationDestination(
+              icon: const Icon(Icons.groups_outlined),
+              selectedIcon: const Icon(Icons.groups_rounded),
+              label: tr('nav.squad'),
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month_rounded),
-              label: 'Jadwal',
+            NavigationDestination(
+              icon: const Icon(Icons.calendar_month_outlined),
+              selectedIcon: const Icon(Icons.calendar_month_rounded),
+              label: tr('nav.fixtures'),
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.swap_horiz_outlined),
-              selectedIcon: Icon(Icons.swap_horiz_rounded),
-              label: 'Transfer',
+            NavigationDestination(
+              icon: const Icon(Icons.swap_horiz_outlined),
+              selectedIcon: const Icon(Icons.swap_horiz_rounded),
+              label: tr('nav.transfer'),
             ),
             NavigationDestination(
               icon: Badge(
@@ -104,7 +105,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
                 label: Text('$pending'),
                 child: const Icon(Icons.inbox_rounded),
               ),
-              label: 'Inbox',
+              label: tr('nav.inbox'),
             ),
           ],
         ),

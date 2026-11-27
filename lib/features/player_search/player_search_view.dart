@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/router.dart';
-import '../../core/utils/format_utils.dart';
 import '../../domain/enums/position.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
 import '../../domain/transfer/player_search.dart';
+import '../../l10n/l10n.dart';
 
 /// Pencarian pemain lintas klub dengan filter dan pengurutan. Dipakai di
 /// tab "Cari Pemain" dan di layar penuh.
@@ -33,7 +33,9 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
     return rows.when(
       skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat pemain: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('player.loadFailed', {'error': '$e'}))),
       data: (all) {
         final result = PlayerSearch.apply(all, _f, now: now);
         final theme = Theme.of(context);
@@ -43,14 +45,13 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
               child: TextField(
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Cari nama pemain',
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: tr('search.hint'),
                   isDense: true,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
-                onChanged:
-                    (v) => setState(() => _f = _f.copyWith(query: v)),
+                onChanged: (v) => setState(() => _f = _f.copyWith(query: v)),
               ),
             ),
             Padding(
@@ -62,11 +63,11 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
                 children: [
                   DropdownButton<Object?>(
                     value: _f.position ?? _f.group,
-                    hint: const Text('Posisi'),
+                    hint: Text(tr('search.position')),
                     items: [
-                      const DropdownMenuItem<Object?>(
+                      DropdownMenuItem<Object?>(
                         value: null,
-                        child: Text('Semua posisi'),
+                        child: Text(tr('search.allPositions')),
                       ),
                       for (final g in PositionGroup.values)
                         DropdownMenuItem<Object?>(
@@ -88,9 +89,7 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
                         DropdownMenuItem(value: s, child: Text(s.label)),
                     ],
                     onChanged:
-                        (s) => setState(
-                          () => _f = _f.copyWith(status: s),
-                        ),
+                        (s) => setState(() => _f = _f.copyWith(status: s)),
                   ),
                   DropdownButton<PlayerSort>(
                     value: _f.sort,
@@ -98,14 +97,16 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
                       for (final s in PlayerSort.values)
                         DropdownMenuItem(
                           value: s,
-                          child: Text('Urut: ${s.label}'),
+                          child: Text(tr('search.sortBy', {'field': s.label})),
                         ),
                     ],
-                    onChanged:
-                        (s) => setState(() => _f = _f.copyWith(sort: s)),
+                    onChanged: (s) => setState(() => _f = _f.copyWith(sort: s)),
                   ),
                   IconButton(
-                    tooltip: _f.ascending ? 'Naik' : 'Turun',
+                    tooltip:
+                        _f.ascending
+                            ? tr('search.ascending')
+                            : tr('search.descending'),
                     onPressed:
                         () => setState(
                           () => _f = _f.copyWith(ascending: !_f.ascending),
@@ -120,7 +121,7 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
             ExpansionTile(
               initiallyExpanded: _advanced,
               onExpansionChanged: (v) => setState(() => _advanced = v),
-              title: const Text('Filter lanjutan'),
+              title: Text(tr('search.advanced')),
               childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
               children: [
                 Wrap(
@@ -128,70 +129,75 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
                   runSpacing: 8,
                   children: [
                     _NumField(
-                      label: 'Usia min',
+                      label: tr('search.ageMin'),
                       value: _f.ageMin,
                       onChanged:
                           (v) => setState(
-                            () => _f = _f.copyWith(
-                              ageMin: v,
-                              clearAgeMin: v == null,
-                            ),
+                            () =>
+                                _f = _f.copyWith(
+                                  ageMin: v,
+                                  clearAgeMin: v == null,
+                                ),
                           ),
                     ),
                     _NumField(
-                      label: 'Usia maks',
+                      label: tr('search.ageMax'),
                       value: _f.ageMax,
                       onChanged:
                           (v) => setState(
-                            () => _f = _f.copyWith(
-                              ageMax: v,
-                              clearAgeMax: v == null,
-                            ),
+                            () =>
+                                _f = _f.copyWith(
+                                  ageMax: v,
+                                  clearAgeMax: v == null,
+                                ),
                           ),
                     ),
                     _NumField(
-                      label: 'CA min',
+                      label: tr('search.caMin'),
                       value: _f.caMin,
                       onChanged:
                           (v) => setState(
-                            () => _f = _f.copyWith(
-                              caMin: v,
-                              clearCaMin: v == null,
-                            ),
+                            () =>
+                                _f = _f.copyWith(
+                                  caMin: v,
+                                  clearCaMin: v == null,
+                                ),
                           ),
                     ),
                     _NumField(
-                      label: 'CA maks',
+                      label: tr('search.caMax'),
                       value: _f.caMax,
                       onChanged:
                           (v) => setState(
-                            () => _f = _f.copyWith(
-                              caMax: v,
-                              clearCaMax: v == null,
-                            ),
+                            () =>
+                                _f = _f.copyWith(
+                                  caMax: v,
+                                  clearCaMax: v == null,
+                                ),
                           ),
                     ),
                     _NumField(
-                      label: 'Nilai maks (€ jt)',
+                      label: tr('search.maxValue'),
                       value:
                           _f.maxMarketValue == null
                               ? null
                               : _f.maxMarketValue! ~/ 1000,
                       onChanged:
                           (v) => setState(
-                            () => _f = _f.copyWith(
-                              maxMarketValue: v == null ? null : v * 1000,
-                              clearMaxValue: v == null,
-                            ),
+                            () =>
+                                _f = _f.copyWith(
+                                  maxMarketValue: v == null ? null : v * 1000,
+                                  clearMaxValue: v == null,
+                                ),
                           ),
                     ),
                     DropdownButton<String?>(
                       value: _f.leagueId,
-                      hint: const Text('Liga'),
+                      hint: Text(tr('search.league')),
                       items: [
-                        const DropdownMenuItem<String?>(
+                        DropdownMenuItem<String?>(
                           value: null,
-                          child: Text('Semua liga'),
+                          child: Text(tr('search.allLeagues')),
                         ),
                         for (final l in leagues)
                           DropdownMenuItem<String?>(
@@ -201,10 +207,11 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
                       ],
                       onChanged:
                           (v) => setState(
-                            () => _f = _f.copyWith(
-                              leagueId: v,
-                              clearLeague: v == null,
-                            ),
+                            () =>
+                                _f = _f.copyWith(
+                                  leagueId: v,
+                                  clearLeague: v == null,
+                                ),
                           ),
                     ),
                   ],
@@ -216,7 +223,7 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '${result.length} pemain',
+                  tr('squad.playerCount', {'n': result.length}),
                   style: theme.textTheme.labelLarge,
                 ),
               ),
@@ -224,11 +231,11 @@ class _PlayerSearchViewState extends ConsumerState<PlayerSearchView> {
             Expanded(
               child:
                   result.isEmpty
-                      ? const Center(
+                      ? Center(
                         child: Padding(
-                          padding: EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(24),
                           child: Text(
-                            'Tidak ada pemain yang cocok dengan filter.',
+                            tr('search.noResults'),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -298,8 +305,9 @@ class _SearchTile extends StatelessWidget {
           ).pushNamed(AppRoutes.player, arguments: p.id),
       title: Text(p.fullName),
       subtitle: Text(
-        '${p.position.label} · ${row.clubName} · ${p.age} th'
-        '${row.isForSale ? ' · Daftar jual' : ''}',
+        '${p.position.label} · ${row.clubName} · '
+        '${tr('common.age', {'n': p.age})}'
+        '${row.isForSale ? ' · ${tr('searchStatus.forSale')}' : ''}',
       ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,

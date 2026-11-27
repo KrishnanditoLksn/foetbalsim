@@ -1,3 +1,5 @@
+import '../../l10n/l10n.dart';
+
 /// Status tawaran transfer.
 /// - pending: menunggu respons klub penjual (1–2 hari).
 /// - awaitingContract: menunggu keputusan kita (tawaran masuk) atau
@@ -8,24 +10,22 @@
 /// - failed: pemain menolak kontrak yang diajukan.
 /// - withdrawn: dibatalkan atau kedaluwarsa karena pemain sudah pindah.
 enum TransferOfferStatus {
-  pending('Menunggu'),
-  awaitingContract('Negosiasi kontrak'),
-  countered('Kontra-tawaran'),
-  completed('Selesai'),
-  rejected('Ditolak'),
-  failed('Gagal'),
-  withdrawn('Dibatalkan');
+  pending,
+  awaitingContract,
+  countered,
+  completed,
+  rejected,
+  failed,
+  withdrawn;
 
-  const TransferOfferStatus(this.label);
-  final String label;
+  String get label => tr('offerStatus.$name');
 }
 
 /// Jenis catatan di riwayat transfer.
 enum TransferType {
-  buy('Pembelian'),
-  sell('Penjualan'),
-  aiDeal('Transfer AI');
+  buy,
+  sell,
+  aiDeal;
 
-  const TransferType(this.label);
-  final String label;
+  String get label => tr('transferType.$name');
 }

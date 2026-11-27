@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
 import '../../domain/enums/position.dart';
+import '../../l10n/l10n.dart';
 import '../utils/format_utils.dart';
 
 /// Komponen kecil gaya "pizarra" yang dipakai di semua layar.
@@ -36,12 +37,7 @@ Color positionColor(PositionGroup g) => switch (g) {
 };
 
 /// Nama pendek kelompok posisi untuk chip filter.
-String positionGroupShort(PositionGroup g) => switch (g) {
-  PositionGroup.goalkeeper => 'Kiper',
-  PositionGroup.defender => 'Bek',
-  PositionGroup.midfielder => 'Gelandang',
-  PositionGroup.forward => 'Penyerang',
-};
+String positionGroupShort(PositionGroup g) => g.label;
 
 /// Warna rating CA (1–200).
 Color ratingColor(int ca) {
@@ -203,9 +199,9 @@ class FormDots extends StatelessWidget {
   };
 
   static String letterOf(String r) => switch (r) {
-    'W' => 'M',
-    'D' => 'S',
-    _ => 'K',
+    'W' => tr('fixtures.wonShort'),
+    'D' => tr('fixtures.drawnShort'),
+    _ => tr('fixtures.lostShort'),
   };
 
   @override

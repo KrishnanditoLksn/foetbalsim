@@ -2,19 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+export '../../l10n/formatters.dart' show formatMoney;
+
 /// Parse warna "#RRGGBB" dari seed JSON menjadi [Color] (alpha penuh).
 Color colorFromHex(String hex) {
   final clean = hex.replaceFirst('#', '');
   return Color(int.parse('FF$clean', radix: 16));
-}
-
-/// Nilai uang disimpan dalam ribuan euro (€K). Contoh: 25000 → "€25,0 jt".
-String formatMoney(int thousands) {
-  if (thousands.abs() >= 1000) {
-    final millions = thousands / 1000;
-    return '€${millions.toStringAsFixed(millions >= 10 ? 0 : 1)} jt';
-  }
-  return '€$thousands rb';
 }
 
 /// Konversi Current Ability (1–200) ke bintang 1–5.

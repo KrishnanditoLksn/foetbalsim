@@ -1,10 +1,11 @@
-enum SquadStatus {
-  keyPlayer('Pilar'),
-  starter('Starter'),
-  rotation('Rotasi'),
-  backup('Cadangan'),
-  youth('Muda');
+import '../../l10n/l10n.dart';
 
-  const SquadStatus(this.label);
-  final String label;
+enum SquadStatus {
+  keyPlayer,
+  starter,
+  rotation,
+  backup,
+  youth;
+
+  String get label => tr('squadStatus.$name');
 }

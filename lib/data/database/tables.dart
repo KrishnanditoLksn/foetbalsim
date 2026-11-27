@@ -93,7 +93,8 @@ class Players extends Table {
   IntColumn get condition => integer()();
   IntColumn get morale => integer()();
   IntColumn get marketValue => integer()(); // €K
-  DateTimeColumn get lockedUntil => dateTime().nullable()(); // v4: tidak bisa pindah dua kali
+  DateTimeColumn get lockedUntil =>
+      dateTime().nullable()(); // v4: tidak bisa pindah dua kali
   BoolColumn get isTransferListed =>
       boolean().withDefault(const Constant(false))(); // v3
 
@@ -121,7 +122,8 @@ class GameStates extends Table {
   TextColumn get managerName => text()();
   TextColumn get clubId => text().nullable()();
   IntColumn get seed => integer()();
-  IntColumn get seasonStartYear => integer().withDefault(const Constant(2026))(); // v4
+  IntColumn get seasonStartYear =>
+      integer().withDefault(const Constant(2026))(); // v4
 
   @override
   Set<Column> get primaryKey => {id};
@@ -137,8 +139,12 @@ class Fixtures extends Table {
   TextColumn get homeClubId => text()();
   TextColumn get awayClubId => text()();
   IntColumn get homeGoals => integer().nullable()();
-  IntColumn get seasonStartYear => integer().withDefault(const Constant(2026))(); // v4
-  TextColumn get stage => text().withDefault(const Constant('league'))(); // v4: league / playoffSemi / playoffFinal
+  IntColumn get seasonStartYear =>
+      integer().withDefault(const Constant(2026))(); // v4
+  TextColumn get stage =>
+      text().withDefault(
+        const Constant('league'),
+      )(); // v4: league / playoffSemi / playoffFinal
   IntColumn get leg => integer().nullable()(); // v4: 1 atau 2 pada playoff
   IntColumn get awayGoals => integer().nullable()();
 
@@ -185,12 +191,17 @@ class TransferOffers extends Table {
   TextColumn get status => textEnum<TransferOfferStatus>()();
   DateTimeColumn get createdDate => dateTime()();
   DateTimeColumn get responseDate => dateTime().nullable()();
-  IntColumn get installmentYears => integer().withDefault(const Constant(1))(); // v4
+  IntColumn get installmentYears =>
+      integer().withDefault(const Constant(1))(); // v4
   IntColumn get sellOnPct => integer().withDefault(const Constant(0))(); // v4
-  IntColumn get round => integer().withDefault(const Constant(1))(); // v4: 1 = tawaran, 2 = kontra
+  IntColumn get round =>
+      integer().withDefault(const Constant(1))(); // v4: 1 = tawaran, 2 = kontra
   DateTimeColumn get expiresDate => dateTime().nullable()(); // v4
   TextColumn get reason => text().nullable()(); // v4: alasan penolakan
-  TextColumn get kind => text().withDefault(const Constant("permanent"))(); // v4: jenis kesepakatan
+  TextColumn get kind =>
+      text().withDefault(
+        const Constant("permanent"),
+      )(); // v4: jenis kesepakatan
 }
 
 /// Riwayat transfer (v3).
@@ -322,7 +333,8 @@ class NegotiationSessions extends Table {
   IntColumn get patience => integer()();
   IntColumn get anchorValue => integer()();
   IntColumn get limitValue => integer()();
-  TextColumn get extras => text()(); // JSON: syarat agen, tawaran terakhir, riwayat
+  TextColumn get extras =>
+      text()(); // JSON: syarat agen, tawaran terakhir, riwayat
   DateTimeColumn get updatedDate => dateTime()();
   DateTimeColumn get cooldownUntil => dateTime().nullable()();
 

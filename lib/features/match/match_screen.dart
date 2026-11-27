@@ -13,6 +13,7 @@ import '../../domain/match/match_engine_2d.dart';
 import '../../domain/match/match_rules.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/match_models.dart';
+import '../../l10n/l10n.dart';
 import 'pitch_2d_painter.dart';
 import 'pitch_animator.dart';
 
@@ -191,7 +192,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
   /// Mengembalikan pesan kesalahan bila pergantian ditolak.
   String? _substitute(int outId, int inId) {
     final session = _session;
-    if (session == null) return 'Laga belum siap.';
+    if (session == null) return tr('match.notReady');
     try {
       session.substitute(_ourHome, outId, inId);
     } on StateError catch (e) {
@@ -273,9 +274,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('match.saveFailed', {'error': '$e'}))),
+        );
       }
     }
   }
@@ -285,19 +286,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Keluar dari laga?'),
-            content: const Text(
-              'Laga belum selesai dan belum disimpan. Jika keluar sekarang, '
-              'laga akan dimulai ulang dari menit 0 saat dibuka lagi.',
-            ),
+            title: Text(tr('match.leaveTitle')),
+            content: Text(tr('match.leaveBody')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Lanjutkan'),
+                child: Text(tr('match.keepPlaying')),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Keluar'),
+                child: Text(tr('match.leave')),
               ),
             ],
           ),
@@ -325,12 +323,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            setup == null ? 'Laga' : '${setup.home.name} vs ${setup.away.name}',
+            setup == null
+                ? tr('match.title')
+                : '${setup.home.name} vs ${setup.away.name}',
           ),
         ),
         body:
             _error != null
-                ? Center(child: Text('Gagal memuat laga: $_error'))
+                ? Center(
+                  child: Text(tr('match.loadFailed', {'error': '$_error'})),
+                )
                 : session == null || setup == null
                 ? const Center(child: CircularProgressIndicator())
                 : _body(context, session, setup, clubs),
@@ -382,12 +384,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           ),
         ),
         Text(
-          session.minute == 0 ? 'Belum mulai' : session.clockText,
+          session.minute == 0 ? tr('match.notStarted') : session.clockText,
           style: theme.textTheme.labelLarge,
         ),
         if (session.isHalfTimeBreak)
           _Banner(
-            text: 'JEDA BABAK PERTAMA · Pergantian bebas',
+            text: tr('match.halfTimeBanner'),
             color: theme.colorScheme.secondaryContainer,
           )
         else if (_bannerText != null && session.tick - _bannerTick <= 4)
@@ -431,7 +433,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           spacing: 6,
           children: [
             IconButton.filledTonal(
-              tooltip: _playing ? 'Jeda' : 'Mainkan',
+              tooltip: _playing ? tr('match.pause') : tr('match.play'),
               onPressed: session.finished ? null : _togglePlay,
               icon: Icon(_playing ? Icons.pause : Icons.play_arrow),
             ),
@@ -445,7 +447,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
               showSelectedIcon: false,
             ),
             IconButton.outlined(
-              tooltip: 'Skip ke akhir',
+              tooltip: tr('match.skip'),
               onPressed: session.finished ? null : _skipToEnd,
               icon: const Icon(Icons.fast_forward),
             ),
@@ -453,8 +455,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
               onPressed: session.finished ? null : _openSubs,
               icon: const Icon(Icons.swap_horiz),
               label: Text(
-                'Ganti · Subs ${session.subsUsed(_ourHome)}/${MatchSession.maxSubs}'
-                ' · Jendela ${session.windowsUsed(_ourHome)}/${MatchRules.maxSubWindows}',
+                tr('match.subsButton', {
+                  'subs': session.subsUsed(_ourHome),
+                  'maxSubs': MatchSession.maxSubs,
+                  'windows': session.windowsUsed(_ourHome),
+                  'maxWindows': MatchRules.maxSubWindows,
+                }),
               ),
             ),
           ],
@@ -480,18 +486,27 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             runSpacing: 4,
             children: [
               _StatChip(
-                'Penguasaan',
+                tr('match.possession'),
                 '${st.homePossession}% - ${st.awayPossession}%',
               ),
-              _StatChip('Tembakan', '${st.home.shots} - ${st.away.shots}'),
               _StatChip(
-                'Tepat sasaran',
+                tr('match.shots'),
+                '${st.home.shots} - ${st.away.shots}',
+              ),
+              _StatChip(
+                tr('match.onTarget'),
                 '${st.home.onTarget} - ${st.away.onTarget}',
               ),
-              _StatChip('Penyelamatan', '${st.home.saves} - ${st.away.saves}'),
-              _StatChip('Pelanggaran', '${st.home.fouls} - ${st.away.fouls}'),
               _StatChip(
-                'Kartu',
+                tr('match.saves'),
+                '${st.home.saves} - ${st.away.saves}',
+              ),
+              _StatChip(
+                tr('match.fouls'),
+                '${st.home.fouls} - ${st.away.fouls}',
+              ),
+              _StatChip(
+                tr('match.cards'),
                 '${st.home.yellow + st.home.red} - ${st.away.yellow + st.away.red}',
               ),
             ],
@@ -503,7 +518,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
             child: FilledButton.icon(
               onPressed: _saving ? null : _finish,
               icon: const Icon(Icons.save),
-              label: Text(_saving ? 'Menyimpan...' : 'Simpan & Kembali'),
+              label: Text(
+                _saving ? tr('match.saving') : tr('match.saveAndReturn'),
+              ),
             ),
           ),
         const Divider(height: 1),
@@ -647,7 +664,7 @@ class _SubsSheetState extends State<_SubsSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Pergantian (sisa ${widget.subsLeft})',
+                tr('match.subsLeft', {'n': widget.subsLeft}),
                 style: theme.textTheme.titleMedium,
               ),
               if (_error != null)
@@ -663,10 +680,7 @@ class _SubsSheetState extends State<_SubsSheet> {
                 child: ListView(
                   shrinkWrap: true,
                   children: [
-                    Text(
-                      'Keluar (di lapangan)',
-                      style: theme.textTheme.labelLarge,
-                    ),
+                    Text(tr('match.subOut'), style: theme.textTheme.labelLarge),
                     for (final p in widget.onPitch)
                       RadioListTile<int>(
                         dense: true,
@@ -679,7 +693,7 @@ class _SubsSheetState extends State<_SubsSheet> {
                         onChanged: (v) => setState(() => _out = v),
                       ),
                     const SizedBox(height: 8),
-                    Text('Masuk (bangku)', style: theme.textTheme.labelLarge),
+                    Text(tr('match.subIn'), style: theme.textTheme.labelLarge),
                     for (final p in widget.bench)
                       RadioListTile<int>(
                         dense: true,
@@ -707,7 +721,7 @@ class _SubsSheetState extends State<_SubsSheet> {
                             Navigator.pop(context);
                           }
                         },
-                child: const Text('Ganti pemain'),
+                child: Text(tr('match.substitute')),
               ),
             ],
           ),

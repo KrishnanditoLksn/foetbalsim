@@ -1,48 +1,49 @@
-enum AttributeGroup {
-  technical('Teknik'),
-  mental('Mental'),
-  physical('Fisik'),
-  goalkeeping('Kiper');
+import '../../l10n/l10n.dart';
 
-  const AttributeGroup(this.label);
-  final String label;
+enum AttributeGroup {
+  technical,
+  mental,
+  physical,
+  goalkeeping;
+
+  String get label => tr('attrGroup.$name');
 }
 
 /// Atribut pemain, skala 1–20 (gaya Football Manager).
 enum Attribute {
   // Teknik
-  finishing(AttributeGroup.technical, 'Penyelesaian'),
-  passing(AttributeGroup.technical, 'Operan'),
-  dribbling(AttributeGroup.technical, 'Dribel'),
-  firstTouch(AttributeGroup.technical, 'Sentuhan Pertama'),
-  crossing(AttributeGroup.technical, 'Umpan Silang'),
-  tackling(AttributeGroup.technical, 'Tekel'),
-  heading(AttributeGroup.technical, 'Sundulan'),
-  technique(AttributeGroup.technical, 'Teknik'),
+  finishing(AttributeGroup.technical),
+  passing(AttributeGroup.technical),
+  dribbling(AttributeGroup.technical),
+  firstTouch(AttributeGroup.technical),
+  crossing(AttributeGroup.technical),
+  tackling(AttributeGroup.technical),
+  heading(AttributeGroup.technical),
+  technique(AttributeGroup.technical),
 
   // Mental
-  decisions(AttributeGroup.mental, 'Keputusan'),
-  positioning(AttributeGroup.mental, 'Posisi'),
-  vision(AttributeGroup.mental, 'Visi'),
-  composure(AttributeGroup.mental, 'Ketenangan'),
-  workRate(AttributeGroup.mental, 'Etos Kerja'),
-  aggression(AttributeGroup.mental, 'Agresi'),
+  decisions(AttributeGroup.mental),
+  positioning(AttributeGroup.mental),
+  vision(AttributeGroup.mental),
+  composure(AttributeGroup.mental),
+  workRate(AttributeGroup.mental),
+  aggression(AttributeGroup.mental),
 
   // Fisik
-  pace(AttributeGroup.physical, 'Kecepatan'),
-  acceleration(AttributeGroup.physical, 'Akselerasi'),
-  stamina(AttributeGroup.physical, 'Stamina'),
-  strength(AttributeGroup.physical, 'Kekuatan'),
-  agility(AttributeGroup.physical, 'Kelincahan'),
+  pace(AttributeGroup.physical),
+  acceleration(AttributeGroup.physical),
+  stamina(AttributeGroup.physical),
+  strength(AttributeGroup.physical),
+  agility(AttributeGroup.physical),
 
   // Kiper
-  handling(AttributeGroup.goalkeeping, 'Penanganan Bola'),
-  reflexes(AttributeGroup.goalkeeping, 'Refleks'),
-  oneOnOnes(AttributeGroup.goalkeeping, 'Satu Lawan Satu'),
-  aerialReach(AttributeGroup.goalkeeping, 'Jangkauan Udara');
+  handling(AttributeGroup.goalkeeping),
+  reflexes(AttributeGroup.goalkeeping),
+  oneOnOnes(AttributeGroup.goalkeeping),
+  aerialReach(AttributeGroup.goalkeeping);
 
-  const Attribute(this.group, this.label);
+  const Attribute(this.group);
 
   final AttributeGroup group;
-  final String label;
+  String get label => tr('attr.$name');
 }

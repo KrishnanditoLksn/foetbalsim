@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/language.dart';
 import '../../app/router.dart';
 import '../../app/save_session.dart';
 import '../../app/theme.dart';
-import '../../core/utils/date_format.dart';
 import '../../data/database/save_storage.dart';
 import '../../data/repositories/save_summary_repository.dart';
+import '../../l10n/l10n.dart';
 
 /// Menu awal: papan dengan garis lapangan dari kapur, nama permainan, lalu
 /// karier terakhir (bila ada), karier baru, dan semua save.
@@ -50,9 +51,9 @@ class _StartScreenState extends ConsumerState<StartScreen> {
       ).pushNamedAndRemoveUntil(AppRoutes.dashboard, (_) => false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save tidak bisa dibuka: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('start.openFailed', {'error': '$e'}))),
+      );
       setState(() => _opening = false);
     }
   }
@@ -100,10 +101,9 @@ class _StartScreenState extends ConsumerState<StartScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Latih klub LaLiga atau Hypermotion, '
-                        'dari bursa transfer sampai peluit akhir.',
-                        style: TextStyle(color: Chalk.dim, fontSize: 16),
+                      Text(
+                        tr('start.tagline'),
+                        style: const TextStyle(color: Chalk.dim, fontSize: 16),
                       ),
                       const SizedBox(height: 56),
                       FutureBuilder<SaveSummary?>(
@@ -124,19 +124,25 @@ class _StartScreenState extends ConsumerState<StartScreen> {
                       FilledButton(
                         onPressed:
                             _opening ? null : () => _push(AppRoutes.newCareer),
-                        child: const Text('Mulai karier baru'),
+                        child: Text(tr('start.newCareer')),
                       ),
                       const SizedBox(height: 10),
                       OutlinedButton(
                         onPressed:
                             _opening ? null : () => _push(AppRoutes.loadGame),
-                        child: const Text('Lihat semua save'),
+                        child: Text(tr('start.allSaves')),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
+          ),
+          // Di atas isi agar tetap bisa diketuk.
+          const Positioned(
+            top: 0,
+            right: 0,
+            child: SafeArea(child: LanguageButton()),
           ),
         ],
       ),
@@ -173,9 +179,9 @@ class _LastCareer extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Lanjutkan karier',
-                      style: TextStyle(color: Chalk.dim, fontSize: 14),
+                    Text(
+                      tr('start.continue'),
+                      style: const TextStyle(color: Chalk.dim, fontSize: 14),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -191,7 +197,7 @@ class _LastCareer extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Manajer ${save.managerName}, '
+                      '${tr('common.manager', {'name': save.managerName})}, '
                       '${formatDate(save.currentDate)}',
                       style: const TextStyle(color: Chalk.dim, fontSize: 14),
                     ),

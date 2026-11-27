@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../../core/rng/seeded_random.dart';
+import '../../l10n/l10n.dart';
 import '../enums/attribute.dart';
 import '../enums/tactics.dart';
 import '../models/game_models.dart';
@@ -55,7 +56,7 @@ class MatchSession {
     _ballX = 0.5;
     _ballY = 0.5;
     _carrier = 6; // gelandang tengah tim kandang memulai
-    _emitAt(0, MatchEventType.kickOff, 'Pertandingan dimulai.');
+    _emitAt(0, MatchEventType.kickOff, tr('ev.kickOff'));
   }
 
   static const int fullMinutes = 90;
@@ -177,8 +178,10 @@ class MatchSession {
     _mentality[isHome ? 0 : 1] = value;
     _emit(
       MatchEventType.mentality,
-      '${isHome ? home.name : away.name} mengubah mentalitas menjadi '
-      '${value.label}.',
+      tr('ev.mentality', {
+        'team': isHome ? home.name : away.name,
+        'mentality': value.label,
+      }),
       isHome: isHome,
     );
   }
@@ -186,13 +189,13 @@ class MatchSession {
   /// Membuka kesempatan berhenti untuk pergantian. Setiap tim punya
   /// [MatchRules.maxSubWindows] kesempatan; jeda babak tidak memakai kuota.
   void openSubWindow(bool isHome) {
-    if (finished) throw StateError('Laga sudah selesai.');
+    if (finished) throw StateError(tr('err.matchFinished'));
     final side = isHome ? 0 : 1;
     if (_windowOwner == side) return;
     if (!_halfTimeBreak) {
       if (_windowsUsed[side] >= MatchRules.maxSubWindows) {
         throw StateError(
-          'Kesempatan pergantian (${MatchRules.maxSubWindows}) sudah habis.',
+          tr('err.subWindowsUsed', {'n': MatchRules.maxSubWindows}),
         );
       }
       _windowsUsed[side]++;
@@ -207,20 +210,20 @@ class MatchSession {
   /// Hanya bisa dilakukan saat kesempatan pergantian terbuka atau jeda babak.
   void substitute(bool isHome, int outId, int inId) {
     final side = isHome ? 0 : 1;
-    if (finished) throw StateError('Laga sudah selesai.');
+    if (finished) throw StateError(tr('err.matchFinished'));
     if (_windowOwner != side && !_halfTimeBreak) {
-      throw StateError('Buka kesempatan pergantian dulu.');
+      throw StateError(tr('err.openSubWindow'));
     }
     if (_subsUsed[side] >= maxSubs) {
-      throw StateError('Batas $maxSubs pergantian sudah habis.');
+      throw StateError(tr('err.subsUsed', {'n': maxSubs}));
     }
     final idx = _pitch.indexWhere(
       (s) => s.isHome == isHome && s.active && s.player.id == outId,
     );
-    if (idx < 0) throw StateError('Pemain keluar tidak di lapangan.');
+    if (idx < 0) throw StateError(tr('err.subOutNotOnPitch'));
     final bench = _benchLeft[side];
     if (!bench.contains(inId)) {
-      throw StateError('Pemain masuk tidak ada di bangku cadangan.');
+      throw StateError(tr('err.subInNotOnBench'));
     }
     final incoming = benchPlayers(isHome).firstWhere((p) => p.id == inId);
 
@@ -243,8 +246,11 @@ class MatchSession {
 
     _emit(
       MatchEventType.substitution,
-      'Pergantian ${isHome ? home.name : away.name}: '
-      'masuk ${incoming.lastName}, keluar ${out.player.lastName}.',
+      tr('ev.substitution', {
+        'team': isHome ? home.name : away.name,
+        'in': incoming.lastName,
+        'out': out.player.lastName,
+      }),
       isHome: isHome,
       playerId: inId,
       assistId: outId,
@@ -263,7 +269,7 @@ class MatchSession {
 
   /// Memajukan satu tick simulasi (1/6 menit) dan mengembalikan frame-nya.
   TickFrame stepTick() {
-    if (finished) throw StateError('Laga sudah selesai.');
+    if (finished) throw StateError(tr('err.matchFinished'));
     final from = currentDots();
     final fromBallX = _ballX;
     final fromBallY = _ballY;
@@ -345,7 +351,7 @@ class MatchSession {
 
   /// Hasil akhir untuk disimpan. Hanya valid setelah [finished].
   MatchResultData result({required int fixtureId}) {
-    if (!finished) throw StateError('Laga belum selesai.');
+    if (!finished) throw StateError(tr('err.matchNotFinished'));
     final endMinute = _tick ~/ ticksPerMinute;
     final minutes = Map<int, int>.from(_minutesPlayed);
     for (final s in _pitch) {
@@ -494,8 +500,10 @@ class MatchSession {
       if (_rng.chance(0.12) && (_pitch[j].x - s.x) * dir > 0.12) {
         _emitChance(
           s.isHome,
-          'Umpan terobosan dari ${s.player.lastName} '
-          'ke ${_pitch[j].player.lastName}!',
+          tr('ev.throughBall', {
+            'from': s.player.lastName,
+            'to': _pitch[j].player.lastName,
+          }),
           s.player.id,
         );
       }
@@ -534,8 +542,10 @@ class MatchSession {
       _recordPass(c, _pitch[j].x, _pitch[j].y);
       _emitChance(
         home,
-        'Umpan silang ${s.player.lastName} ke '
-        '${_pitch[j].player.lastName} di kotak penalti.',
+        tr('ev.cross', {
+          'from': s.player.lastName,
+          'to': _pitch[j].player.lastName,
+        }),
         s.player.id,
       );
       _carrier = j;
@@ -590,7 +600,7 @@ class MatchSession {
     if (!_rng.chance(onTargetP)) {
       _emit(
         MatchEventType.shotOff,
-        _pick(_missTexts).replaceAll('{p}', s.player.lastName),
+        tr(_pick(_missKeys), {'p': s.player.lastName}),
         isHome: home,
         playerId: s.player.id,
       );
@@ -605,22 +615,20 @@ class MatchSession {
     if (_rng.chance(MatchRules.postHitChance)) {
       _emit(
         MatchEventType.shotOff,
-        'Tembakan ${s.player.lastName} membentur mistar!',
+        tr('ev.hitBar', {'p': s.player.lastName}),
         isHome: home,
         playerId: s.player.id,
       );
       final crossed = _rng.chance(0.5);
       _emit(
         MatchEventType.goalLineTech,
-        crossed
-            ? 'GOAL-LINE TECH: GOL'
-            : 'GOAL-LINE TECH: BELUM MELEWATI GARIS',
+        crossed ? tr('ev.gltGoal') : tr('ev.gltNoGoal'),
         isHome: home,
       );
       if (crossed) {
         _goal(c);
       } else {
-        _save(c, gkIdx, 'Bola memantul, ditangkap ${gk.player.lastName}.');
+        _save(c, gkIdx, tr('ev.reboundCaught', {'gk': gk.player.lastName}));
       }
       return;
     }
@@ -636,7 +644,7 @@ class MatchSession {
       _save(
         c,
         gkIdx,
-        'Penyelamatan ${gk.player.lastName}! Tembakan ${s.player.lastName} ditepis.',
+        tr('ev.save', {'gk': gk.player.lastName, 'p': s.player.lastName}),
       );
     }
   }
@@ -661,9 +669,16 @@ class MatchSession {
             : null;
     _emit(
       MatchEventType.goal,
-      'GOOL! ${s.player.fullName}'
-      '${assistId == null ? '' : ' (assist: ${_nameOf(assistId)})'} — '
-      '$_homeGoals-$_awayGoals.',
+      assistId == null
+          ? tr('ev.goal', {
+            'p': s.player.fullName,
+            'score': '$_homeGoals-$_awayGoals',
+          })
+          : tr('ev.goalAssist', {
+            'p': s.player.fullName,
+            'a': _nameOf(assistId),
+            'score': '$_homeGoals-$_awayGoals',
+          }),
       isHome: home,
       playerId: s.player.id,
       assistId: assistId,
@@ -687,11 +702,11 @@ class MatchSession {
   void _penalty(int attacker) {
     final a = _pitch[attacker];
     final home = a.isHome;
-    if (!_varReview('penalti untuk ${a.player.lastName}')) return;
+    if (!_varReview(tr('ev.varPenalty', {'p': a.player.lastName}))) return;
 
     _emit(
       MatchEventType.penalty,
-      'PENALTI! ${a.player.lastName} maju ke titik penalti.',
+      tr('ev.penalty', {'p': a.player.lastName}),
       isHome: home,
       playerId: a.player.id,
     );
@@ -709,7 +724,7 @@ class MatchSession {
     if (_rng.chance(goalP)) {
       _goal(attacker);
     } else {
-      _save(attacker, gkIdx, 'Penalti ditepis ${gk.player.lastName}!');
+      _save(attacker, gkIdx, tr('ev.penaltySaved', {'gk': gk.player.lastName}));
     }
   }
 
@@ -738,7 +753,7 @@ class MatchSession {
     _counters[home ? 0 : 1].fouls++;
     _emit(
       MatchEventType.foul,
-      'Pelanggaran oleh ${d.player.lastName}.',
+      tr('ev.foul', {'p': d.player.lastName}),
       isHome: home,
       playerId: d.player.id,
     );
@@ -749,11 +764,8 @@ class MatchSession {
         oneOnOne &&
         _rng.chance(MatchRules.dogsoChance)) {
       // DOGSO: menggagalkan peluang emas → kartu merah langsung + penalti.
-      if (_varReview('kartu merah langsung untuk ${d.player.lastName}')) {
-        _sendOff(
-          defender,
-          'Kartu merah langsung! ${d.player.lastName} menggagalkan peluang emas.',
-        );
+      if (_varReview(tr('ev.varStraightRed', {'p': d.player.lastName}))) {
+        _sendOff(defender, tr('ev.straightRed', {'p': d.player.lastName}));
       } else {
         _card(defender);
       }
@@ -779,14 +791,14 @@ class MatchSession {
       _counters[home ? 0 : 1].yellow++;
       _emit(
         MatchEventType.yellow,
-        'Kartu kuning untuk ${p.player.lastName}.',
+        tr('ev.yellow', {'p': p.player.lastName}),
         isHome: home,
         playerId: p.player.id,
       );
       return;
     }
-    if (!_varReview('kartu merah untuk ${p.player.lastName}')) return;
-    _sendOff(idx, 'Kartu merah! ${p.player.lastName} diusir (dua kuning).');
+    if (!_varReview(tr('ev.varRed', {'p': p.player.lastName}))) return;
+    _sendOff(idx, tr('ev.secondYellow', {'p': p.player.lastName}));
   }
 
   /// Mengeluarkan pemain [idx] dari lapangan.
@@ -808,7 +820,7 @@ class MatchSession {
     final s = _pitch[c];
     _emit(
       MatchEventType.dive,
-      'Dia menjatuhkan diri di kotak penalti!',
+      tr('ev.dive', {'p': s.player.lastName}),
       isHome: s.isHome,
       playerId: s.player.id,
     );
@@ -845,7 +857,7 @@ class MatchSession {
     final recv = _pitch[j];
     _emit(
       MatchEventType.offside,
-      'OFFSIDE! ${recv.player.lastName} berada di posisi offside.',
+      tr('ev.offside', {'p': recv.player.lastName}),
       isHome: recv.isHome,
       playerId: recv.player.id,
     );
@@ -861,14 +873,12 @@ class MatchSession {
   /// keputusan wasit dipertahankan (atau tidak ditinjau sama sekali).
   bool _varReview(String subject) {
     if (!_rng.chance(MatchRules.varReviewChance)) return true;
-    _emit(MatchEventType.varReview, 'PENINJAUAN VAR: $subject.');
+    _emit(MatchEventType.varReview, tr('ev.varReview', {'subject': subject}));
     _addStoppage(MatchRules.stoppageTicksPerVarReview);
     final overturned = _rng.chance(MatchRules.varOverturnChance);
     _emit(
       MatchEventType.varResult,
-      overturned
-          ? 'VAR: keputusan dibatalkan.'
-          : 'VAR: keputusan dipertahankan.',
+      overturned ? tr('ev.varOverturned') : tr('ev.varStands'),
     );
     return !overturned;
   }
@@ -910,7 +920,7 @@ class MatchSession {
       _emitAt(
         45,
         MatchEventType.halfTime,
-        'Turun minum. Skor $_homeGoals-$_awayGoals.',
+        tr('ev.halfTime', {'score': '$_homeGoals-$_awayGoals'}),
         extra: (_extraTicks[0] + ticksPerMinute - 1) ~/ ticksPerMinute,
       );
       return;
@@ -921,7 +931,7 @@ class MatchSession {
     _emitAt(
       fullMinutes,
       MatchEventType.fullTime,
-      'Peluit akhir. Skor akhir $_homeGoals-$_awayGoals.',
+      tr('ev.fullTime', {'score': '$_homeGoals-$_awayGoals'}),
       extra: (_extraTicks[1] + ticksPerMinute - 1) ~/ ticksPerMinute,
     );
   }
@@ -1330,11 +1340,7 @@ class MatchSession {
     }
   }
 
-  static const List<String> _missTexts = [
-    'Tembakan {p} melebar.',
-    'Tembakan {p} melambung di atas mistar.',
-    'Sepakan {p} meleset tipis di samping gawang.',
-  ];
+  static const List<String> _missKeys = ['ev.miss1', 'ev.miss2', 'ev.miss3'];
 }
 
 class _Slot {

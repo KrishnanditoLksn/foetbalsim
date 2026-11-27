@@ -18,7 +18,8 @@ abstract final class SeasonCalendar {
   static DateTime seasonStart(int startYear) => DateTime.utc(startYear, 7, 1);
 
   /// Musim selesai 31 Mei tahun berikutnya.
-  static DateTime seasonEnd(int startYear) => DateTime.utc(startYear + 1, 5, 31);
+  static DateTime seasonEnd(int startYear) =>
+      DateTime.utc(startYear + 1, 5, 31);
 
   /// Sabtu pertama pada atau setelah 15 Agustus: pekan 1.
   static DateTime firstRound(int startYear) {
@@ -44,12 +45,16 @@ abstract final class SeasonCalendar {
       lastLeagueRound(startYear).subtract(const Duration(days: 14));
 
   /// Jendela transfer musim panas: 1 Juli – 31 Agustus.
-  static (DateTime, DateTime) summerWindow(int startYear) =>
-      (DateTime.utc(startYear, 7, 1), DateTime.utc(startYear, 8, 31));
+  static (DateTime, DateTime) summerWindow(int startYear) => (
+    DateTime.utc(startYear, 7, 1),
+    DateTime.utc(startYear, 8, 31),
+  );
 
   /// Jendela transfer musim dingin: 1 – 31 Januari tahun berikutnya.
-  static (DateTime, DateTime) winterWindow(int startYear) =>
-      (DateTime.utc(startYear + 1, 1, 1), DateTime.utc(startYear + 1, 1, 31));
+  static (DateTime, DateTime) winterWindow(int startYear) => (
+    DateTime.utc(startYear + 1, 1, 1),
+    DateTime.utc(startYear + 1, 1, 31),
+  );
 
   static bool isWinterBreak(DateTime d) =>
       (d.month == 12 && d.day >= 22) || (d.month == 1 && d.day <= 2);
@@ -81,9 +86,8 @@ abstract final class SeasonCalendar {
       final wed = d.subtract(const Duration(days: 3));
       if (!isWinterBreak(wed) && !wed.isBefore(first)) weeks.add(wed);
     }
-    final candidates = weeks.length <= 6
-        ? <DateTime>[]
-        : weeks.sublist(3, weeks.length - 3);
+    final candidates =
+        weeks.length <= 6 ? <DateTime>[] : weeks.sublist(3, weeks.length - 3);
     if (candidates.length < extra * 2) {
       throw StateError(
         'Tidak cukup pekan untuk $rounds pekan sampai ${last.toIso8601String()}.',

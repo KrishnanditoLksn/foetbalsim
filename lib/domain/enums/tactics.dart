@@ -1,13 +1,15 @@
+import '../../l10n/l10n.dart';
+
 /// Mentalitas tim. [attackBias] mengalikan frekuensi serangan, [pushShift]
 /// menggeser garis tim ke depan (+) atau ke belakang (−) sebagai fraksi lapangan.
 enum Mentality {
-  defensive('Bertahan', 0.8, -0.05),
-  balanced('Seimbang', 1.0, 0.0),
-  attacking('Menyerang', 1.25, 0.05);
+  defensive(0.8, -0.05),
+  balanced(1.0, 0.0),
+  attacking(1.25, 0.05);
 
-  const Mentality(this.label, this.attackBias, this.pushShift);
+  const Mentality(this.attackBias, this.pushShift);
 
-  final String label;
+  String get label => tr('mentality.$name');
   final double attackBias;
   final double pushShift;
 }

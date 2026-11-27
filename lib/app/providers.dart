@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database/app_database.dart';
+import '../l10n/l10n.dart';
 import '../data/repositories/club_repository.dart';
 import '../data/repositories/fixture_repository.dart';
 import '../data/repositories/game_state_repository.dart';
@@ -55,7 +56,7 @@ final worldVersionProvider = StateProvider<int>((ref) => 0);
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = ref.watch(currentDatabaseProvider);
   if (db == null) {
-    throw StateError('Belum ada save aktif. Buka atau buat karier dulu.');
+    throw StateError(tr('err.noActiveSave'));
   }
   return db;
 });

@@ -54,8 +54,7 @@ class TransferRepository {
     final rows =
         await (_db.select(_db.transferOffers)
               ..where(
-                (t) =>
-                    t.fromClubId.equals(clubId) | t.toClubId.equals(clubId),
+                (t) => t.fromClubId.equals(clubId) | t.toClubId.equals(clubId),
               )
               ..orderBy([(t) => OrderingTerm.desc(t.id)]))
             .get();
@@ -120,7 +119,9 @@ class TransferRepository {
           t.status.isInValues(_activeStatuses) &
           (exceptId == null ? const Constant(true) : t.id.isNotValue(exceptId)),
     )).write(
-      const TransferOffersCompanion(status: Value(TransferOfferStatus.withdrawn)),
+      const TransferOffersCompanion(
+        status: Value(TransferOfferStatus.withdrawn),
+      ),
     );
     await _pruneSessions();
   }
@@ -144,35 +145,39 @@ class TransferRepository {
       _db.into(_db.negotiationSessions).insertOnConflictUpdate(row);
 
   Future<void> deleteSession(int offerId, String mode) {
-    return (_db.delete(_db.negotiationSessions)..where(
-      (t) => t.offerId.equals(offerId) & t.mode.equals(mode),
-    )).go();
+    return (_db.delete(_db.negotiationSessions)
+      ..where((t) => t.offerId.equals(offerId) & t.mode.equals(mode))).go();
   }
 
   /// Walk-out terakhir agen pemain [playerId] pada mode [mode]: dipakai untuk
   /// jeda 1 minggu dan ingatan agen.
   Future<NegotiationSessionRow?> lastWalkOut(int playerId, String mode) async {
-    final rows = await (_db.select(_db.negotiationSessions)
-          ..where(
-            (t) =>
-                t.playerId.equals(playerId) &
-                t.mode.equals(mode) &
-                t.status.equals('walkedOut'),
-          )
-          ..orderBy([(t) => OrderingTerm.desc(t.updatedDate)])
-          ..limit(1))
-        .get();
+    final rows =
+        await (_db.select(_db.negotiationSessions)
+              ..where(
+                (t) =>
+                    t.playerId.equals(playerId) &
+                    t.mode.equals(mode) &
+                    t.status.equals('walkedOut'),
+              )
+              ..orderBy([(t) => OrderingTerm.desc(t.updatedDate)])
+              ..limit(1))
+            .get();
     return rows.firstOrNull;
   }
 
   /// Jeda walk-out yang masih berlaku untuk pemain (mode apa pun).
-  Future<NegotiationSessionRow?> activeCooldown(int playerId, DateTime now) async {
-    final rows = await (_db.select(_db.negotiationSessions)..where(
-      (t) =>
-          t.playerId.equals(playerId) &
-          t.status.equals('walkedOut') &
-          t.cooldownUntil.isBiggerThanValue(now),
-    )).get();
+  Future<NegotiationSessionRow?> activeCooldown(
+    int playerId,
+    DateTime now,
+  ) async {
+    final rows =
+        await (_db.select(_db.negotiationSessions)..where(
+          (t) =>
+              t.playerId.equals(playerId) &
+              t.status.equals('walkedOut') &
+              t.cooldownUntil.isBiggerThanValue(now),
+        )).get();
     return rows.firstOrNull;
   }
 
@@ -259,7 +264,10 @@ class TransferRepository {
       await _db
           .into(_db.shortlist)
           .insertOnConflictUpdate(
-            ShortlistCompanion.insert(playerId: Value(playerId), addedDate: now),
+            ShortlistCompanion.insert(
+              playerId: Value(playerId),
+              addedDate: now,
+            ),
           );
     } else {
       await (_db.delete(_db.shortlist)
@@ -290,8 +298,9 @@ class TransferRepository {
   // --- Profil AI ---------------------------------------------------------------
 
   Future<ClubAiProfile?> profileFor(String clubId) async {
-    final r = await (_db.select(_db.clubAiProfiles)
-      ..where((t) => t.clubId.equals(clubId))).getSingleOrNull();
+    final r =
+        await (_db.select(_db.clubAiProfiles)
+          ..where((t) => t.clubId.equals(clubId))).getSingleOrNull();
     return r == null ? null : _mapProfile(r);
   }
 
@@ -344,11 +353,14 @@ class TransferRepository {
   }
 
   /// Klub yang berminat pada pemain, skor tertinggi lebih dulu.
-  Future<List<(String, int, InterestLevel)>> interestsForPlayer(int playerId) async {
-    final rows = await (_db.select(_db.transferInterests)
-          ..where((t) => t.playerId.equals(playerId))
-          ..orderBy([(t) => OrderingTerm.desc(t.score)]))
-        .get();
+  Future<List<(String, int, InterestLevel)>> interestsForPlayer(
+    int playerId,
+  ) async {
+    final rows =
+        await (_db.select(_db.transferInterests)
+              ..where((t) => t.playerId.equals(playerId))
+              ..orderBy([(t) => OrderingTerm.desc(t.score)]))
+            .get();
     return [
       for (final r in rows)
         (r.clubId, r.score, InterestLevel.values.byName(r.level)),
@@ -357,8 +369,7 @@ class TransferRepository {
 
   Future<void> deleteInterestsBelow(int minScore) {
     return (_db.delete(_db.transferInterests)
-          ..where((t) => t.score.isSmallerThanValue(minScore)))
-        .go();
+      ..where((t) => t.score.isSmallerThanValue(minScore))).go();
   }
 
   // --- Berita -----------------------------------------------------------------
@@ -382,19 +393,21 @@ class TransferRepository {
   }
 
   Future<List<String>> newsOn(DateTime date) async {
-    final rows = await (_db.select(_db.transferNews)
-          ..where((t) => t.date.equals(date))
-          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
-        .get();
+    final rows =
+        await (_db.select(_db.transferNews)
+              ..where((t) => t.date.equals(date))
+              ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+            .get();
     return [for (final r in rows) r.body];
   }
 
   /// Berita bursa terbaru lebih dulu.
   Future<List<TransferNewsItem>> recentNews({int limit = 100}) async {
-    final rows = await (_db.select(_db.transferNews)
-          ..orderBy([(t) => OrderingTerm.desc(t.id)])
-          ..limit(limit))
-        .get();
+    final rows =
+        await (_db.select(_db.transferNews)
+              ..orderBy([(t) => OrderingTerm.desc(t.id)])
+              ..limit(limit))
+            .get();
     return [
       for (final r in rows)
         TransferNewsItem(date: r.date.toUtc(), kind: r.kind, body: r.body),
@@ -404,8 +417,9 @@ class TransferRepository {
   // --- Memori pasar -----------------------------------------------------------
 
   Future<int> memory(String key) async {
-    final r = await (_db.select(_db.marketMemory)
-      ..where((t) => t.key.equals(key))).getSingleOrNull();
+    final r =
+        await (_db.select(_db.marketMemory)
+          ..where((t) => t.key.equals(key))).getSingleOrNull();
     return r?.value ?? 0;
   }
 
@@ -419,9 +433,9 @@ class TransferRepository {
 
   /// Semua entri memori yang kuncinya diawali [prefix].
   Future<Map<String, int>> memoryWithPrefix(String prefix) async {
-    final rows = await (_db.select(_db.marketMemory)
-          ..where((t) => t.key.like('$prefix%')))
-        .get();
+    final rows =
+        await (_db.select(_db.marketMemory)
+          ..where((t) => t.key.like('$prefix%'))).get();
     return {for (final r in rows) r.key: r.value};
   }
 

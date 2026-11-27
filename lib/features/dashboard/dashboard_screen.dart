@@ -6,7 +6,6 @@ import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
-import '../../core/utils/date_format.dart';
 import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../core/widgets/futbol_ui.dart';
@@ -14,10 +13,9 @@ import '../../data/services/game_engine.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/season_models.dart';
 import '../../domain/season/season_calendar.dart';
+import '../../l10n/l10n.dart';
 import '../match/match_screen.dart';
 import '../shell/main_shell_screen.dart';
-
-const _days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
 /// Beranda: kepala berwarna klub, angka penting, laga berikutnya, kabar
 /// terbaru, dan satu tombol aksi di bawah.
@@ -34,7 +32,10 @@ class DashboardScreen extends ConsumerWidget {
       loading:
           () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error:
+          (e, _) => Scaffold(
+            body: Center(child: Text(tr('common.error', {'error': '$e'}))),
+          ),
       data: (s) {
         final clubId = s.clubId;
         final club =
@@ -104,7 +105,7 @@ class _ClubHeader extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_days[date.weekday - 1]}, ${formatDate(date)}',
+                        '${tr('weekday.${date.weekday}')}, ${formatDate(date)}',
                         style: TextStyle(
                           color: ink.withValues(alpha: 0.8),
                           fontWeight: FontWeight.w500,
@@ -112,7 +113,7 @@ class _ClubHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        club?.name ?? 'Karier',
+                        club?.name ?? tr('dash.career'),
                         style: TextStyle(
                           fontFamily: Fonts.condensed,
                           fontSize: 40,
@@ -123,14 +124,18 @@ class _ClubHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Musim ${SeasonCalendar.label(SeasonCalendar.firstSeasonYear)}',
+                        tr('dash.season', {
+                          'season': SeasonCalendar.label(
+                            SeasonCalendar.firstSeasonYear,
+                          ),
+                        }),
                         style: TextStyle(color: ink.withValues(alpha: 0.8)),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Kembali ke menu awal',
+                  tooltip: tr('dash.toMenu'),
                   color: ink,
                   icon: const Icon(Icons.logout_rounded),
                   onPressed:
@@ -164,13 +169,16 @@ class _Numbers extends ConsumerWidget {
     return StatStrip(
       children: [
         StatFigure(
-          label: table == null ? 'Posisi liga' : 'dari ${table.length} tim',
+          label:
+              table == null
+                  ? tr('dash.leaguePos')
+                  : tr('dash.ofTeams', {'n': table.length}),
           value: started ? '${idx + 1}' : '–',
           color: Theme.of(context).colorScheme.primary,
         ),
-        StatFigure(label: 'Saldo klub', value: formatMoney(club.balance)),
+        StatFigure(label: tr('dash.balance'), value: formatMoney(club.balance)),
         StatFigure(
-          label: '5 laga terakhir',
+          label: tr('dash.last5'),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: FormDots(row?.form ?? const [], showEmpty: 5),
@@ -193,12 +201,9 @@ class _DayNotes extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader('Kemarin di klub (${formatDate(report.date)})'),
+        SectionHeader(tr('dash.yesterday', {'date': formatDate(report.date)})),
         if (notes.isEmpty)
-          const Text(
-            'Hari yang tenang, tidak ada kejadian penting.',
-            style: TextStyle(color: Chalk.dim),
-          )
+          Text(tr('dash.quietDay'), style: const TextStyle(color: Chalk.dim))
         else
           for (final n in notes)
             Padding(
@@ -214,7 +219,7 @@ class _DayNotes extends ConsumerWidget {
                       child: ColoredBox(color: Chalk.dim),
                     ),
                   ),
-                  Expanded(child: Text(n)),
+                  Expanded(child: Text(trText(n))),
                 ],
               ),
             ),
@@ -238,11 +243,9 @@ class _NextMatch extends ConsumerWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SectionHeader('Laga berikutnya'),
+          SectionHeader(tr('dash.nextMatch')),
           Text(
-            status.seasonOver
-                ? 'Musim sudah selesai.'
-                : 'Belum ada laga terjadwal.',
+            status.seasonOver ? tr('dash.seasonOver') : tr('dash.noFixtures'),
             style: const TextStyle(color: Chalk.dim),
           ),
         ],
@@ -254,15 +257,15 @@ class _NextMatch extends ConsumerWidget {
     final days = f.date.difference(status.date).inDays;
     final when =
         isToday
-            ? 'Hari ini'
+            ? tr('dash.today')
             : days == 1
-            ? 'Besok'
-            : '$days hari lagi';
+            ? tr('dash.tomorrow')
+            : tr('dash.inDays', {'n': days});
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(isToday ? 'Hari ini ada laga' : 'Laga berikutnya'),
+        SectionHeader(isToday ? tr('dash.matchToday') : tr('dash.nextMatch')),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
@@ -286,14 +289,14 @@ class _NextMatch extends ConsumerWidget {
                       club: clubs[f.homeClubId],
                       fallback: f.homeClubId,
                       ours: f.homeClubId == clubId,
-                      note: 'kandang',
+                      note: tr('dash.home'),
                     ),
                     const SizedBox(height: 10),
                     _TeamLine(
                       club: clubs[f.awayClubId],
                       fallback: f.awayClubId,
                       ours: f.awayClubId == clubId,
-                      note: 'tandang',
+                      note: tr('dash.away'),
                     ),
                   ],
                 ),
@@ -322,7 +325,7 @@ class _NextMatch extends ConsumerWidget {
                       style: const TextStyle(color: Chalk.dim, fontSize: 13),
                     ),
                     Text(
-                      'Pekan ${f.round}',
+                      tr('common.round', {'n': f.round}),
                       style: const TextStyle(color: Chalk.dim, fontSize: 13),
                     ),
                   ],
@@ -401,14 +404,14 @@ class _LatestNews extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(
-          'Kabar terbaru',
+          tr('dash.latestNews'),
           trailing: TextButton(
             onPressed: openInbox,
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
             ),
-            child: const Text('Buka inbox'),
+            child: Text(tr('dash.openInbox')),
           ),
         ),
         for (final m in sorted.take(3)) ...[
@@ -441,7 +444,7 @@ class _NewsRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    m.title,
+                    trText(m.title),
                     style: TextStyle(
                       fontWeight: m.isRead ? FontWeight.w400 : FontWeight.w700,
                     ),
@@ -449,7 +452,7 @@ class _NewsRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     m.needsAction
-                        ? 'Menunggu keputusan Anda'
+                        ? tr('dash.awaitingDecision')
                         : '${m.category.label}, ${formatDate(m.date)}',
                     style: TextStyle(
                       fontSize: 13,
@@ -502,11 +505,7 @@ class _ActionBar extends ConsumerWidget {
         ),
         onPressed:
             () => ref.read(shellTabProvider.notifier).state = ShellTab.inbox,
-        child: Text(
-          pending == 1
-              ? 'Ambil 1 keputusan di inbox'
-              : 'Ambil $pending keputusan di inbox',
-        ),
+        child: Text(tr('dash.decisions', {'n': pending})),
       );
     } else if (status.todayFixture != null) {
       button = FilledButton(
@@ -515,12 +514,12 @@ class _ActionBar extends ConsumerWidget {
           foregroundColor: Chalk.boardDeep,
         ),
         onPressed: busy ? null : () => _playMatch(context, ref),
-        child: const Text('Mainkan laga'),
+        child: Text(tr('dash.playMatch')),
       );
     } else if (status.seasonOver) {
-      button = const FilledButton(
+      button = FilledButton(
         onPressed: null,
-        child: Text('Musim selesai'),
+        child: Text(tr('dash.seasonFinished')),
       );
     } else {
       button = FilledButton(
@@ -532,7 +531,7 @@ class _ActionBar extends ConsumerWidget {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-                : const Text('Lanjutkan ke hari berikutnya'),
+                : Text(tr('dash.continue')),
       );
     }
 
@@ -550,9 +549,9 @@ class _ActionBar extends ConsumerWidget {
     if (report == null || !context.mounted) return;
     if (report.advanced) return;
     final reason = switch (report.stop) {
-      ContinueStop.blockingAction => 'Ada keputusan yang perlu Anda ambil.',
-      ContinueStop.matchDay => 'Hari ini tim Anda bertanding.',
-      ContinueStop.seasonOver => 'Musim sudah selesai.',
+      ContinueStop.blockingAction => tr('dash.stopDecision'),
+      ContinueStop.matchDay => tr('dash.stopMatch'),
+      ContinueStop.seasonOver => tr('dash.seasonOver'),
       ContinueStop.dayLimit || null => '',
     };
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(reason)));
@@ -568,7 +567,7 @@ class _ActionBar extends ConsumerWidget {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Hasil laga'),
+            title: Text(tr('dash.result')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -599,9 +598,9 @@ class _ActionBar extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  const Text(
-                    'Laga lain hari ini',
-                    style: TextStyle(
+                  Text(
+                    tr('dash.otherMatches'),
+                    style: const TextStyle(
                       fontFamily: Fonts.condensed,
                       fontSize: 19,
                       fontWeight: FontWeight.w600,
@@ -609,9 +608,9 @@ class _ActionBar extends ConsumerWidget {
                   ),
                   const Divider(color: Chalk.dim),
                   if (res.others.isEmpty)
-                    const Text(
-                      'Tidak ada laga lain.',
-                      style: TextStyle(color: Chalk.dim),
+                    Text(
+                      tr('dash.noOtherMatches'),
+                      style: const TextStyle(color: Chalk.dim),
                     ),
                   for (final o in res.others)
                     Padding(
@@ -648,7 +647,7 @@ class _ActionBar extends ConsumerWidget {
             actions: [
               FilledButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Kembali ke Beranda'),
+                child: Text(tr('dash.backHome')),
               ),
             ],
           ),

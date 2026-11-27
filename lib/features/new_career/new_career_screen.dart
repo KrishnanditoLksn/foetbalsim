@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/save_session.dart';
-import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../data/database/save_storage.dart';
 import '../../data/repositories/world_repository.dart';
 import '../../domain/models/game_models.dart';
+import '../../l10n/l10n.dart';
 
 /// Alur: nama manajer → pilih liga → pilih klub → membangun dunia → dashboard.
 class NewCareerScreen extends ConsumerStatefulWidget {
@@ -45,17 +45,19 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
           (ctx) => AlertDialog(
             title: Text(club.name),
             content: Text(
-              'Mulai karier sebagai manajer ${_nameController.text.trim()} '
-              'di ${club.name}?',
+              tr('newCareer.confirm', {
+                'name': _nameController.text.trim(),
+                'club': club.name,
+              }),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Batal'),
+                child: Text(tr('common.cancel')),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Mulai'),
+                child: Text(tr('newCareer.start')),
               ),
             ],
           ),
@@ -76,9 +78,9 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
       debugPrint('Gagal membuat karier: $e\n$st');
       if (!mounted) return;
       setState(() => _building = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal membuat karier: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('newCareer.failed', {'error': '$e'}))),
+      );
       return;
     }
     if (!mounted) return;
@@ -88,12 +90,11 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
       final navigator = Navigator.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Semua slot save sudah terisi '
-            '(maksimal ${SaveStorage.maxSlots} slot).',
+          content: Text(
+            tr('newCareer.slotsFull', {'max': SaveStorage.maxSlots}),
           ),
           action: SnackBarAction(
-            label: 'Kelola Save',
+            label: tr('newCareer.manageSaves'),
             onPressed: () => navigator.pushNamed(AppRoutes.loadGame),
           ),
         ),
@@ -108,14 +109,14 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
   @override
   Widget build(BuildContext context) {
     if (_building) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Membangun dunia...'),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(tr('newCareer.building')),
             ],
           ),
         ),
@@ -129,7 +130,7 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Karier Baru'),
+          title: Text(tr('newCareer.title')),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _back,
@@ -148,15 +149,15 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
     return _Padded(
       children: [
         Text(
-          'Siapa namamu, manajer?',
+          tr('newCareer.askName'),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Nama manajer',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: tr('newCareer.nameLabel'),
+            border: const OutlineInputBorder(),
           ),
           textCapitalization: TextCapitalization.words,
           onChanged: (_) => setState(() {}),
@@ -167,7 +168,7 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
               _nameController.text.trim().isEmpty
                   ? null
                   : () => setState(() => _step = 1),
-          child: const Text('Lanjut'),
+          child: Text(tr('newCareer.next')),
         ),
       ],
     );
@@ -177,11 +178,17 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
     final catalog = ref.watch(seedCatalogProvider);
     return catalog.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat liga: $e')),
+      error:
+          (e, _) => Center(
+            child: Text(tr('newCareer.leaguesFailed', {'error': '$e'})),
+          ),
       data:
           (seed) => _Padded(
             children: [
-              Text('Pilih liga', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                tr('newCareer.pickLeague'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 12),
               Expanded(
                 child: ListView(
@@ -191,9 +198,14 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
                         child: ListTile(
                           title: Text(league.name),
                           subtitle: Text(
-                            'Tier ${league.tier} · ${league.jumlahTim} tim · '
-                            'Degradasi ${league.slotDegradasi}'
-                            '${league.slotPromosi > 0 ? ' · Promosi ${league.slotPromosi}' : ''}',
+                            tr('newCareer.leagueInfo', {
+                                  'tier': league.tier,
+                                  'teams': league.jumlahTim,
+                                  'down': league.slotDegradasi,
+                                }) +
+                                (league.slotPromosi > 0
+                                    ? ' · ${tr('newCareer.promotion', {'n': league.slotPromosi})}'
+                                    : ''),
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap:
@@ -217,7 +229,9 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
     final catalog = ref.watch(seedCatalogProvider);
     return catalog.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat klub: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('newCareer.clubsFailed', {'error': '$e'}))),
       data: (seed) => _buildClubList(league, seed.clubsOf(league.id)),
     );
   }
@@ -237,11 +251,9 @@ class _NewCareerScreenState extends ConsumerState<NewCareerScreen> {
                 leading: ClubBadge(club: club),
                 title: Text(club.name),
                 subtitle: Text(
-                  'Reputasi ${club.reputation} · ${club.stadiumName} '
-                  '(${club.capacity})\n'
-                  'Saldo ${formatMoney(club.balance)} · '
-                  'Transfer ${formatMoney(club.transferBudget)} · '
-                  'Gaji ${formatMoney(club.wageBudget)}/th',
+                  '${tr('newCareer.reputation', {'n': club.reputation})} · '
+                  '${club.stadiumName} (${club.capacity})\n'
+                  '${tr('newCareer.finances', {'balance': formatMoney(club.balance), 'transfer': formatMoney(club.transferBudget), 'wage': formatMoney(club.wageBudget)})}',
                 ),
                 isThreeLine: true,
                 onTap: () => _pickClub(club),

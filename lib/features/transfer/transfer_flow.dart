@@ -10,6 +10,7 @@ import '../../data/services/transfer_service.dart';
 import '../../domain/enums/transfer.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../l10n/l10n.dart';
 import 'transfer_dialogs.dart';
 
 /// Alur UI transfer yang dipakai bersama oleh detail pemain, tab Negosiasi,
@@ -81,7 +82,7 @@ abstract final class TransferFlow {
           sellOnPct: terms.sellOnPct,
         ),
       ),
-      success: 'Tawaran dikirim. Respons klub dalam 1–2 hari.',
+      success: tr('flow.bidSent'),
     );
   }
 
@@ -117,7 +118,8 @@ class OfferActions extends ConsumerWidget {
       () => GameActions.run(ref, (e) => e.respondToOffer(offer.id, choice)),
       success: success,
     );
-    final roomLabel = session == null ? 'Negosiasi' : 'Lanjutkan negosiasi';
+    final roomLabel =
+        session == null ? tr('flow.negotiate') : tr('flow.continueNegotiation');
     final room = FilledButton(
       onPressed: () => TransferFlow.openRoom(context, offer.id),
       child: Text(roomLabel),
@@ -128,12 +130,12 @@ class OfferActions extends ConsumerWidget {
     if (incoming) {
       buttons = [
         TextButton(
-          onPressed: () => simple('reject', 'Tawaran ditolak.'),
-          child: const Text('Tolak'),
+          onPressed: () => simple('reject', tr('flow.offerRejected')),
+          child: Text(tr('inbox.reject')),
         ),
         OutlinedButton(
-          onPressed: () => simple('accept', 'Pemain dijual.'),
-          child: const Text('Terima'),
+          onPressed: () => simple('accept', tr('step.playerSold')),
+          child: Text(tr('inbox.accept')),
         ),
         room,
       ];
@@ -141,8 +143,8 @@ class OfferActions extends ConsumerWidget {
         offer.status == TransferOfferStatus.awaitingContract) {
       buttons = [
         TextButton(
-          onPressed: () => simple('cancel', 'Negosiasi dibatalkan.'),
-          child: const Text('Batalkan'),
+          onPressed: () => simple('cancel', tr('flow.negotiationCancelled')),
+          child: Text(tr('inbox.cancelNegotiation')),
         ),
         room,
       ];
@@ -150,9 +152,8 @@ class OfferActions extends ConsumerWidget {
       final when = offer.responseDate;
       return Text(
         when == null
-            ? 'Menunggu respons klub penjual.'
-            : 'Menunggu respons klub penjual '
-                '(${when.day}/${when.month}).',
+            ? tr('err.awaitingSeller')
+            : tr('flow.awaitingSellerOn', {'date': formatDayMonth(when)}),
         style: Theme.of(context).textTheme.bodySmall,
       );
     } else {
@@ -186,4 +187,6 @@ String offerSummary(TransferOffer o) =>
 /// masih berjalan disimpan sebagai `awaitingContract`, tetapi bagi user itu
 /// adalah tawaran yang menunggu jawaban, bukan negosiasi kontrak.
 String offerStatusLabel(TransferOffer o, String ourClubId) =>
-    o.isActive && o.isIncomingFor(ourClubId) ? 'Tawaran masuk' : o.status.label;
+    o.isActive && o.isIncomingFor(ourClubId)
+        ? tr('flow.incomingOffer')
+        : o.status.label;

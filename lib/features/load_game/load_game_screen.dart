@@ -5,6 +5,7 @@ import '../../app/router.dart';
 import '../../app/save_session.dart';
 import '../../data/database/save_storage.dart';
 import '../../data/repositories/save_summary_repository.dart';
+import '../../l10n/l10n.dart';
 
 /// Daftar semua save yang tersimpan. Pemain memilih salah satu untuk dimuat
 /// atau menghapusnya untuk mengosongkan slot.
@@ -68,7 +69,7 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Gagal membaca daftar save: $e';
+        _error = tr('load.listFailed', {'error': '$e'});
         _loading = false;
       });
     }
@@ -85,9 +86,9 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
       ).pushNamedAndRemoveUntil(AppRoutes.dashboard, (_) => false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal memuat save: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('load.openFailed', {'error': '$e'}))),
+      );
     } finally {
       if (mounted) setState(() => _openingSlot = null);
     }
@@ -101,15 +102,15 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
       builder: (dialogContext) {
         final scheme = Theme.of(dialogContext).colorScheme;
         return AlertDialog(
-          title: const Text('Hapus save?'),
+          title: Text(tr('load.deleteTitle')),
           content: Text(
-            'Slot $slot · $description\n\n'
-            'Save ini akan dihapus permanen dan tidak bisa dikembalikan.',
+            '${tr('load.slot', {'n': slot})} · $description\n\n'
+            '${tr('load.deleteBody')}',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Batal'),
+              child: Text(tr('common.cancel')),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
@@ -117,7 +118,7 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
                 foregroundColor: scheme.onError,
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Hapus'),
+              child: Text(tr('common.delete')),
             ),
           ],
         );
@@ -130,11 +131,13 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
     try {
       await deleteSave(ref, slot);
       messenger.showSnackBar(
-        SnackBar(content: Text('Save slot $slot berhasil dihapus.')),
+        SnackBar(content: Text(tr('load.deleted', {'n': slot}))),
       );
     } catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Gagal menghapus save slot $slot: $e')),
+        SnackBar(
+          content: Text(tr('load.deleteFailed', {'n': slot, 'error': '$e'})),
+        ),
       );
     } finally {
       if (mounted) setState(() => _deletingSlot = null);
@@ -148,12 +151,12 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
       appBar: AppBar(
         title: Text(
           _loading
-              ? 'Muat Karier'
-              : 'Muat Karier ($_usedSlots/${SaveStorage.maxSlots})',
+              ? tr('load.title')
+              : '${tr('load.title')} ($_usedSlots/${SaveStorage.maxSlots})',
         ),
         actions: [
           IconButton(
-            tooltip: 'Muat ulang',
+            tooltip: tr('load.reload'),
             icon: const Icon(Icons.refresh),
             onPressed: _loading || _busy ? null : _loadSaves,
           ),
@@ -176,13 +179,10 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
       );
     }
     if (_saves.isEmpty && _brokenSlots.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'Belum ada karier yang tersimpan.\nBuat karier baru dari menu awal.',
-            textAlign: TextAlign.center,
-          ),
+          padding: const EdgeInsets.all(24),
+          child: Text(tr('load.empty'), textAlign: TextAlign.center),
         ),
       );
     }
@@ -206,8 +206,8 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
         title: Text(save.managerName),
         subtitle: Text(
           '${save.clubName}\n'
-          'Tanggal game: ${_formatDate(save.currentDate)} · '
-          'Disimpan: ${_formatDate(save.modified.toLocal())}',
+          '${tr('load.gameDate', {'date': formatDate(save.currentDate)})} · '
+          '${tr('load.savedAt', {'date': _formatDateTime(save.modified.toLocal())})}',
         ),
         isThreeLine: true,
         trailing: Row(
@@ -228,12 +228,9 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
     return Card(
       child: ListTile(
         leading: CircleAvatar(child: Text('$slot')),
-        title: const Text('Save tidak dapat dibaca'),
-        subtitle: const Text(
-          'File save ada tetapi datanya rusak atau belum lengkap. '
-          'Hapus untuk mengosongkan slot ini.',
-        ),
-        trailing: _deleteButton(slot, 'save rusak'),
+        title: Text(tr('load.brokenTitle')),
+        subtitle: Text(tr('load.brokenBody')),
+        trailing: _deleteButton(slot, tr('load.brokenShort')),
       ),
     );
   }
@@ -247,30 +244,16 @@ class _LoadGameScreenState extends ConsumerState<LoadGameScreen> {
     }
     return IconButton(
       icon: const Icon(Icons.delete_outline),
-      tooltip: 'Hapus save',
+      tooltip: tr('load.deleteTooltip'),
       color: Theme.of(context).colorScheme.error,
       onPressed: _busy ? null : () => _confirmAndDelete(slot, description),
     );
   }
 
-  static String _formatDate(DateTime d) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
-    ];
+  static String _formatDateTime(DateTime d) {
     final hh = d.hour.toString().padLeft(2, '0');
     final mm = d.minute.toString().padLeft(2, '0');
-    return '${d.day} ${months[d.month - 1]} ${d.year} $hh:$mm';
+    return '${formatDate(d)} $hh:$mm';
   }
 }
 

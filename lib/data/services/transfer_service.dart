@@ -16,6 +16,7 @@ import '../../domain/transfer/player_willingness.dart';
 import '../../domain/transfer/transfer_rules.dart';
 import '../../domain/transfer/transfer_window.dart';
 import '../../domain/transfer/valuation.dart';
+import '../../l10n/l10n.dart';
 import '../database/app_database.dart';
 import '../repositories/club_repository.dart';
 import '../repositories/inbox_repository.dart';
@@ -139,18 +140,20 @@ class TransferService {
   }) async {
     final profile = await profileOf(player.clubId, seed);
     final heat = MarketHeat.multiplier(date: now, positionDemand: 0.5);
-    var ask = DynamicValuation.askingFee(
-      player: player,
-      contract: contract,
-      now: now,
-      marketHeat: heat,
-      sellerPersonality: profile?.personality,
-    ).toDouble();
+    var ask =
+        DynamicValuation.askingFee(
+          player: player,
+          contract: contract,
+          now: now,
+          marketHeat: heat,
+          sellerPersonality: profile?.personality,
+        ).toDouble();
     if (forUser) {
       final lowball = await _transfers.memory('lowballCount');
       ask *= 1 + (0.05 * lowball).clamp(0, 0.15);
     }
-    if (buyerClubId != null && TransferRules.areRivals(buyerClubId, player.clubId)) {
+    if (buyerClubId != null &&
+        TransferRules.areRivals(buyerClubId, player.clubId)) {
       ask *= TransferRules.rivalPremium;
     }
     return (ask / 10).round() * 10;
@@ -164,7 +167,7 @@ class TransferService {
     required int seed,
   }) async {
     final player = await _players.byId(playerId);
-    if (player == null) throw StateError('Pemain tidak ditemukan.');
+    if (player == null) throw StateError(tr('err.playerNotFound'));
     final detail = await _players.detail(playerId);
     final ask = await askingFor(
       player: player,
@@ -189,41 +192,45 @@ class TransferService {
   }
 
   /// Aturan yang harus dipenuhi sebelum menawar (tanpa melihat nominal).
-  Future<void> _checkCanBid(Player player, String ourClubId, DateTime now) async {
+  Future<void> _checkCanBid(
+    Player player,
+    String ourClubId,
+    DateTime now,
+  ) async {
     if (!TransferWindow.isOpen(now)) {
-      throw StateError('Jendela transfer sedang tertutup.');
+      throw StateError(tr('err.windowClosed'));
     }
     if (player.clubId == ourClubId) {
-      throw StateError('Pemain ini sudah bersama klub Anda.');
+      throw StateError(tr('err.alreadyOurs'));
     }
     if (player.lockedUntil != null && player.lockedUntil!.isAfter(now)) {
-      throw StateError(
-        'Pemain baru pindah klub dan terkunci sampai jendela berikutnya.',
-      );
+      throw StateError(tr('err.playerLocked'));
     }
     final active = await _transfers.activeOffersForPlayer(player.id);
     if (active.any((o) => o.fromClubId == ourClubId)) {
-      throw StateError('Sudah ada negosiasi berjalan untuk pemain ini.');
+      throw StateError(tr('err.alreadyNegotiating'));
     }
     final cooldown = await _transfers.activeCooldown(player.id, now);
     if (cooldown != null) {
       final until = cooldown.cooldownUntil!.toUtc();
       throw StateError(
-        'Agen ${player.lastName} mengakhiri negosiasi terakhir. Ia baru mau '
-        'bicara lagi mulai ${until.day}/${until.month}.',
+        tr('err.agentCooldown', {
+          'player': player.lastName,
+          'date': formatDayMonth(until),
+        }),
       );
     }
     final squad = await _players.squad(ourClubId);
     if (squad.length >= TransferRules.maxSquad) {
       throw StateError(
-        'Skuad penuh (maks ${TransferRules.maxSquad} pemain). Jual pemain dulu.',
+        tr('err.squadFullSell', {'max': TransferRules.maxSquad}),
       );
     }
     final start = TransferRules.windowStart(now)!;
     final moves = await _transfers.movesSince(ourClubId, start);
     if (moves.incoming >= TransferRules.maxMovesPerWindow) {
       throw StateError(
-        'Batas ${TransferRules.maxMovesPerWindow} pemain masuk per jendela tercapai.',
+        tr('err.maxIncoming', {'n': TransferRules.maxMovesPerWindow}),
       );
     }
   }
@@ -233,14 +240,12 @@ class TransferService {
   void _checkFunds(Club ours, int fee, int installmentYears) {
     if (fee > ours.transferBudget) {
       throw StateError(
-        'Anggaran transfer tidak cukup (sisa ${moneyLabel(ours.transferBudget)}).',
+        tr('err.budget', {'left': moneyLabel(ours.transferBudget)}),
       );
     }
     final upfront = TransferRules.upfront(fee, installmentYears);
     if (upfront > ours.balance) {
-      throw StateError(
-        'Saldo klub tidak cukup untuk pembayaran di muka ${moneyLabel(upfront)}.',
-      );
+      throw StateError(tr('err.balance', {'upfront': moneyLabel(upfront)}));
     }
   }
 
@@ -255,17 +260,17 @@ class TransferService {
     int sellOnPct = 0,
   }) async {
     final player = await _players.byId(playerId);
-    if (player == null) throw StateError('Pemain tidak ditemukan.');
+    if (player == null) throw StateError(tr('err.playerNotFound'));
     await _checkCanBid(player, ourClubId, now);
-    if (fee <= 0) throw StateError('Nominal tawaran harus lebih dari nol.');
+    if (fee <= 0) throw StateError(tr('err.amountPositive'));
     if (!TransferRules.validInstallments(installmentYears)) {
-      throw StateError('Cicilan hanya bisa langsung, 2, atau 3 tahun.');
+      throw StateError(tr('err.installments'));
     }
     if (!TransferRules.validSellOn(sellOnPct)) {
-      throw StateError('Sell-on clause hanya 0% atau 10–30%.');
+      throw StateError(tr('err.sellOn'));
     }
     final ours = await _clubs.clubById(ourClubId);
-    if (ours == null) throw StateError('Klub tidak ditemukan.');
+    if (ours == null) throw StateError(tr('err.clubNotFound'));
     _checkFunds(ours, fee, installmentYears);
 
     final seller = await _clubs.clubById(player.clubId);
@@ -285,10 +290,13 @@ class TransferService {
     await _inbox.add(
       _info(
         now,
-        'Tawaran dikirim: ${player.fullName}',
-        'Tawaran ${termsLabel(fee, installmentYears, sellOnPct)} untuk '
-            '${player.fullName} dikirim ke ${seller?.name ?? player.clubId}. '
-            'Respons dalam $days hari.',
+        Msg('msg.bidSent.title', {'player': player.fullName}),
+        Msg('msg.bidSent.body', {
+          'terms': termsMsg(fee, installmentYears, sellOnPct),
+          'player': player.fullName,
+          'club': seller?.name ?? player.clubId,
+          'days': days,
+        }),
         payload: 'offer:$offerId',
       ),
     );
@@ -303,7 +311,9 @@ class TransferService {
   /// Klub yang berminat pada pemain beserta level minatnya.
   Future<List<PlayerInterest>> interestsFor(int playerId) async {
     final list = <PlayerInterest>[];
-    for (final (clubId, score, level) in await _transfers.interestsForPlayer(playerId)) {
+    for (final (clubId, score, level) in await _transfers.interestsForPlayer(
+      playerId,
+    )) {
       final club = await _clubs.clubById(clubId);
       list.add(
         PlayerInterest(
@@ -311,9 +321,9 @@ class TransferService {
           clubName: club?.name ?? clubId,
           score: score,
           levelLabel: switch (level) {
-            InterestLevel.target => 'Target utama',
-            InterestLevel.interested => 'Tertarik',
-            InterestLevel.watching => 'Memantau',
+            InterestLevel.target => tr('interest.target'),
+            InterestLevel.interested => tr('interest.interested'),
+            InterestLevel.watching => tr('interest.watching'),
             InterestLevel.none => '-',
           },
         ),
@@ -339,7 +349,7 @@ class TransferService {
           o.id,
           status: TransferOfferStatus.withdrawn,
           responseDate: date,
-          reason: 'Pemain sudah pindah klub.',
+          reason: const Msg('reason.playerMoved').encode(),
         );
         continue;
       }
@@ -366,12 +376,18 @@ class TransferService {
         seller: seller!,
         isIndispensable: indispensable,
       );
-      final sellerName = (await _clubs.clubById(o.toClubId))?.name ?? o.toClubId;
-      final terms = termsLabel(o.fee, o.installmentYears, o.sellOnPct);
+      final sellerName =
+          (await _clubs.clubById(o.toClubId))?.name ?? o.toClubId;
+      final terms = termsMsg(o.fee, o.installmentYears, o.sellOnPct);
 
       switch (result.verdict) {
         case NegotiationVerdict.accept:
-          await _acceptFee(o, player, date, '$sellerName menerima tawaran $terms.');
+          await _acceptFee(
+            o,
+            player,
+            date,
+            Msg('msg.sellerAccepted', {'club': sellerName, 'terms': terms}),
+          );
         case NegotiationVerdict.counter:
           final agent = AgentProfile.forPlayer(seed: seed, playerId: player.id);
           await _transfers.updateOffer(
@@ -384,10 +400,17 @@ class TransferService {
               id: 0,
               date: date,
               category: InboxCategory.transfer,
-              title: 'Kontra-tawaran: ${player.fullName}',
-              body: '$sellerName belum setuju dengan tawaran $terms untuk '
-                  '${player.fullName}. Agennya, ${agent.name}, menunggu Anda '
-                  'di Ruang Negosiasi untuk membahas harga.',
+              title:
+                  Msg('msg.counter.title', {
+                    'player': player.fullName,
+                  }).encode(),
+              body:
+                  Msg('msg.counter.body', {
+                    'club': sellerName,
+                    'terms': terms,
+                    'player': player.fullName,
+                    'agent': agent.name,
+                  }).encode(),
               isRead: false,
               actionType: InboxActionType.counterOffer,
               payload: 'offer:${o.id}',
@@ -399,7 +422,7 @@ class TransferService {
           if (value < ask * TransferRules.rejectBelow) {
             await _addLowball();
           }
-          final reason = result.reason ?? 'Tawaran ditolak.';
+          final reason = result.reason ?? const Msg('reason.rejected').encode();
           await _transfers.updateOffer(
             o.id,
             status: TransferOfferStatus.rejected,
@@ -409,8 +432,12 @@ class TransferService {
           await _inbox.add(
             _info(
               date,
-              'Tawaran ditolak: ${player.fullName}',
-              '$sellerName menolak tawaran $terms. $reason',
+              Msg('msg.rejected.title', {'player': player.fullName}),
+              Msg('msg.rejected.body', {
+                'club': sellerName,
+                'terms': terms,
+                'reason': asMsg(reason),
+              }),
             ),
           );
       }
@@ -427,7 +454,7 @@ class TransferService {
     TransferOffer o,
     Player player,
     DateTime date,
-    String lead,
+    Msg lead,
   ) async {
     final wage = DynamicValuation.expectedWage(player);
     await _transfers.updateOffer(
@@ -440,9 +467,12 @@ class TransferService {
         id: 0,
         date: date,
         category: InboxCategory.transfer,
-        title: 'Harga disepakati: ${player.fullName}',
-        body: '$lead Agen ${player.fullName} menunggu di Ruang Negosiasi '
-            'untuk membahas gaji, durasi, dan peran di skuad.',
+        title: Msg('msg.feeAgreed.title', {'player': player.fullName}).encode(),
+        body:
+            Msg('msg.feeAgreed.body', {
+              'lead': lead,
+              'player': player.fullName,
+            }).encode(),
         isRead: false,
         actionType: InboxActionType.contractNegotiation,
         payload: 'offer:${o.id}|min:$wage',
@@ -458,9 +488,10 @@ class TransferService {
       return false;
     }
     // Tanpa pengganti di grup posisi yang sama, pemain dianggap inti.
-    final sameGroup = squad
-        .where((s) => s.id != p.id && s.position.group == p.position.group)
-        .toList();
+    final sameGroup =
+        squad
+            .where((s) => s.id != p.id && s.position.group == p.position.group)
+            .toList();
     return sameGroup.length < 2;
   }
 
@@ -495,22 +526,22 @@ class TransferService {
     if (offerId == null) return;
     final offer = await _transfers.offerById(offerId);
     if (offer == null || !offer.isActive) {
-      throw StateError('Negosiasi ini sudah tidak berjalan.');
+      throw StateError(tr('err.negotiationInactive'));
     }
     final player = await _players.byId(offer.playerId);
-    if (player == null) throw StateError('Pemain tidak ditemukan.');
+    if (player == null) throw StateError(tr('err.playerNotFound'));
 
     if (offer.isIncomingFor(ourClubId)) {
       await _answerIncoming(offer, player, choice, date, ourClubId);
     } else if (offer.status == TransferOfferStatus.countered) {
       if (choice != 'cancel') {
-        throw StateError('Tawar harga di Ruang Negosiasi.');
+        throw StateError(tr('err.useRoom'));
       }
       await _withdraw(offer, date);
     } else if (offer.status == TransferOfferStatus.awaitingContract) {
       await _negotiateContract(offer, player, choice, date, ourClubId);
     } else {
-      throw StateError('Menunggu respons klub penjual.');
+      throw StateError(tr('err.awaitingSeller'));
     }
   }
 
@@ -519,7 +550,7 @@ class TransferService {
         offer.id,
         status: TransferOfferStatus.withdrawn,
         responseDate: date,
-        reason: 'Dibatalkan oleh klub Anda.',
+        reason: const Msg('reason.cancelledByUs').encode(),
       );
 
   /// Tawaran masuk dari klub AI untuk pemain kita: terima di harga pembeli
@@ -536,12 +567,12 @@ class TransferService {
         offer.id,
         status: TransferOfferStatus.rejected,
         responseDate: date,
-        reason: 'Ditolak oleh klub Anda.',
+        reason: const Msg('reason.rejectedByUs').encode(),
       );
       return;
     }
     if (choice != 'accept') {
-      throw StateError('Tawar harga di Ruang Negosiasi.');
+      throw StateError(tr('err.useRoom'));
     }
     await _checkCanSell(ourClubId, date);
     await _completeTransfer(
@@ -565,7 +596,7 @@ class TransferService {
     return switch (offer.status) {
       TransferOfferStatus.countered => NegotiationMode.transferBuy,
       TransferOfferStatus.awaitingContract => NegotiationMode.contract,
-      _ => throw StateError('Menunggu respons klub penjual.'),
+      _ => throw StateError(tr('err.awaitingSeller')),
     };
   }
 
@@ -639,7 +670,7 @@ class TransferService {
     if (response.verdict != AgentVerdict.accept) {
       // Patokan agen memenuhi syaratnya sendiri; ini hanya terjadi bila
       // pembulatan nominal menggeser nilai terlalu jauh.
-      throw StateError('Patokan agen berubah. Coba lagi.');
+      throw StateError(tr('err.anchorChanged'));
     }
     return _applyResponse(room, response, ourClubId, date);
   }
@@ -647,13 +678,13 @@ class TransferService {
   Future<_RoomContext> _roomContext(int offerId, String ourClubId) async {
     final offer = await _transfers.offerById(offerId);
     if (offer == null || !offer.isActive) {
-      throw StateError('Negosiasi ini sudah tidak berjalan.');
+      throw StateError(tr('err.negotiationInactive'));
     }
     final mode = _modeOf(offer, ourClubId);
     final player = await _players.byId(offer.playerId);
-    if (player == null) throw StateError('Pemain tidak ditemukan.');
+    if (player == null) throw StateError(tr('err.playerNotFound'));
     final ours = await _clubs.clubById(ourClubId);
-    if (ours == null) throw StateError('Klub tidak ditemukan.');
+    if (ours == null) throw StateError(tr('err.clubNotFound'));
     final otherId =
         offer.isIncomingFor(ourClubId) ? offer.fromClubId : offer.toClubId;
     final other = await _clubs.clubById(otherId);
@@ -682,7 +713,10 @@ class TransferService {
   ) async {
     final o = ctx.offer;
     final player = ctx.player;
-    final names = NegotiationNames(player: player.lastName, club: ctx.otherName);
+    final names = NegotiationNames(
+      player: player.lastName,
+      club: ctx.otherName,
+    );
 
     switch (ctx.mode) {
       case NegotiationMode.transferBuy:
@@ -723,14 +757,14 @@ class TransferService {
       case NegotiationMode.contract:
         final detail = await _players.detail(player.id);
         if (_shortContractInJanuary(detail?.contract, date)) {
-          const reason = 'Kontrak tinggal ≤ 6 bulan: menunggu bebas transfer.';
+          final reason = const Msg('reason.shortContract').encode();
           await _transfers.updateOffer(
             o.id,
             status: TransferOfferStatus.failed,
             responseDate: date,
             reason: reason,
           );
-          throw StateError('${player.fullName}: $reason');
+          throw StateError('${player.fullName}: ${trText(reason)}');
         }
         final expected = DynamicValuation.expectedWage(player);
         // Turun kelas tanpa alasan lain: pemain butuh gaji 15% di atas
@@ -782,9 +816,10 @@ class TransferService {
         // untuk cicilan terberat agar nominal tetap muat).
         final other = ctx.other;
         if (other != null) {
-          final cash = other.transferBudget < other.balance
-              ? other.transferBudget
-              : other.balance;
+          final cash =
+              other.transferBudget < other.balance
+                  ? other.transferBudget
+                  : other.balance;
           final cap = (cash * 0.92).round();
           if (limit > cap) limit = cap;
         }
@@ -849,9 +884,9 @@ class TransferService {
     String ourClubId,
     DateTime date,
   ) async {
-    if (offer.amount <= 0) throw StateError('Nominal harus lebih dari nol.');
+    if (offer.amount <= 0) throw StateError(tr('err.amountPositive'));
     final ours = await _clubs.clubById(ourClubId);
-    if (ours == null) throw StateError('Klub tidak ditemukan.');
+    if (ours == null) throw StateError(tr('err.clubNotFound'));
     switch (room.mode) {
       case NegotiationMode.transferBuy:
         _checkTerms(offer);
@@ -861,13 +896,13 @@ class TransferService {
         await _checkCanSell(ourClubId, date);
       case NegotiationMode.contract:
         if (offer.contractYears < 1 || offer.contractYears > 5) {
-          throw StateError('Durasi kontrak 1–5 tahun.');
+          throw StateError(tr('err.contractYears'));
         }
         _checkFunds(ours, room.offer.fee, room.offer.installmentYears);
         final squad = await _players.squad(ourClubId);
         if (squad.length >= TransferRules.maxSquad) {
           throw StateError(
-            'Skuad penuh (maks ${TransferRules.maxSquad} pemain).',
+            tr('err.squadFull', {'max': TransferRules.maxSquad}),
           );
         }
     }
@@ -875,10 +910,10 @@ class TransferService {
 
   void _checkTerms(NegotiationOffer o) {
     if (!TransferRules.validInstallments(o.installmentYears)) {
-      throw StateError('Cicilan hanya bisa langsung, 2, atau 3 tahun.');
+      throw StateError(tr('err.installments'));
     }
     if (!TransferRules.validSellOn(o.sellOnPct)) {
-      throw StateError('Sell-on clause hanya 0% atau 10–30%.');
+      throw StateError(tr('err.sellOn'));
     }
   }
 
@@ -900,7 +935,8 @@ class TransferService {
         return NegotiationStep(response: response, summary: null);
 
       case AgentVerdict.walkOut:
-        final reason = 'Agen ${room.agent.name} mengakhiri negosiasi.';
+        final reason =
+            Msg('reason.agentWalkedOut', {'agent': room.agent.name}).encode();
         if (room.mode == NegotiationMode.transferSell) {
           await _transfers.deleteSession(offer.id, room.mode.name);
         } else {
@@ -925,15 +961,19 @@ class TransferService {
         await _inbox.add(
           _info(
             date,
-            'Negosiasi gagal: ${player.fullName}',
+            Msg('msg.failed.title', {'player': player.fullName}),
             room.mode == NegotiationMode.transferSell
-                ? '${room.counterpartName} mundur dari negosiasi untuk '
-                    '${player.fullName}.'
-                : '$reason ${player.fullName} baru bisa ditawar lagi '
-                    'seminggu lagi.',
+                ? Msg('msg.failed.buyerLeft', {
+                  'club': room.counterpartName,
+                  'player': player.fullName,
+                })
+                : Msg('msg.failed.cooldown', {
+                  'reason': asMsg(reason),
+                  'player': player.fullName,
+                }),
           ),
         );
-        return NegotiationStep(response: response, summary: reason);
+        return NegotiationStep(response: response, summary: trText(reason));
 
       case AgentVerdict.accept:
         final deal = response.agreedOffer!;
@@ -948,17 +988,23 @@ class TransferService {
               installmentYears: deal.installmentYears,
               sellOnPct: deal.sellOnPct,
             );
-            final terms =
-                termsLabel(deal.amount, deal.installmentYears, deal.sellOnPct);
+            final terms = termsMsg(
+              deal.amount,
+              deal.installmentYears,
+              deal.sellOnPct,
+            );
             await _acceptFee(
               offer,
               player,
               date,
-              'Anda dan agen ${room.agent.name} sepakat di $terms.',
+              Msg('msg.agreedWithAgent', {
+                'agent': room.agent.name,
+                'terms': terms,
+              }),
             );
             return NegotiationStep(
               response: response,
-              summary: 'Harga disepakati. Lanjut ke kontrak.',
+              summary: tr('step.feeAgreed'),
             );
           case NegotiationMode.transferSell:
             await _completeTransfer(
@@ -972,12 +1018,23 @@ class TransferService {
               installmentYears: deal.installmentYears,
               sellOnPct: deal.sellOnPct,
             );
-            return NegotiationStep(response: response, summary: 'Pemain dijual.');
+            return NegotiationStep(
+              response: response,
+              summary: tr('step.playerSold'),
+            );
           case NegotiationMode.contract:
-            final value =
-                AgentNegotiator.valueOf(room.mode, deal, s.preferredYears);
-            final refusal =
-                await _contractRefusal(offer, player, value, ourClubId, date);
+            final value = AgentNegotiator.valueOf(
+              room.mode,
+              deal,
+              s.preferredYears,
+            );
+            final refusal = await _contractRefusal(
+              offer,
+              player,
+              value,
+              ourClubId,
+              date,
+            );
             if (refusal != null) {
               await _transfers.updateOffer(
                 offer.id,
@@ -986,9 +1043,16 @@ class TransferService {
                 reason: refusal,
               );
               await _inbox.add(
-                _info(date, 'Negosiasi gagal: ${player.fullName}', refusal),
+                _info(
+                  date,
+                  Msg('msg.failed.title', {'player': player.fullName}),
+                  asMsg(refusal),
+                ),
               );
-              return NegotiationStep(response: response, summary: refusal);
+              return NegotiationStep(
+                response: response,
+                summary: trText(refusal),
+              );
             }
             await _completeTransfer(
               player: player,
@@ -1006,7 +1070,7 @@ class TransferService {
             );
             return NegotiationStep(
               response: response,
-              summary: '${player.fullName} resmi bergabung.',
+              summary: tr('step.joined', {'player': player.fullName}),
             );
         }
     }
@@ -1042,16 +1106,14 @@ class TransferService {
   Future<void> _checkCanSell(String ourClubId, DateTime date) async {
     final squad = await _players.squad(ourClubId);
     if (squad.length <= TransferRules.minSquad) {
-      throw StateError(
-        'Skuad minimal ${TransferRules.minSquad} pemain. Rekrut pemain dulu.',
-      );
+      throw StateError(tr('err.squadMin', {'min': TransferRules.minSquad}));
     }
     final start = TransferRules.windowStart(date);
     if (start != null) {
       final moves = await _transfers.movesSince(ourClubId, start);
       if (moves.outgoing >= TransferRules.maxMovesPerWindow) {
         throw StateError(
-          'Batas ${TransferRules.maxMovesPerWindow} pemain keluar per jendela tercapai.',
+          tr('err.maxOutgoing', {'n': TransferRules.maxMovesPerWindow}),
         );
       }
     }
@@ -1071,20 +1133,20 @@ class TransferService {
         offer.id,
         status: TransferOfferStatus.withdrawn,
         responseDate: date,
-        reason: 'Dibatalkan oleh klub Anda.',
+        reason: const Msg('reason.cancelledByUs').encode(),
       );
       return;
     }
     final parsed = _parseNegotiation(choice);
     if (parsed == null) {
-      throw StateError('Isi gaji (lebih dari nol) dan durasi 1–5 tahun.');
+      throw StateError(tr('err.wageAndYears'));
     }
     final ours = await _clubs.clubById(ourClubId);
-    if (ours == null) throw StateError('Klub tidak ditemukan.');
+    if (ours == null) throw StateError(tr('err.clubNotFound'));
     _checkFunds(ours, offer.fee, offer.installmentYears);
     final squad = await _players.squad(ourClubId);
     if (squad.length >= TransferRules.maxSquad) {
-      throw StateError('Skuad penuh (maks ${TransferRules.maxSquad} pemain).');
+      throw StateError(tr('err.squadFull', {'max': TransferRules.maxSquad}));
     }
 
     final expected = DynamicValuation.expectedWage(player);
@@ -1096,21 +1158,32 @@ class TransferService {
       toRep: ours.reputation,
       wageOffer: parsed.wage,
       expectedWage: expected,
-      isBenchPlayer: detail?.contract?.squadStatus == SquadStatus.backup ||
+      isBenchPlayer:
+          detail?.contract?.squadStatus == SquadStatus.backup ||
           detail?.contract?.squadStatus == SquadStatus.youth,
       shortContractInJanuary: _shortContractInJanuary(detail?.contract, date),
     );
     if (parsed.wage < expected || !will.willing) {
-      final reason = will.reason ??
-          '${player.fullName} menolak kontrak ${moneyLabel(parsed.wage)}/tahun. '
-              'Ia menginginkan minimal ${moneyLabel(expected)}/tahun.';
+      final reason =
+          will.reason ??
+          Msg('reason.contractRefused', {
+            'player': player.fullName,
+            'wage': Msg.money(parsed.wage),
+            'expected': Msg.money(expected),
+          }).encode();
       await _transfers.updateOffer(
         offer.id,
         status: TransferOfferStatus.failed,
         responseDate: date,
         reason: reason,
       );
-      await _inbox.add(_info(date, 'Negosiasi gagal: ${player.fullName}', reason));
+      await _inbox.add(
+        _info(
+          date,
+          Msg('msg.failed.title', {'player': player.fullName}),
+          asMsg(reason),
+        ),
+      );
       return;
     }
     await _completeTransfer(
@@ -1177,7 +1250,8 @@ class TransferService {
     final sellerName = (await _clubs.clubById(sellerId))?.name ?? sellerId;
     final buyerName = (await _clubs.clubById(buyerId))?.name ?? buyerId;
     final detail = await _players.detail(player.id);
-    final newWage = wage ?? detail?.contract?.wage ?? DynamicValuation.expectedWage(player);
+    final newWage =
+        wage ?? detail?.contract?.wage ?? DynamicValuation.expectedWage(player);
     final newYears = years ?? 3;
     final upfront = TransferRules.upfront(fee, installmentYears);
     final sellOns = await _transfers.memoryWithPrefix('sellon|${player.id}|');
@@ -1239,9 +1313,13 @@ class TransferService {
       await _inbox.add(
         _info(
           date,
-          'Transfer selesai: ${player.fullName}',
-          '${player.fullName} pindah dari $sellerName ke $buyerName dengan '
-              '${termsLabel(fee, installmentYears, sellOnPct)}.',
+          Msg('msg.completed.title', {'player': player.fullName}),
+          Msg('msg.completed.body', {
+            'player': player.fullName,
+            'from': sellerName,
+            'to': buyerName,
+            'terms': termsMsg(fee, installmentYears, sellOnPct),
+          }),
         ),
       );
     });
@@ -1278,35 +1356,38 @@ class TransferService {
   }
 
   /// Teks syarat tawaran, mis. "€12,0 jt (cicilan 3 thn, sell-on 20%)".
-  static String termsLabel(int fee, int installmentYears, int sellOnPct) {
+  static String termsLabel(int fee, int installmentYears, int sellOnPct) =>
+      termsMsg(fee, installmentYears, sellOnPct).resolve();
+
+  /// [termsLabel] sebagai [Msg] untuk teks yang disimpan.
+  static Msg termsMsg(int fee, int installmentYears, int sellOnPct) {
     final extras = [
-      if (installmentYears > 1) 'cicilan $installmentYears thn',
-      if (sellOnPct > 0) 'sell-on $sellOnPct%',
+      if (installmentYears > 1)
+        Msg('terms.installments', {'n': installmentYears}),
+      if (sellOnPct > 0) Msg('terms.sellOn', {'pct': sellOnPct}),
     ];
-    return extras.isEmpty
-        ? moneyLabel(fee)
-        : '${moneyLabel(fee)} (${extras.join(', ')})';
+    if (extras.isEmpty) return Msg.money(fee);
+    return Msg('terms.withExtras', {
+      'fee': Msg.money(fee),
+      'extras': Msg.join(extras, separator: ', '),
+    });
   }
 
   static DateTime _day(DateTime d) => DateTime.utc(d.year, d.month, d.day);
 
-  InboxMessage _info(
-    DateTime date,
-    String title,
-    String body, {
-    String? payload,
-  }) => InboxMessage(
-    id: 0,
-    date: date,
-    category: InboxCategory.transfer,
-    title: title,
-    body: body,
-    isRead: false,
-    actionType: InboxActionType.none,
-    payload: payload,
-    resolved: false,
-    choice: null,
-  );
+  InboxMessage _info(DateTime date, Msg title, Msg body, {String? payload}) =>
+      InboxMessage(
+        id: 0,
+        date: date,
+        category: InboxCategory.transfer,
+        title: title.encode(),
+        body: body.encode(),
+        isRead: false,
+        actionType: InboxActionType.none,
+        payload: payload,
+        resolved: false,
+        choice: null,
+      );
 
   /// Payload pesan transfer: "offer:ID" atau "offer:ID|min:GAJI".
   static int? _offerIdOf(String? payload) {

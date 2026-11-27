@@ -1,12 +1,13 @@
+import '../../l10n/l10n.dart';
+
 /// Kelompok besar posisi, dipakai untuk filter di layar skuad.
 enum PositionGroup {
-  goalkeeper('Kiper'),
-  defender('Bek'),
-  midfielder('Gelandang'),
-  forward('Penyerang');
+  goalkeeper,
+  defender,
+  midfielder,
+  forward;
 
-  const PositionGroup(this.label);
-  final String label;
+  String get label => tr('posGroup.$name');
 }
 
 enum Position {

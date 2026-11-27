@@ -10,6 +10,7 @@ import '../../domain/enums/tactics.dart';
 import '../../domain/match/lineup_builder.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/match_models.dart';
+import '../../l10n/l10n.dart';
 import '../match/pitch_2d_painter.dart';
 import '../squad/squad_screen.dart';
 
@@ -20,7 +21,7 @@ class TacticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Taktik & Lineup')),
+    appBar: AppBar(title: Text(tr('tactics.title'))),
     body: const TacticsView(),
   );
 }
@@ -49,7 +50,9 @@ class _TacticsViewState extends ConsumerState<TacticsView> {
     return lineup.when(
       skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat skuad: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('squad.loadFailed', {'error': '$e'}))),
       data: (l) {
         final formation = tactic?.formation ?? Formation.f442;
         final mentality = tactic?.mentality ?? Mentality.balanced;
@@ -116,9 +119,9 @@ class _TacticsViewState extends ConsumerState<TacticsView> {
                 onCancel: () => setState(() => _selected = null),
               ),
             ),
-            const Padding(
+            Padding(
               padding: pad,
-              child: SectionHeader('Sebelas pertama'),
+              child: SectionHeader(tr('tactics.startingXI')),
             ),
             for (var i = 0; i < l.starters.length; i++)
               PlayerListCard(
@@ -130,7 +133,10 @@ class _TacticsViewState extends ConsumerState<TacticsView> {
             Padding(
               padding: pad,
               child: SectionHeader(
-                'Cadangan (${l.bench.length} dari ${LineupBuilder.benchCount})',
+                tr('tactics.bench', {
+                  'n': l.bench.length,
+                  'max': LineupBuilder.benchCount,
+                }),
               ),
             ),
             for (var i = 0; i < l.bench.length; i++)
@@ -184,13 +190,9 @@ class _TacticsViewState extends ConsumerState<TacticsView> {
   ) {
     final sel = _selected;
     if (sel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Pilih starter dulu, lalu ketuk cadangan untuk menukar.',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('tactics.pickStarterFirst'))));
       return;
     }
     final starters = [...l.starters];
@@ -289,7 +291,7 @@ class _Controls extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Formasi', style: label),
+                  Text(tr('tactics.formation'), style: label),
                   DropdownButton<Formation>(
                     value: formation,
                     isExpanded: true,
@@ -313,14 +315,11 @@ class _Controls extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            OutlinedButton(
-              onPressed: onAuto,
-              child: const Text('Susun otomatis'),
-            ),
+            OutlinedButton(onPressed: onAuto, child: Text(tr('tactics.auto'))),
           ],
         ),
         const SizedBox(height: 14),
-        const Text('Mentalitas', style: label),
+        Text(tr('tactics.mentality'), style: label),
         const SizedBox(height: 6),
         SegmentedButton<Mentality>(
           segments: [
@@ -351,10 +350,9 @@ class _SwapHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!active) {
-      return const Text(
-        'Ketuk pemain di sebelas pertama, lalu ketuk pemain lain untuk '
-        'menukar posisinya.',
-        style: TextStyle(color: Chalk.dim, fontSize: 14),
+      return Text(
+        tr('tactics.swapHint'),
+        style: const TextStyle(color: Chalk.dim, fontSize: 14),
       );
     }
     return Container(
@@ -367,7 +365,7 @@ class _SwapHint extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              'Menukar $selectedName. Ketuk pemain penggantinya.',
+              tr('tactics.swapping', {'name': selectedName}),
               style: const TextStyle(
                 color: Chalk.yellow,
                 fontWeight: FontWeight.w600,
@@ -377,7 +375,7 @@ class _SwapHint extends StatelessWidget {
           TextButton(
             onPressed: onCancel,
             style: TextButton.styleFrom(foregroundColor: Chalk.yellow),
-            child: const Text('Batal'),
+            child: Text(tr('common.cancel')),
           ),
         ],
       ),

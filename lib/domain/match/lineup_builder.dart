@@ -95,9 +95,6 @@ abstract final class LineupBuilder {
       if (bench.length >= benchCount) break;
       bench.add(p);
     }
-    return (
-      starters: [for (final id in starterIds) byId[id]!],
-      bench: bench,
-    );
+    return (starters: [for (final id in starterIds) byId[id]!], bench: bench);
   }
 }

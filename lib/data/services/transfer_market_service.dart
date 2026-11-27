@@ -2,7 +2,7 @@ import '../../core/rng/seeded_random.dart';
 import '../../domain/enums/inbox.dart';
 import '../../domain/enums/squad_status.dart';
 import '../../domain/enums/transfer.dart';
-import '../../domain/finance/money_label.dart';
+
 import '../../domain/models/game_models.dart';
 import '../../domain/models/season_models.dart';
 import '../../domain/transfer/club_ai_profile.dart';
@@ -14,6 +14,7 @@ import '../../domain/transfer/squad_needs.dart';
 import '../../domain/transfer/transfer_rules.dart';
 import '../../domain/transfer/transfer_window.dart';
 import '../../domain/transfer/valuation.dart';
+import '../../l10n/l10n.dart';
 import '../database/app_database.dart';
 import '../repositories/club_repository.dart';
 import '../repositories/inbox_repository.dart';
@@ -54,7 +55,9 @@ class TransferMarketService {
     required String ourClubId,
   }) async {
     final openNow = TransferWindow.isOpen(date);
-    final openBefore = TransferWindow.isOpen(date.subtract(const Duration(days: 1)));
+    final openBefore = TransferWindow.isOpen(
+      date.subtract(const Duration(days: 1)),
+    );
 
     // Cicilan jatuh tempo dan respons atas tawaran kita (juga saat bursa tutup).
     await _service.payDueInstallments(date);
@@ -70,7 +73,7 @@ class TransferMarketService {
     final phase = MarketHeat.phase(date);
     if (TransferWindow.isDeadlineDay(date) &&
         !TransferWindow.isDeadlineDay(date.subtract(const Duration(days: 1)))) {
-      await _news(date, 'deadline', 'DEADLINE DAY dimulai: pasar paling panas.', '');
+      await _news(date, 'deadline', const Msg('news.deadlineDay'), '');
     }
 
     // Satu snapshot per hari; diambil ulang hanya setelah ada pemain pindah.
@@ -119,8 +122,9 @@ class TransferMarketService {
     SeededRandom rng,
     _World w,
   ) async {
-    final aiClubs = w.clubs.values.where((c) => c.id != ourClubId).toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
+    final aiClubs =
+        w.clubs.values.where((c) => c.id != ourClubId).toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
     final dayIndex = date.difference(DateTime.utc(date.year, 1, 1)).inDays;
     var rumours = 0;
     for (var i = 0; i < aiClubs.length; i++) {
@@ -160,9 +164,19 @@ class TransferMarketService {
           player: p,
           contract: contract,
           now: date,
-          sellerPersonality: (await _service.profileOf(p.clubId, seed))?.personality,
+          sellerPersonality:
+              (await _service.profileOf(p.clubId, seed))?.personality,
         );
-        final score = _interestScore(p, profile, group.value, squad, club, ask, contract, date);
+        final score = _interestScore(
+          p,
+          profile,
+          group.value,
+          squad,
+          club,
+          ask,
+          contract,
+          date,
+        );
         if (score < 40) continue;
         final level = InterestEngine.levelFor(score);
         await _transfers.upsertInterest(
@@ -177,7 +191,11 @@ class TransferMarketService {
           await _news(
             date,
             'rumour',
-            '${club.name} memantau ${p.fullName} (${p.position.label}).',
+            Msg('news.rumour', {
+              'club': club.name,
+              'player': p.fullName,
+              'pos': p.position.label,
+            }),
             '${club.id},$ourClubId',
           );
         }
@@ -195,26 +213,29 @@ class TransferMarketService {
     Contract? contract,
     DateTime date,
   ) {
-    final starters = squad
-        .where((s) => s.position.group == p.position.group)
-        .toList()
-      ..sort((a, b) => b.currentAbility.compareTo(a.currentAbility));
+    final starters =
+        squad.where((s) => s.position.group == p.position.group).toList()
+          ..sort((a, b) => b.currentAbility.compareTo(a.currentAbility));
     final bestHere = starters.isEmpty ? 50 : starters.first.currentAbility;
-    final upgrade = (50 + (p.currentAbility - bestHere) * 2.5).clamp(0, 100).toInt();
+    final upgrade =
+        (50 + (p.currentAbility - bestHere) * 2.5).clamp(0, 100).toInt();
     final profileFit = switch (profile.personality) {
       ClubPersonality.youthDeveloper => p.age <= 23 ? 90 : 30,
-      ClubPersonality.moneyball => p.marketValue < DynamicValuation.expectedWage(p) * 40 ? 80 : 40,
+      ClubPersonality.moneyball =>
+        p.marketValue < DynamicValuation.expectedWage(p) * 40 ? 80 : 40,
       ClubPersonality.bigSpender => p.currentAbility >= 110 ? 85 : 40,
       _ => 60,
     };
     final budget = club.transferBudget;
     final affordability = (budget / ask * 100).clamp(0, 100).toInt();
-    final expiring = contract != null &&
-        contract.endDate.difference(date).inDays <= 365;
-    final opportunity = (profile.sellingWillingness ~/ 2 + (expiring ? 35 : 0) +
-            (p.isTransferListed ? 20 : 0))
-        .clamp(0, 100)
-        .toInt();
+    final expiring =
+        contract != null && contract.endDate.difference(date).inDays <= 365;
+    final opportunity =
+        (profile.sellingWillingness ~/ 2 +
+                (expiring ? 35 : 0) +
+                (p.isTransferListed ? 20 : 0))
+            .clamp(0, 100)
+            .toInt();
     return InterestEngine.score(
       needFit: needPriority,
       upgrade: upgrade,
@@ -236,8 +257,9 @@ class TransferMarketService {
     SeededRandom rng,
     _World w,
   ) async {
-    final aiClubs = w.clubs.values.where((c) => c.id != ourClubId).toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
+    final aiClubs =
+        w.clubs.values.where((c) => c.id != ourClubId).toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
     if (aiClubs.length < 2) return false;
     final buyer = aiClubs[rng.nextInt(aiClubs.length)];
     if (buyer.transferBudget < 2000) return false;
@@ -250,19 +272,22 @@ class TransferMarketService {
       benchmarkCa: w.benchmark,
     );
     if (needs.isEmpty) return false;
-    final group = needs.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    final group =
+        needs.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
 
     final sellers = aiClubs.where((c) => c.id != buyer.id).toList();
     final seller = sellers[rng.nextInt(sellers.length)];
     final sellerSquad = w.squads[seller.id] ?? const <Player>[];
     if (sellerSquad.length <= minSquad) return false;
-    final candidates = sellerSquad
-        .where((p) => p.position.group == group && _unlocked(p, date))
-        .toList();
+    final candidates =
+        sellerSquad
+            .where((p) => p.position.group == group && _unlocked(p, date))
+            .toList();
     if (candidates.isEmpty) return false;
     final player = candidates[rng.nextInt(candidates.length)];
     final contract = w.contracts[player.id];
-    final starter = contract?.squadStatus == SquadStatus.starter ||
+    final starter =
+        contract?.squadStatus == SquadStatus.starter ||
         contract?.squadStatus == SquadStatus.keyPlayer;
     final windowKey = _windowKey(date);
     if (starter &&
@@ -293,8 +318,12 @@ class TransferMarketService {
       ask = (ask * TransferRules.rivalPremium).round();
     }
     final offer = (ask * (0.85 + rng.nextDouble() * 0.2)).round();
-    final indispensable = starter &&
-        sellerSquad.where((s) => s.id != player.id && s.position.group == group).length < 2;
+    final indispensable =
+        starter &&
+        sellerSquad
+                .where((s) => s.id != player.id && s.position.group == group)
+                .length <
+            2;
     final verdict = NegotiationAi.evaluate(
       offer: offer,
       ask: ask,
@@ -306,7 +335,8 @@ class TransferMarketService {
     if (verdict.verdict == NegotiationVerdict.accept) fee = offer;
     if (verdict.verdict == NegotiationVerdict.counter) {
       final counter = verdict.counterFee!;
-      if (counter <= buyer.transferBudget && counter <= ask * 1.1) fee = counter;
+      if (counter <= buyer.transferBudget && counter <= ask * 1.1)
+        fee = counter;
     }
     if (fee == null) return false;
     if (fee > buyer.transferBudget || fee > buyer.balance) return false;
@@ -318,7 +348,8 @@ class TransferMarketService {
       toRep: buyer.reputation,
       wageOffer: (wage * 1.05).round(),
       expectedWage: wage,
-      isBenchPlayer: contract?.squadStatus == SquadStatus.backup ||
+      isBenchPlayer:
+          contract?.squadStatus == SquadStatus.backup ||
           contract?.squadStatus == SquadStatus.youth,
       shortContractInJanuary: false,
     );
@@ -343,8 +374,12 @@ class TransferMarketService {
     await _news(
       date,
       'deal',
-      '${seller.name} menjual ${player.fullName} ke ${buyer.name} '
-          'seharga ${moneyLabel(fee)}.',
+      Msg('news.deal', {
+        'seller': seller.name,
+        'player': player.fullName,
+        'buyer': buyer.name,
+        'fee': Msg.money(fee),
+      }),
       '${seller.id},${buyer.id}',
     );
     return true;
@@ -366,21 +401,24 @@ class TransferMarketService {
     _World w,
   ) async {
     final ours = w.squads[ourClubId] ?? const <Player>[];
-    final buyers = w.clubs.values
-        .where(
-          (c) =>
-              c.id != ourClubId &&
-              c.transferBudget >= 3000 &&
-              (w.squads[c.id]?.length ?? 0) < maxSquad,
-        )
-        .toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
+    final buyers =
+        w.clubs.values
+            .where(
+              (c) =>
+                  c.id != ourClubId &&
+                  c.transferBudget >= 3000 &&
+                  (w.squads[c.id]?.length ?? 0) < maxSquad,
+            )
+            .toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
     if (buyers.isEmpty) return;
     for (final p in ours) {
       if (!_unlocked(p, date)) continue;
       // Klub yang menjadikan pemain ini target utama menawar lebih dulu.
       Club? suitor;
-      for (final (clubId, _, level) in await _transfers.interestsForPlayer(p.id)) {
+      for (final (clubId, _, level) in await _transfers.interestsForPlayer(
+        p.id,
+      )) {
         final c = w.clubs[clubId];
         if (level == InterestLevel.target && c != null && buyers.contains(c)) {
           suitor = c;
@@ -400,7 +438,8 @@ class TransferMarketService {
       if (TransferRules.areRivals(buyer.id, ourClubId)) {
         ask = (ask * TransferRules.rivalPremium).round();
       }
-      final fee = ((ask * (listed ? 0.95 : 1.05) + ask * rng.nextDouble() * 0.25) / 10)
+      final fee =
+          ((ask * (listed ? 0.95 : 1.05) + ask * rng.nextDouble() * 0.25) / 10)
               .round() *
           10;
       if (fee > buyer.transferBudget || fee > buyer.balance) continue;
@@ -418,11 +457,13 @@ class TransferMarketService {
           id: 0,
           date: date,
           category: InboxCategory.transfer,
-          title: 'Tawaran masuk: ${p.fullName}',
-          body: '${buyer.name} menawar ${p.fullName} dengan ${moneyLabel(fee)}'
-              '${listed ? '' : ' (pemain tidak didaftar jual)'}. '
-              'Terima, tolak, atau tawar harga lewat agen pemain di Ruang '
-              'Negosiasi.',
+          title: Msg('msg.incoming.title', {'player': p.fullName}).encode(),
+          body:
+              Msg(listed ? 'msg.incoming.body' : 'msg.incoming.bodyUnlisted', {
+                'club': buyer.name,
+                'player': p.fullName,
+                'fee': Msg.money(fee),
+              }).encode(),
           isRead: false,
           actionType: InboxActionType.incomingTransferOffer,
           payload: 'offer:$offerId',
@@ -450,10 +491,12 @@ class TransferMarketService {
       benchmarkCa: w.benchmark,
     );
     if (needs.isEmpty) return;
-    final group = needs.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    final group =
+        needs.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     final options = <Player>[];
     for (final entry in w.squads.entries) {
-      if (entry.key == ourClubId || entry.value.length <= minSquad + 2) continue;
+      if (entry.key == ourClubId || entry.value.length <= minSquad + 2)
+        continue;
       for (final p in entry.value) {
         if (p.position.group == group &&
             p.currentAbility >= w.benchmark - 5 &&
@@ -470,16 +513,21 @@ class TransferMarketService {
       contract: w.contracts[p.id],
       now: date,
     );
-    final text = '${club?.name ?? p.clubId} menawarkan ${p.fullName} '
-        '(${p.position.label}, ${p.age} th) seharga ${moneyLabel(ask)}.';
+    final text = Msg('news.offer', {
+      'club': club?.name ?? p.clubId,
+      'player': p.fullName,
+      'pos': p.position.label,
+      'age': p.age,
+      'fee': Msg.money(ask),
+    });
     await _news(date, 'offer', text, '${p.clubId},$ourClubId');
     await _inbox.add(
       InboxMessage(
         id: 0,
         date: date,
         category: InboxCategory.transfer,
-        title: 'Tawaran pemain: ${p.fullName}',
-        body: '$text Cari pemain ini di Cari Pemain untuk menawar.',
+        title: Msg('msg.playerOffered.title', {'player': p.fullName}).encode(),
+        body: Msg('msg.playerOffered.body', {'text': text}).encode(),
         isRead: false,
         actionType: InboxActionType.none,
         payload: 'player:${p.id}',
@@ -493,12 +541,19 @@ class TransferMarketService {
 
   /// Negosiasi yang belum tuntas dibatalkan, lalu ringkasan bursa ke inbox.
   Future<void> _closeWindow(DateTime date, String ourClubId) async {
-    final start = date.month == 1 ? DateTime.utc(date.year, 1, 1) : DateTime.utc(date.year, 7, 1);
+    final start =
+        date.month == 1
+            ? DateTime.utc(date.year, 1, 1)
+            : DateTime.utc(date.year, 7, 1);
     final history = await _transfers.history(limit: 500);
-    final inWindow = history.where((r) => !r.date.isBefore(start) && !r.date.isAfter(date)).toList();
-    final biggest = inWindow.isEmpty
-        ? null
-        : inWindow.reduce((a, b) => a.fee >= b.fee ? a : b);
+    final inWindow =
+        history
+            .where((r) => !r.date.isBefore(start) && !r.date.isAfter(date))
+            .toList();
+    final biggest =
+        inWindow.isEmpty
+            ? null
+            : inWindow.reduce((a, b) => a.fee >= b.fee ? a : b);
     for (final o in await _transfers.offersFor(ourClubId)) {
       if (o.isActive || o.status == TransferOfferStatus.countered) {
         await _transfers.updateOffer(
@@ -511,8 +566,13 @@ class TransferMarketService {
     await _news(
       date,
       'deadline',
-      'Bursa ditutup: ${inWindow.length} transfer'
-          '${biggest == null ? '' : ', terbesar ${moneyLabel(biggest.fee)} (${biggest.playerName})'}.',
+      biggest == null
+          ? Msg('news.closed', {'n': inWindow.length})
+          : Msg('news.closedBiggest', {
+            'n': inWindow.length,
+            'fee': Msg.money(biggest.fee),
+            'player': biggest.playerName,
+          }),
       '',
     );
     await _inbox.add(
@@ -520,9 +580,8 @@ class TransferMarketService {
         id: 0,
         date: date,
         category: InboxCategory.transfer,
-        title: 'Bursa ditutup',
-        body: 'Bursa transfer ditutup: ${inWindow.length} transfer di liga. '
-            'Negosiasi yang belum tuntas dibatalkan.',
+        title: const Msg('msg.windowClosed.title').encode(),
+        body: Msg('msg.windowClosed.body', {'n': inWindow.length}).encode(),
         isRead: false,
         actionType: InboxActionType.none,
         payload: null,
@@ -534,10 +593,16 @@ class TransferMarketService {
 
   // --- Util -----------------------------------------------------------------------
 
-  Future<void> _news(DateTime date, String kind, String body, String clubIds) =>
-      _transfers.addNews(date: date, kind: kind, body: body, clubIds: clubIds);
+  Future<void> _news(DateTime date, String kind, Msg body, String clubIds) =>
+      _transfers.addNews(
+        date: date,
+        kind: kind,
+        body: body.encode(),
+        clubIds: clubIds,
+      );
 
-  static String _windowKey(DateTime d) => '${d.year}-${d.month == 1 ? 'w' : 's'}';
+  static String _windowKey(DateTime d) =>
+      '${d.year}-${d.month == 1 ? 'w' : 's'}';
 
   /// Hash hari: (seed, jumlah hari sejak 2000) → seed RNG harian.
   static int _daySeed(int seed, DateTime d) {

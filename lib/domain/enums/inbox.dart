@@ -1,14 +1,15 @@
-enum InboxCategory {
-  board('Dewan'),
-  match('Pertandingan'),
-  scouting('Scouting'),
-  finance('Keuangan'),
-  contract('Kontrak'),
-  season('Musim'),
-  transfer('Transfer');
+import '../../l10n/l10n.dart';
 
-  const InboxCategory(this.label);
-  final String label;
+enum InboxCategory {
+  board,
+  match,
+  scouting,
+  finance,
+  contract,
+  season,
+  transfer;
+
+  String get label => tr('inboxCat.$name');
 }
 
 /// Jenis tindakan yang diminta dari pemain. Pesan dengan tindakan selain

@@ -5,7 +5,6 @@ import 'package:drift/drift.dart';
 
 import '../../domain/enums/inbox.dart';
 import '../../domain/enums/tactics.dart';
-import '../../domain/finance/money_label.dart';
 import '../../domain/match/lineup_builder.dart';
 import '../../domain/match/match_engine_2d.dart';
 import '../../domain/models/game_models.dart';
@@ -17,6 +16,7 @@ import '../../domain/season/league_table.dart';
 import '../../domain/season/quick_match_simulator.dart';
 import '../../domain/season/season_calendar.dart';
 import '../../domain/transfer/agent_negotiator.dart';
+import '../../l10n/l10n.dart';
 import '../database/app_database.dart';
 import '../repositories/club_repository.dart';
 import '../repositories/fixture_repository.dart';
@@ -146,9 +146,12 @@ class GameEngine {
       final clubs = await _clubs.clubsByLeague(league.id);
       final ids = clubs.map((c) => c.id).toList()..sort();
       // Liga tingkat 1 selesai di batas LaLiga; tingkat 2 lebih awal (playoff).
-      final last = league.tier == 1
-          ? SeasonCalendar.lastLeagueRound(SeasonCalendar.firstSeasonYear)
-          : SeasonCalendar.lastSecondTierRound(SeasonCalendar.firstSeasonYear);
+      final last =
+          league.tier == 1
+              ? SeasonCalendar.lastLeagueRound(SeasonCalendar.firstSeasonYear)
+              : SeasonCalendar.lastSecondTierRound(
+                SeasonCalendar.firstSeasonYear,
+              );
       final roundDates = SeasonCalendar.roundDates(
         startYear: SeasonCalendar.firstSeasonYear,
         rounds: 2 * (ids.length - 1),
@@ -176,11 +179,13 @@ class GameEngine {
         id: 0,
         date: state.currentDate,
         category: InboxCategory.board,
-        title: 'Sambutan dewan',
+        title: const Msg('msg.boardWelcome.title').encode(),
         body:
-            'Selamat datang di ${club.name}, Manajer ${state.managerName}. '
-            'Target musim ini: finis di posisi $target atau lebih baik. '
-            'Terima target ini untuk memulai musim.',
+            Msg('msg.boardWelcome.body', {
+              'club': club.name,
+              'manager': state.managerName,
+              'target': target,
+            }).encode(),
         isRead: false,
         actionType: InboxActionType.acceptTarget,
         payload: 'target:$target',
@@ -194,7 +199,7 @@ class GameEngine {
 
   Future<GameStatus> status() async {
     final state = await _states.load();
-    if (state == null) throw StateError('Save belum berisi data karier.');
+    if (state == null) throw StateError(tr('err.noCareer'));
 
     final clubId = state.clubId;
     Fixture? today;
@@ -356,12 +361,12 @@ class GameEngine {
   /// dipakai untuk tim kita; lawan memakai susunan otomatis 4-4-2.
   Future<MatchSetup> prepareMatch() async {
     final state = await _states.load();
-    if (state == null) throw StateError('Save belum berisi data karier.');
+    if (state == null) throw StateError(tr('err.noCareer'));
     final s = await status();
     final f = s.todayFixture;
     final clubId = state.clubId;
     if (f == null || clubId == null) {
-      throw StateError('Tidak ada laga tim Anda hari ini.');
+      throw StateError(tr('err.noMatchToday'));
     }
 
     final ourSide = f.homeClubId == clubId;
@@ -385,9 +390,10 @@ class GameEngine {
     final club = await _clubs.clubById(clubId);
     final squad = await _players.squad(clubId);
     final saved = useSavedTactics ? await _tactics.load(clubId) : null;
-    final lineup = useSavedTactics
-        ? LineupBuilder.resolve(squad, saved)
-        : LineupBuilder.auto(squad, Formation.f442);
+    final lineup =
+        useSavedTactics
+            ? LineupBuilder.resolve(squad, saved)
+            : LineupBuilder.auto(squad, Formation.f442);
     return MatchTeamSetup(
       clubId: clubId,
       name: club?.name ?? clubId,
@@ -402,15 +408,15 @@ class GameEngine {
   /// tiket, dan laporan di inbox. Laga hanya bisa disimpan sekali.
   Future<MatchDayResult> commitMatch(MatchResultData r) async {
     final state = await _states.load();
-    if (state == null) throw StateError('Save belum berisi data karier.');
+    if (state == null) throw StateError(tr('err.noCareer'));
     final clubId = state.clubId;
-    if (clubId == null) throw StateError('Belum ada klub.');
+    if (clubId == null) throw StateError(tr('common.noClub'));
     final fixtures = await _fixtures.forClub(clubId);
     final f = fixtures.firstWhere(
       (x) => x.id == r.fixtureId,
-      orElse: () => throw StateError('Laga tidak ditemukan.'),
+      orElse: () => throw StateError(tr('err.matchNotFound')),
     );
-    if (f.played) throw StateError('Laga ini sudah dimainkan.');
+    if (f.played) throw StateError(tr('err.matchAlreadyPlayed'));
 
     await _fixtures.setResult(f.id, r.homeGoals, r.awayGoals);
     await _applyMatchLoad(r, state.seed);
@@ -456,18 +462,29 @@ class GameEngine {
         date: state.currentDate,
         category: InboxCategory.match,
         title:
-            'Hasil: ${ours.homeName} ${ours.homeGoals}-${ours.awayGoals} ${ours.awayName}',
+            Msg('msg.result.title', {
+              'score':
+                  '${ours.homeName} ${ours.homeGoals}-${ours.awayGoals} '
+                  '${ours.awayName}',
+            }).encode(),
         body:
-            '${scorers.isEmpty ? 'Tanpa gol.' : scorers.join('. ')}. '
-            'Penguasaan bola ${st.homePossession}%-${st.awayPossession}%. '
-            'Tembakan ${st.home.shots}-${st.away.shots} '
-            '(tepat sasaran ${st.home.onTarget}-${st.away.onTarget}). '
-            'Moral skuad ${delta > 0
-                ? 'naik'
-                : delta < 0
-                ? 'turun'
-                : 'tetap'} '
-            '(${delta >= 0 ? '+' : ''}$delta).',
+            Msg('msg.result.body', {
+              'scorers':
+                  scorers.isEmpty
+                      ? const Msg('msg.result.noGoals')
+                      : Msg.raw('${scorers.join('. ')}.'),
+              'possession': '${st.homePossession}%-${st.awayPossession}%',
+              'shots': '${st.home.shots}-${st.away.shots}',
+              'onTarget': '${st.home.onTarget}-${st.away.onTarget}',
+              'morale': Msg(
+                delta > 0
+                    ? 'msg.result.moraleUp'
+                    : delta < 0
+                    ? 'msg.result.moraleDown'
+                    : 'msg.result.moraleSame',
+              ),
+              'delta': '${delta >= 0 ? '+' : ''}$delta',
+            }).encode(),
         isRead: false,
         actionType: InboxActionType.none,
         payload: null,
@@ -501,9 +518,7 @@ class GameEngine {
     while (!session.finished) {
       session.step();
     }
-    return commitMatch(
-      session.result(fixtureId: setup.fixture.id),
-    );
+    return commitMatch(session.result(fixtureId: setup.fixture.id));
   }
 
   /// Kondisi pemain berkurang sesuai menit bermain (starter penuh 12–22).
@@ -653,7 +668,7 @@ class GameEngine {
   Future<GameState> _ourState() async {
     final state = await _states.load();
     if (state == null || state.clubId == null) {
-      throw StateError('Belum ada klub.');
+      throw StateError(tr('common.noClub'));
     }
     return state;
   }
@@ -737,12 +752,31 @@ class GameEngine {
         id: 0,
         date: d,
         category: InboxCategory.scouting,
-        title: 'Laporan lawan: ${opp.name}',
+        title: Msg('msg.scout.title', {'club': opp.name}).encode(),
         body:
-            'Laga ${f.homeClubId == clubId ? 'kandang' : 'tandang'} besok. '
-            '${opp.name} di posisi ${pos + 1} dengan ${row.points} poin. '
-            'Bentuk terakhir: ${row.form.isEmpty ? '-' : row.form.join(' ')}. '
-            'Pemain kunci: ${key.fullName} (CA ${key.currentAbility}).',
+            Msg(
+              f.homeClubId == clubId
+                  ? 'msg.scout.bodyHome'
+                  : 'msg.scout.bodyAway',
+              {
+                'club': opp.name,
+                'pos': pos + 1,
+                'points': row.points,
+                'form':
+                    row.form.isEmpty
+                        ? Msg.raw('-')
+                        : Msg.join([
+                          for (final r in row.form)
+                            Msg(switch (r) {
+                              'W' => 'fixtures.wonShort',
+                              'D' => 'fixtures.drawnShort',
+                              _ => 'fixtures.lostShort',
+                            }),
+                        ]),
+                'player': key.fullName,
+                'ca': key.currentAbility,
+              },
+            ).encode(),
         isRead: false,
         actionType: InboxActionType.none,
         payload: null,
@@ -776,11 +810,12 @@ class GameEngine {
           id: 0,
           date: d,
           category: InboxCategory.contract,
-          title: 'Kontrak ${p.fullName} segera berakhir',
+          title: Msg('msg.expiry.title', {'player': p.fullName}).encode(),
           body:
-              'Kontrak berakhir 30 Juni ${d.year}. Gaji saat ini '
-              '${_money(c.wage)}/tahun. Perpanjang 2 tahun dengan kenaikan '
-              'gaji 10%, atau biarkan pergi.',
+              Msg('msg.expiry.body', {
+                'year': d.year,
+                'wage': Msg.money(c.wage),
+              }).encode(),
           isRead: false,
           actionType: InboxActionType.contractDecision,
           payload: 'player:${p.id}',
@@ -803,11 +838,22 @@ class GameEngine {
         id: 0,
         date: date,
         category: InboxCategory.season,
-        title: 'Musim selesai',
+        title: const Msg('msg.seasonEnd.title').encode(),
         body:
-            'Posisi akhir $pos dari ${table.length} dengan ${row.points} poin '
-            '(${row.won}M ${row.drawn}S ${row.lost}K). Target dewan: posisi $target. '
-            '${pos <= target ? 'Target tercapai.' : 'Target belum tercapai.'}',
+            Msg('msg.seasonEnd.body', {
+              'pos': pos,
+              'teams': table.length,
+              'points': row.points,
+              'won': row.won,
+              'drawn': row.drawn,
+              'lost': row.lost,
+              'target': target,
+              'verdict': Msg(
+                pos <= target
+                    ? 'msg.seasonEnd.targetMet'
+                    : 'msg.seasonEnd.targetMissed',
+              ),
+            }).encode(),
         isRead: false,
         actionType: InboxActionType.none,
         payload: null,
@@ -932,6 +978,4 @@ class GameEngine {
       );
     }
   }
-
-  static String _money(int thousands) => moneyLabel(thousands);
 }

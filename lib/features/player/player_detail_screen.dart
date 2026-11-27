@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/theme.dart';
-import '../../core/utils/date_format.dart';
 import '../../core/utils/format_utils.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../core/widgets/futbol_ui.dart';
@@ -20,6 +19,7 @@ import '../../domain/generators/world_generator.dart';
 import '../../domain/models/transfer_models.dart';
 import '../../domain/transfer/agent_negotiator.dart';
 import '../../domain/transfer/transfer_window.dart';
+import '../../l10n/l10n.dart';
 import '../transfer/transfer_flow.dart';
 
 class PlayerDetailScreen extends ConsumerWidget {
@@ -31,15 +31,17 @@ class PlayerDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(playerDetailProvider(playerId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil pemain')),
+      appBar: AppBar(title: Text(tr('player.title'))),
       body: detail.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Pemain gagal dimuat: $e')),
+        error:
+            (e, _) =>
+                Center(child: Text(tr('player.loadFailed', {'error': '$e'}))),
         data:
             (d) =>
                 d == null
-                    ? const Center(child: Text('Pemain tidak ditemukan.'))
+                    ? Center(child: Text(tr('err.playerNotFound')))
                     : _PlayerBody(detail: d),
       ),
     );
@@ -63,10 +65,10 @@ class _PlayerBody extends ConsumerWidget {
         _Identity(detail: detail, club: club),
         const SizedBox(height: 20),
         _Numbers(player: p),
-        const SectionHeader('Transfer'),
+        SectionHeader(tr('inboxCat.transfer')),
         _TransferActions(detail: detail),
         if (c != null) ...[
-          const SectionHeader('Kontrak'),
+          SectionHeader(tr('inboxCat.contract')),
           _ContractRow(contract: c),
         ],
         for (final entry in p.attributes.byGroup.entries)
@@ -124,9 +126,14 @@ class _Identity extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     PositionBadge(p.position),
-                    Text('${p.age} tahun, ${p.nationality}'),
+                    Text(
+                      tr('player.ageNation', {
+                        'age': p.age,
+                        'nation': p.nationality,
+                      }),
+                    ),
                     if (p.isTransferListed)
-                      const StatusBadge('Dijual', color: Chalk.yellow),
+                      StatusBadge(tr('player.forSale'), color: Chalk.yellow),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -160,8 +167,8 @@ class _Numbers extends StatelessWidget {
       children: [
         StatStrip(
           children: [
-            _Ability(label: 'Kemampuan (CA)', value: p.currentAbility),
-            _Ability(label: 'Potensi (PA)', value: p.potentialAbility),
+            _Ability(label: tr('player.ca'), value: p.currentAbility),
+            _Ability(label: tr('player.pa'), value: p.potentialAbility),
           ],
         ),
         const SizedBox(height: 16),
@@ -170,15 +177,18 @@ class _Numbers extends StatelessWidget {
         StatStrip(
           children: [
             StatFigure(
-              label: 'Kondisi',
+              label: tr('player.condition'),
               child: ConditionBar(p.condition, width: 44),
             ),
             StatFigure(
-              label: 'Moral',
+              label: tr('player.morale'),
               value: '${p.morale}',
               color: moraleColor,
             ),
-            StatFigure(label: 'Nilai pasar', value: formatMoney(p.marketValue)),
+            StatFigure(
+              label: tr('player.marketValue'),
+              value: formatMoney(p.marketValue),
+            ),
           ],
         ),
       ],
@@ -264,12 +274,14 @@ class _TransferActions extends ConsumerWidget {
             children: [
               StatFigure(
                 label:
-                    quote.isRival ? 'Harga minta, premi rival' : 'Harga minta',
+                    quote.isRival
+                        ? tr('player.askingRival')
+                        : tr('player.asking'),
                 value: moneyLabel(quote.askingFee),
                 labelLines: 2,
               ),
               StatFigure(
-                label: 'Gaji diharapkan per tahun',
+                label: tr('player.expectedWage'),
                 value: moneyLabel(quote.expectedWage),
                 labelLines: 2,
               ),
@@ -287,7 +299,7 @@ class _TransferActions extends ConsumerWidget {
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(text: 'Agen '),
+              TextSpan(text: tr('player.agentPrefix')),
               TextSpan(
                 text: agent.name,
                 style: const TextStyle(
@@ -295,7 +307,11 @@ class _TransferActions extends ConsumerWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              TextSpan(text: ', gaya ${agent.style.label.toLowerCase()}'),
+              TextSpan(
+                text: tr('player.agentStyle', {
+                  'style': agent.style.label.toLowerCase(),
+                }),
+              ),
             ],
           ),
           style: const TextStyle(color: Chalk.dim),
@@ -344,8 +360,8 @@ class _TransferActions extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 12, bottom: 4),
           child: Text(
             interests.isEmpty
-                ? 'Belum ada klub yang berminat.'
-                : 'Klub yang berminat',
+                ? tr('player.noInterest')
+                : tr('player.interestedClubs'),
             style: const TextStyle(color: Chalk.dim),
           ),
         ),
@@ -356,7 +372,10 @@ class _TransferActions extends ConsumerWidget {
             label: i.clubName,
             labelColor: Chalk.white,
             child: Text(
-              '${i.levelLabel}, skor ${i.score}',
+              tr('player.interestScore', {
+                'level': i.levelLabel,
+                'score': i.score,
+              }),
               textAlign: TextAlign.end,
               style: const TextStyle(color: Chalk.dim),
             ),
@@ -375,7 +394,9 @@ class _TransferActions extends ConsumerWidget {
                 (e) => e.setShortlisted(p.id, !shortlisted),
               ),
           icon: Icon(shortlisted ? Icons.bookmark : Icons.bookmark_border),
-          label: Text(shortlisted ? 'Di shortlist' : 'Shortlist'),
+          label: Text(
+            shortlisted ? tr('player.shortlisted') : tr('player.shortlist'),
+          ),
         ),
       if (isOurs)
         FilledButton.tonalIcon(
@@ -386,9 +407,7 @@ class _TransferActions extends ConsumerWidget {
               ),
           icon: const Icon(Icons.sell_outlined),
           label: Text(
-            p.isTransferListed
-                ? 'Batalkan daftar jual'
-                : 'Masukkan daftar jual',
+            p.isTransferListed ? tr('player.unlist') : tr('player.list'),
           ),
         )
       else if (active.isEmpty)
@@ -398,7 +417,7 @@ class _TransferActions extends ConsumerWidget {
                   ? null
                   : () => TransferFlow.bid(context, ref, p),
           icon: const Icon(Icons.gavel),
-          label: const Text('Ajukan tawaran'),
+          label: Text(tr('player.makeOffer')),
         ),
     ];
 
@@ -411,8 +430,10 @@ class _TransferActions extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           window.isOpen
-              ? 'Bursa buka sampai ${formatDate(window.closesOn!)}.'
-              : 'Bursa tutup, buka lagi ${formatDate(window.nextOpensOn!)}.',
+              ? tr('player.windowOpen', {'date': formatDate(window.closesOn!)})
+              : tr('player.windowClosed', {
+                'date': formatDate(window.nextOpensOn!),
+              }),
           style: const TextStyle(color: Chalk.dim, fontSize: 13),
         ),
       ],
@@ -477,10 +498,10 @@ class _ActiveNegotiation extends ConsumerWidget {
     final other = ref.watch(clubByIdProvider(otherId)).valueOrNull?.name ?? '';
     final title =
         incoming
-            ? 'Tawaran $other'
+            ? tr('player.offerFrom', {'club': other})
             : offer.status == TransferOfferStatus.awaitingContract
-            ? 'Harga disepakati dengan $other'
-            : 'Negosiasi dengan $other';
+            ? tr('player.feeAgreedWith', {'club': other})
+            : tr('player.negotiatingWith', {'club': other});
     final s = session;
     final patienceColor =
         s == null
@@ -524,7 +545,7 @@ class _ActiveNegotiation extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                'Tawar-menawar berjalan, kesabaran agen ${s.patience}%',
+                tr('player.bargaining', {'n': s.patience}),
                 style: TextStyle(
                   color: patienceColor,
                   fontWeight: FontWeight.w600,
@@ -556,9 +577,15 @@ class _ContractRow extends StatelessWidget {
     final end = contract.endDate;
     return StatStrip(
       children: [
-        StatFigure(label: 'Gaji per tahun', value: formatMoney(contract.wage)),
-        StatFigure(label: 'Berakhir', value: '${end.month}/${end.year}'),
-        StatFigure(label: 'Peran', value: contract.squadStatus.label),
+        StatFigure(
+          label: tr('player.wagePerYear'),
+          value: formatMoney(contract.wage),
+        ),
+        StatFigure(
+          label: tr('player.expires'),
+          value: '${end.month}/${end.year}',
+        ),
+        StatFigure(label: tr('player.role'), value: contract.squadStatus.label),
       ],
     );
   }

@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/theme.dart';
-import '../../core/utils/date_format.dart';
 import '../../core/widgets/club_badge.dart';
 import '../../core/widgets/futbol_ui.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/season_models.dart';
+import '../../l10n/l10n.dart';
 
 /// Tiga tab: Klub (jadwal tim kita), Klasemen, dan Pekan.
 class FixturesScreen extends ConsumerStatefulWidget {
@@ -41,19 +41,19 @@ class _FixturesScreenState extends ConsumerState<FixturesScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Jadwal & Klasemen'),
+        title: Text(tr('fixtures.title')),
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: 'Klub'),
-            Tab(text: 'Klasemen'),
-            Tab(text: 'Pekan'),
+          tabs: [
+            Tab(text: tr('fixtures.tabClub')),
+            Tab(text: tr('fixtures.tabTable')),
+            Tab(text: tr('fixtures.tabRound')),
           ],
         ),
       ),
       body:
           clubId == null
-              ? const Center(child: Text('Belum ada klub.'))
+              ? Center(child: Text(tr('common.noClub')))
               : TabBarView(
                 controller: _tabs,
                 children: [
@@ -89,7 +89,9 @@ class _ClubFixtures extends ConsumerWidget {
     return fixtures.when(
       skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat jadwal: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('fixtures.loadFailed', {'error': '$e'}))),
       data:
           (list) => ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
@@ -139,7 +141,7 @@ class _ClubFixtures extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            '${home ? 'Di kandang' : 'Tandang'}, '
+                            '${home ? tr('fixtures.atHome') : tr('fixtures.away')}, '
                             '${formatDateWithDay(f.date)}',
                             style: theme.textTheme.bodySmall,
                           ),
@@ -179,7 +181,9 @@ class _TableTab extends ConsumerWidget {
     return table.when(
       skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat klasemen: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('fixtures.loadFailed', {'error': '$e'}))),
       data: (rows) {
         final teams = rows.length;
         final tier = leagueId == 'laliga' ? 1 : 2;
@@ -257,13 +261,31 @@ class _TableHeader extends StatelessWidget {
         children: [
           SizedBox(width: _colPos, child: Text('#', style: style)),
           const SizedBox(width: 30),
-          const Expanded(child: Text('Klub', style: style)),
-          Tooltip(message: 'Main', child: num('Main', _colNum + 6)),
-          Tooltip(message: 'Menang', child: num('M', _colNum)),
-          Tooltip(message: 'Seri', child: num('S', _colNum)),
-          Tooltip(message: 'Kalah', child: num('K', _colNum)),
-          Tooltip(message: 'Selisih gol', child: num('SG', _colNum + 4)),
-          Tooltip(message: 'Poin', child: num('Poin', _colPts)),
+          Expanded(child: Text(tr('fixtures.club'), style: style)),
+          Tooltip(
+            message: tr('fixtures.played'),
+            child: num(tr('fixtures.playedShort'), _colNum + 6),
+          ),
+          Tooltip(
+            message: tr('fixtures.won'),
+            child: num(tr('fixtures.wonShort'), _colNum),
+          ),
+          Tooltip(
+            message: tr('fixtures.drawn'),
+            child: num(tr('fixtures.drawnShort'), _colNum),
+          ),
+          Tooltip(
+            message: tr('fixtures.lost'),
+            child: num(tr('fixtures.lostShort'), _colNum),
+          ),
+          Tooltip(
+            message: tr('fixtures.goalDiff'),
+            child: num(tr('fixtures.goalDiffShort'), _colNum + 4),
+          ),
+          Tooltip(
+            message: tr('fixtures.points'),
+            child: num(tr('fixtures.pointsShort'), _colPts),
+          ),
         ],
       ),
     );
@@ -368,15 +390,18 @@ class _ZoneLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final items =
         tier == 1
-            ? const [
-              (FutbolColors.cyan, 'Liga Champions'),
-              (FutbolColors.amber, 'Liga Eropa'),
-              (FutbolColors.coral, 'Degradasi'),
+            ? [
+              (FutbolColors.cyan, tr('fixtures.ucl')),
+              (FutbolColors.amber, tr('fixtures.uel')),
+              (FutbolColors.coral, tr('fixtures.relegation')),
             ]
             : [
-              (FutbolColors.emerald, 'Promosi'),
-              (FutbolColors.emerald.withValues(alpha: 0.5), 'Playoff'),
-              (FutbolColors.coral, 'Degradasi'),
+              (FutbolColors.emerald, tr('fixtures.promotion')),
+              (
+                FutbolColors.emerald.withValues(alpha: 0.5),
+                tr('fixtures.playoff'),
+              ),
+              (FutbolColors.coral, tr('fixtures.relegation')),
             ];
     final style = Theme.of(context).textTheme.bodySmall?.copyWith(
       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -396,7 +421,7 @@ class _ZoneLegend extends StatelessWidget {
                 Text(label, style: style),
               ],
             ),
-          Text('M/S/K = Menang/Seri/Kalah · SG = selisih gol', style: style),
+          Text(tr('fixtures.legend'), style: style),
         ],
       ),
     );
@@ -427,7 +452,9 @@ class _RoundTabState extends ConsumerState<_RoundTab> {
     return fixtures.when(
       skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Gagal memuat pekan: $e')),
+      error:
+          (e, _) =>
+              Center(child: Text(tr('fixtures.loadFailed', {'error': '$e'}))),
       data: (list) {
         final maxRound = list.isEmpty ? 1 : list.last.round;
         final current =
@@ -451,7 +478,7 @@ class _RoundTabState extends ConsumerState<_RoundTab> {
                     child: Column(
                       children: [
                         Text(
-                          'Pekan $round dari $maxRound',
+                          tr('fixtures.roundOf', {'n': round, 'max': maxRound}),
                           textAlign: TextAlign.center,
                           style: theme.textTheme.titleMedium,
                         ),
