@@ -27,6 +27,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/seed/spain.json
+    - assets/icon/app_logo.png
   # Barlow (OFL, lihat assets/fonts/OFL.txt): teks biasa; Barlow Condensed
   # untuk angka, skor, dan nama klub (huruf punggung jersey).
   fonts:

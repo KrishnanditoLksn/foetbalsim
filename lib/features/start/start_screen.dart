@@ -72,15 +72,32 @@ class _StartScreenState extends ConsumerState<StartScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'Futbol',
-                        style: TextStyle(
-                          fontFamily: Fonts.condensed,
-                          fontSize: 76,
-                          height: 0.95,
-                          fontWeight: FontWeight.w700,
-                          color: Chalk.white,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              'assets/icon/app_logo.png',
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Text(
+                              'Futbol',
+                              style: TextStyle(
+                                fontFamily: Fonts.condensed,
+                                fontSize: 72,
+                                height: 0.95,
+                                fontWeight: FontWeight.w700,
+                                color: Chalk.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       const Text(
