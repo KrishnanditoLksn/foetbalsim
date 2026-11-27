@@ -1,16 +1,16 @@
+import '../../l10n/l10n.dart';
 import '../../core/rng/seeded_random.dart';
 import '../models/game_models.dart';
 
 /// Kepribadian klub AI di bursa (README_FASE3 B.2).
 enum ClubPersonality {
-  bigSpender('Big Spender'),
-  sellingClub('Selling Club'),
-  moneyball('Moneyball'),
-  youthDeveloper('Youth Developer'),
-  survivalMode('Survival Mode');
+  bigSpender,
+  sellingClub,
+  moneyball,
+  youthDeveloper,
+  survivalMode;
 
-  const ClubPersonality(this.label);
-  final String label;
+  String get label => tr('clubPersonality.$name');
 }
 
 /// Profil klub AI. Atribut 0–100 (README B.2).
@@ -34,10 +34,7 @@ class ClubAiProfile {
   final int youthFocus;
 
   /// Profil diturunkan dari reputasi, saldo, dan seed. Deterministik.
-  static ClubAiProfile derive({
-    required Club club,
-    required int seed,
-  }) {
+  static ClubAiProfile derive({required Club club, required int seed}) {
     final rng = SeededRandom(seed ^ _hash(club.id));
     final rep = club.reputation;
     final ClubPersonality personality;
@@ -46,9 +43,10 @@ class ClubAiProfile {
     } else if (rep >= 80) {
       personality = ClubPersonality.bigSpender;
     } else if (rep <= 55) {
-      personality = rng.chance(0.5)
-          ? ClubPersonality.youthDeveloper
-          : ClubPersonality.moneyball;
+      personality =
+          rng.chance(0.5)
+              ? ClubPersonality.youthDeveloper
+              : ClubPersonality.moneyball;
     } else {
       personality = rng.pick(const [
         ClubPersonality.sellingClub,
@@ -66,12 +64,14 @@ class ClubAiProfile {
       ambition: jitter(rep, 10),
       riskTolerance: jitter(40, 30),
       negotiationSkill: jitter(40 + rep ~/ 2, 10),
-      sellingWillingness: personality == ClubPersonality.sellingClub
-          ? jitter(75, 10)
-          : jitter(35, 15),
-      youthFocus: personality == ClubPersonality.youthDeveloper
-          ? jitter(80, 10)
-          : jitter(30, 15),
+      sellingWillingness:
+          personality == ClubPersonality.sellingClub
+              ? jitter(75, 10)
+              : jitter(35, 15),
+      youthFocus:
+          personality == ClubPersonality.youthDeveloper
+              ? jitter(80, 10)
+              : jitter(30, 15),
     );
   }
 

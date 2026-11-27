@@ -5,7 +5,6 @@ import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
-import '../../core/utils/date_format.dart';
 import '../../core/widgets/futbol_ui.dart';
 import '../../data/database/app_database.dart' show NegotiationSessionRow;
 import '../../domain/finance/money_label.dart';
@@ -14,6 +13,7 @@ import '../../domain/models/transfer_models.dart';
 import '../../domain/transfer/agent_negotiator.dart';
 import '../../domain/transfer/transfer_rules.dart';
 import '../../domain/transfer/transfer_window.dart';
+import '../../l10n/l10n.dart';
 import '../player_search/player_search_view.dart';
 import 'transfer_flow.dart';
 
@@ -38,22 +38,27 @@ class TransferScreen extends ConsumerWidget {
       initialIndex: initialTab,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Pasar Transfer'),
+          title: Text(tr('transfer.title')),
           bottom: TabBar(
             isScrollable: true,
             // Tanpa celah awal bawaan Material 3 untuk tab yang bisa digeser.
             tabAlignment: TabAlignment.start,
             tabs: [
-              const Tab(text: 'Bursa Hari Ini'),
-              const Tab(text: 'Cari Pemain'),
-              const Tab(text: 'Shortlist'),
-              Tab(text: active == 0 ? 'Negosiasi' : 'Negosiasi ($active)'),
-              const Tab(text: 'Riwayat'),
+              Tab(text: tr('transfer.tabToday')),
+              Tab(text: tr('search.title')),
+              Tab(text: tr('player.shortlist')),
+              Tab(
+                text:
+                    active == 0
+                        ? tr('transfer.tabNegotiations')
+                        : '${tr('transfer.tabNegotiations')} ($active)',
+              ),
+              Tab(text: tr('transfer.tabHistory')),
             ],
           ),
           actions: [
             IconButton(
-              tooltip: 'Cari pemain layar penuh',
+              tooltip: tr('transfer.searchFullscreen'),
               icon: const Icon(Icons.open_in_new),
               onPressed:
                   () => Navigator.of(context).pushNamed(AppRoutes.playerSearch),
@@ -87,13 +92,11 @@ class _WindowBanner extends StatelessWidget {
   final TransferWindowStatus status;
   final DateTime now;
 
-  static const _rules =
-      'Jendela Eropa: 1 Juli – 31 Agustus dan 1–31 Januari.\n'
-      'Maks ${TransferRules.maxMovesPerWindow} masuk & '
-      '${TransferRules.maxMovesPerWindow} keluar per jendela.\n'
-      'Skuad ${TransferRules.minSquad}–${TransferRules.maxSquad} pemain.\n'
-      'Tawar-menawar dengan agen pemain di Ruang Negosiasi. Bila agen '
-      'walk-out, pemain baru bisa ditawar lagi seminggu kemudian.';
+  static String get _rules => tr('transfer.rules', {
+    'moves': TransferRules.maxMovesPerWindow,
+    'min': TransferRules.minSquad,
+    'max': TransferRules.maxSquad,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -109,14 +112,16 @@ class _WindowBanner extends StatelessWidget {
     final daysLeft = open ? status.closesOn!.difference(now).inDays : 0;
     final title =
         deadline
-            ? 'Hari terakhir bursa transfer'
+            ? tr('transfer.deadlineDay')
             : open
-            ? 'Bursa buka, $daysLeft hari lagi'
-            : 'Bursa transfer tutup';
+            ? tr('transfer.openDaysLeft', {'n': daysLeft})
+            : tr('transfer.closed');
     final detail =
         open
-            ? 'Tutup ${formatDate(status.closesOn!)}'
-            : 'Buka lagi ${formatDate(status.nextOpensOn!)}';
+            ? tr('transfer.closesOn', {'date': formatDate(status.closesOn!)})
+            : tr('transfer.reopensOn', {
+              'date': formatDate(status.nextOpensOn!),
+            });
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
@@ -138,7 +143,7 @@ class _WindowBanner extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Ketentuan transfer',
+            tooltip: tr('transfer.rulesTitle'),
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.info_outline, size: 18),
             onPressed:
@@ -146,12 +151,12 @@ class _WindowBanner extends StatelessWidget {
                   context: context,
                   builder:
                       (ctx) => AlertDialog(
-                        title: const Text('Ketentuan transfer'),
-                        content: const Text(_rules),
+                        title: Text(tr('transfer.rulesTitle')),
+                        content: Text(_rules),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Tutup'),
+                            child: Text(tr('common.close')),
                           ),
                         ],
                       ),
@@ -185,14 +190,10 @@ class _MarketTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('$e')),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                'Belum ada berita bursa. Rumor dan transfer muncul setiap hari '
-                'selama jendela transfer buka.',
-                textAlign: TextAlign.center,
-              ),
+              padding: const EdgeInsets.all(24),
+              child: Text(tr('transfer.noNews'), textAlign: TextAlign.center),
             ),
           );
         }
@@ -205,7 +206,7 @@ class _MarketTab extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: Text(
-                  n.date == now ? 'Hari ini' : formatDate(n.date),
+                  n.date == now ? tr('dash.today') : formatDate(n.date),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
@@ -215,7 +216,7 @@ class _MarketTab extends ConsumerWidget {
             ListTile(
               dense: true,
               leading: Icon(_iconOf(n.kind)),
-              title: Text(n.body),
+              title: Text(trText(n.body)),
             ),
           );
         }
@@ -242,9 +243,9 @@ class _ShortlistTab extends ConsumerWidget {
                 .where((r) => set.contains(r.player.id))
                 .toList();
         if (list.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              'Shortlist kosong. Tambahkan pemain dari Cari Pemain.',
+              tr('transfer.shortlistEmpty'),
               textAlign: TextAlign.center,
             ),
           );
@@ -264,7 +265,7 @@ class _ShortlistTab extends ConsumerWidget {
                   '${moneyLabel(r.player.marketValue)}',
                 ),
                 trailing: IconButton(
-                  tooltip: 'Hapus dari shortlist',
+                  tooltip: tr('transfer.removeShortlist'),
                   icon: const Icon(Icons.bookmark_remove),
                   onPressed:
                       () => GameActions.run(
@@ -301,12 +302,11 @@ class _NegotiationTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('$e')),
       data: (list) {
         if (list.isEmpty || ourId == null) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Text(
-                'Belum ada negosiasi. Ajukan tawaran dari detail pemain saat '
-                'jendela transfer buka.',
+                tr('transfer.noNegotiations'),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -319,7 +319,8 @@ class _NegotiationTab extends ConsumerWidget {
           final incoming = o.toClubId == ourId;
           final other =
               clubs[incoming ? o.fromClubId : o.toClubId]?.name ?? '-';
-          final name = names[o.playerId] ?? 'Pemain #${o.playerId}';
+          final name =
+              names[o.playerId] ?? tr('transfer.playerN', {'n': o.playerId});
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Padding(
@@ -354,13 +355,13 @@ class _NegotiationTab extends ConsumerWidget {
                     ],
                   ),
                   Text(
-                    '${incoming ? 'Tawaran dari' : 'Ke'} $other · '
+                    '${incoming ? tr('transfer.offerFrom', {'club': other}) : tr('transfer.offerTo', {'club': other})} · '
                     '${formatDate(o.createdDate)}',
                   ),
                   Text(offerSummary(o)),
                   if (o.reason != null)
                     Text(
-                      o.reason!,
+                      trText(o.reason),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -385,14 +386,15 @@ class _NegotiationTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.only(bottom: 16),
           children: [
-            _SectionTitle('Berjalan (${active.length})'),
+            _SectionTitle(tr('transfer.active', {'n': active.length})),
             if (active.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Tidak ada negosiasi berjalan.'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(tr('transfer.noneActive')),
               ),
             for (final o in active) card(o),
-            if (done.isNotEmpty) _SectionTitle('Selesai (${done.length})'),
+            if (done.isNotEmpty)
+              _SectionTitle(tr('transfer.done', {'n': done.length})),
             for (final o in done) card(o),
           ],
         );
@@ -416,12 +418,14 @@ class _SessionLine extends StatelessWidget {
       PatienceLevel.impatient => Chalk.yellow,
       _ => Chalk.red,
     };
-    final subject =
-        session.mode == NegotiationMode.contract.name ? 'kontrak' : 'harga';
+    final key =
+        session.mode == NegotiationMode.contract.name
+            ? 'transfer.bargainContract'
+            : 'transfer.bargainFee';
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Text(
-        'Tawar-menawar $subject berjalan, kesabaran agen $patience%',
+        tr(key, {'n': patience}),
         style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
     );
@@ -453,9 +457,7 @@ class _HistoryTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('$e')),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(
-            child: Text('Belum ada transfer di liga. Tunggu jendela dibuka.'),
-          );
+          return Center(child: Text(tr('transfer.noHistory')));
         }
         return ListView(
           children: [

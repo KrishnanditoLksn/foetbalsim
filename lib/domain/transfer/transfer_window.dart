@@ -63,11 +63,8 @@ abstract final class TransferValuation {
     required Player player,
     required Contract? contract,
     required DateTime now,
-  }) => DynamicValuation.askingFee(
-    player: player,
-    contract: contract,
-    now: now,
-  );
+  }) =>
+      DynamicValuation.askingFee(player: player, contract: contract, now: now);
 
   /// Gaji per tahun yang diharapkan pemain (€K).
   static int expectedWage(Player p) => DynamicValuation.expectedWage(p);

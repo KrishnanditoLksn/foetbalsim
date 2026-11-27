@@ -1,3 +1,4 @@
+import '../../l10n/l10n.dart';
 import 'club_ai_profile.dart';
 
 /// Keputusan klub penjual atas sebuah tawaran.
@@ -31,14 +32,16 @@ abstract final class NegotiationAi {
     if (isIndispensable && ratio < 1.1) {
       return NegotiationResult(
         NegotiationVerdict.reject,
-        reason: 'Pemain inti, tidak dijual di bawah '
-            '${_fmt((ask * 1.1).round())}.',
+        reason:
+            Msg('reason.indispensable', {
+              'fee': Msg.money((ask * 1.1).round()),
+            }).encode(),
       );
     }
     if (ratio < 0.7) {
-      return const NegotiationResult(
+      return NegotiationResult(
         NegotiationVerdict.reject,
-        reason: 'Tawaran terlalu rendah.',
+        reason: const Msg('reason.tooLow').encode(),
       );
     }
     if (ratio >= 1.0) return const NegotiationResult(NegotiationVerdict.accept);
@@ -47,8 +50,4 @@ abstract final class NegotiationAi {
     final counter = (ask * closeness).round();
     return NegotiationResult(NegotiationVerdict.counter, counterFee: counter);
   }
-
-  static String _fmt(int k) => k >= 1000
-      ? '€${(k / 1000).toStringAsFixed(1)} jt'
-      : '€$k rb';
 }

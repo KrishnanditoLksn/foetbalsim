@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/finance/money_label.dart';
 import '../../domain/transfer/transfer_rules.dart';
+import '../../l10n/l10n.dart';
 
 /// Syarat tawaran: biaya (€K), cicilan (tahun), dan sell-on clause (%).
 typedef BidTerms = ({int fee, int installmentYears, int sellOnPct});
@@ -65,21 +66,15 @@ class _BidDialogState extends State<BidDialog> {
 
     final (verdict, color) = switch (ratio) {
       < TransferRules.rejectBelow => (
-        'Terlalu rendah: kemungkinan besar ditolak.',
+        tr('bid.tooLow'),
         theme.colorScheme.error,
       ),
-      < 1.0 => (
-        'Di bawah harga minta: kemungkinan dibalas kontra-tawaran.',
-        theme.colorScheme.tertiary,
-      ),
-      _ => (
-        'Sesuai harga minta: kemungkinan diterima.',
-        theme.colorScheme.primary,
-      ),
+      < 1.0 => (tr('bid.belowAsking'), theme.colorScheme.tertiary),
+      _ => (tr('bid.atAsking'), theme.colorScheme.primary),
     };
 
     return AlertDialog(
-      title: const Text('Ajukan tawaran'),
+      title: Text(tr('player.makeOffer')),
       scrollable: true,
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -87,30 +82,33 @@ class _BidDialogState extends State<BidDialog> {
         children: [
           Text(widget.playerName, style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
-          Text('Harga minta klub: ${moneyLabel(widget.askingFee)}'),
+          Text(tr('bid.asking', {'fee': moneyLabel(widget.askingFee)})),
           if (widget.isRival)
-            Text(
-              'Termasuk premi rival lokal +30%.',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(tr('bid.rivalPremium'), style: theme.textTheme.bodySmall),
           const SizedBox(height: 12),
           TextField(
             controller: _fee,
             keyboardType: TextInputType.number,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Biaya transfer (€ ribu)',
-              helperText: '1.000 = €1 juta',
+            decoration: InputDecoration(
+              labelText: tr('bid.feeLabel', {'unit': moneyUnitThousands()}),
+              helperText: tr('bid.feeHelper'),
             ),
           ),
           const SizedBox(height: 12),
-          Text('Pembayaran', style: theme.textTheme.labelLarge),
+          Text(tr('bid.payment'), style: theme.textTheme.labelLarge),
           const SizedBox(height: 4),
           SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 1, label: Text('Langsung')),
-              ButtonSegment(value: 2, label: Text('2 tahun')),
-              ButtonSegment(value: 3, label: Text('3 tahun')),
+            segments: [
+              ButtonSegment(value: 1, label: Text(tr('bid.upfront'))),
+              ButtonSegment(
+                value: 2,
+                label: Text(tr('common.years', {'n': 2})),
+              ),
+              ButtonSegment(
+                value: 3,
+                label: Text(tr('common.years', {'n': 3})),
+              ),
             ],
             selected: {_installments},
             showSelectedIcon: false,
@@ -119,15 +117,15 @@ class _BidDialogState extends State<BidDialog> {
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
             value: _sellOn,
-            decoration: const InputDecoration(
-              labelText: 'Sell-on clause untuk penjual',
-            ),
+            decoration: InputDecoration(labelText: tr('bid.sellOnLabel')),
             items: [
               for (final pct in TransferRules.sellOnOptions)
                 DropdownMenuItem(
                   value: pct,
                   child: Text(
-                    pct == 0 ? 'Tanpa' : '$pct% penjualan berikutnya',
+                    pct == 0
+                        ? tr('bid.sellOnNone')
+                        : tr('bid.sellOnPct', {'pct': pct}),
                   ),
                 ),
             ],
@@ -135,44 +133,44 @@ class _BidDialogState extends State<BidDialog> {
           ),
           const Divider(height: 24),
           Text(
-            'Nilai bagi penjual: ${moneyLabel(value)} '
-            '(${(ratio * 100).round()}% dari harga minta)',
+            tr('bid.valueToSeller', {
+              'value': moneyLabel(value),
+              'pct': (ratio * 100).round(),
+            }),
           ),
           Text(verdict, style: TextStyle(color: color)),
           const SizedBox(height: 8),
           Text(
             _installments == 1
-                ? 'Dibayar langsung: ${moneyLabel(upfront)}.'
-                : 'Di muka ${moneyLabel(upfront)}, sisanya dicicil tiap 1 Juli.',
+                ? tr('bid.paidUpfront', {'amount': moneyLabel(upfront)})
+                : tr('bid.paidInstallments', {'amount': moneyLabel(upfront)}),
             style: theme.textTheme.bodySmall,
           ),
           Text(
-            'Anggaran transfer ${moneyLabel(widget.transferBudget)} · '
-            'saldo ${moneyLabel(widget.balance)}',
+            tr('bid.budgetLine', {
+              'budget': moneyLabel(widget.transferBudget),
+              'balance': moneyLabel(widget.balance),
+            }),
             style: theme.textTheme.bodySmall,
           ),
           if (overBudget)
             Text(
-              'Biaya melebihi anggaran transfer.',
+              tr('bid.overBudget'),
               style: TextStyle(color: theme.colorScheme.error),
             ),
           if (overBalance)
             Text(
-              'Saldo tidak cukup untuk pembayaran di muka.',
+              tr('bid.overBalance'),
               style: TextStyle(color: theme.colorScheme.error),
             ),
           const SizedBox(height: 8),
-          Text(
-            'Respons dalam 1–2 hari. Bila belum cocok, agen pemain mengajak '
-            'Anda tawar-menawar di Ruang Negosiasi.',
-            style: theme.textTheme.bodySmall,
-          ),
+          Text(tr('bid.note'), style: theme.textTheme.bodySmall),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Batal'),
+          child: Text(tr('common.cancel')),
         ),
         FilledButton(
           onPressed:
@@ -183,7 +181,7 @@ class _BidDialogState extends State<BidDialog> {
                     sellOnPct: _sellOn,
                   ))
                   : null,
-          child: const Text('Kirim'),
+          child: Text(tr('bid.send')),
         ),
       ],
     );

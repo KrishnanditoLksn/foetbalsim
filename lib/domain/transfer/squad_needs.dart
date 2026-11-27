@@ -28,8 +28,9 @@ abstract final class SquadNeeds {
   }) {
     final result = <PositionGroup, int>{};
     for (final group in PositionGroup.values) {
-      final members = squad.where((p) => p.position.group == group).toList()
-        ..sort((a, b) => b.currentAbility.compareTo(a.currentAbility));
+      final members =
+          squad.where((p) => p.position.group == group).toList()
+            ..sort((a, b) => b.currentAbility.compareTo(a.currentAbility));
       final target = minDepth[group] ?? 0;
       final fit = members.where((p) => p.condition >= 40).length;
       var priority = 0.0;
@@ -38,11 +39,10 @@ abstract final class SquadNeeds {
         priority += 40.0 * (target - fit) / target + 20;
       }
 
-      final starters = members
-          .where((p) => _isStarter(p, contracts))
-          .toList();
+      final starters = members.where((p) => _isStarter(p, contracts)).toList();
       if (starters.isNotEmpty) {
-        final avgCa = starters.fold<int>(0, (s, p) => s + p.currentAbility) /
+        final avgCa =
+            starters.fold<int>(0, (s, p) => s + p.currentAbility) /
             starters.length;
         if (avgCa < benchmarkCa) {
           priority += ((benchmarkCa - avgCa) / benchmarkCa * 100).clamp(0, 30);
@@ -53,12 +53,13 @@ abstract final class SquadNeeds {
         priority += 15;
       }
 
-      final expiringKey = members.where((p) {
-        final c = contracts[p.id];
-        return c != null &&
-            c.endDate.difference(now).inDays <= 365 &&
-            _isStarter(p, contracts);
-      }).length;
+      final expiringKey =
+          members.where((p) {
+            final c = contracts[p.id];
+            return c != null &&
+                c.endDate.difference(now).inDays <= 365 &&
+                _isStarter(p, contracts);
+          }).length;
       priority += 8.0 * expiringKey;
 
       result[group] = priority.clamp(0, 100).round();
@@ -72,7 +73,10 @@ abstract final class SquadNeeds {
   }
 
   /// CA benchmark: rata-rata CA starter 6 besar liga (dari daftar skuad).
-  static int benchmarkCa(Iterable<List<Player>> squads, Map<int, Contract> contracts) {
+  static int benchmarkCa(
+    Iterable<List<Player>> squads,
+    Map<int, Contract> contracts,
+  ) {
     final all = <int>[];
     for (final squad in squads) {
       final top = [...squad]

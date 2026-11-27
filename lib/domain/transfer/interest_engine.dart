@@ -13,7 +13,8 @@ class InterestEngine {
     required int affordability,
     required int opportunity,
   }) {
-    final s = 0.35 * needFit +
+    final s =
+        0.35 * needFit +
         0.25 * upgrade +
         0.15 * profileFit +
         0.15 * affordability +

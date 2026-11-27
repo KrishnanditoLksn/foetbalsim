@@ -1,9 +1,11 @@
+import '../../l10n/l10n.dart';
 import '../models/game_models.dart';
 
 /// Kemauan pemain untuk pindah (README_FASE3 B.10.4).
 class PlayerWillingness {
   /// Keputusan pemain. [fromRep] & [toRep] adalah reputasi klub asal dan
   /// tujuan (1–100). [wageOffer] dibanding [expectedWage] menentukan bujukan.
+  /// [reason] berupa `Msg` yang di-encode (tampilkan dengan `trText`).
   static ({bool willing, String? reason}) decide({
     required Player player,
     required int fromRep,
@@ -16,7 +18,7 @@ class PlayerWillingness {
     if (shortContractInJanuary) {
       return (
         willing: false,
-        reason: 'Kontrak tinggal ≤ 6 bulan: menunggu bebas transfer.',
+        reason: const Msg('reason.shortContract').encode(),
       );
     }
     final movingUp = toRep >= fromRep + 10;
@@ -31,7 +33,7 @@ class PlayerWillingness {
       }
       return (
         willing: false,
-        reason: '${player.lastName} tidak mau turun kelas tanpa kenaikan gaji.',
+        reason: Msg('reason.movingDown', {'player': player.lastName}).encode(),
       );
     }
     // Pindah sekelas: cadangan mau demi menit bermain; inti butuh gaji wajar.
@@ -40,7 +42,7 @@ class PlayerWillingness {
     }
     return (
       willing: false,
-      reason: '${player.lastName} menolak gaji yang ditawarkan.',
+      reason: Msg('reason.wageRefused', {'player': player.lastName}).encode(),
     );
   }
 }

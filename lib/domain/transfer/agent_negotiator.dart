@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import '../../core/rng/seeded_random.dart';
+import '../../l10n/l10n.dart';
 import '../enums/squad_status.dart';
-import '../finance/money_label.dart';
 import 'transfer_rules.dart';
 
 /// Ruang negosiasi (README_NEGOTIATION_ROOM): tawar-menawar langsung dengan
@@ -30,12 +30,11 @@ enum NegotiationMode {
 
 /// Gaya agen menentukan kesabaran, potongan tiap ronde, dan nada bicara.
 enum AgentStyle {
-  compromising('Kompromistis'),
-  professional('Profesional'),
-  stubborn('Keras kepala');
+  compromising,
+  professional,
+  stubborn;
 
-  const AgentStyle(this.label);
-  final String label;
+  String get label => tr('agentStyle.$name');
 }
 
 /// Profil agen satu pemain (README B.1).
@@ -84,11 +83,12 @@ class AgentProfile {
       rng.nextU32();
     }
     final roll = rng.nextDouble();
-    final style = roll < 0.35
-        ? AgentStyle.compromising
-        : roll < 0.75
-        ? AgentStyle.professional
-        : AgentStyle.stubborn;
+    final style =
+        roll < 0.35
+            ? AgentStyle.compromising
+            : roll < 0.75
+            ? AgentStyle.professional
+            : AgentStyle.stubborn;
     final name = '${rng.pick(_firstNames)} ${rng.pick(_lastNames)}';
     double between(double a, double b) => a + (b - a) * rng.nextDouble();
     return switch (style) {
@@ -129,14 +129,46 @@ class AgentProfile {
   }
 
   static const _firstNames = [
-    'Carlos', 'Jorge', 'Paulo', 'Miguel', 'Andrés', 'Luis', 'Rafael',
-    'Sergio', 'Marco', 'Federico', 'Hugo', 'Tomás', 'Nuno', 'Iker',
-    'Mónica', 'Lucía', 'Elena', 'Marta', 'Pilar', 'Ana',
+    'Carlos',
+    'Jorge',
+    'Paulo',
+    'Miguel',
+    'Andrés',
+    'Luis',
+    'Rafael',
+    'Sergio',
+    'Marco',
+    'Federico',
+    'Hugo',
+    'Tomás',
+    'Nuno',
+    'Iker',
+    'Mónica',
+    'Lucía',
+    'Elena',
+    'Marta',
+    'Pilar',
+    'Ana',
   ];
   static const _lastNames = [
-    'Mendoza', 'Barros', 'Ferreira', 'Ortega', 'Salgado', 'Quintero',
-    'Vidal', 'Arriaga', 'Navarro', 'Pires', 'Cabral', 'Ibarra', 'Lozano',
-    'Montes', 'Serrano', 'Duarte', 'Robles', 'Aguirre',
+    'Mendoza',
+    'Barros',
+    'Ferreira',
+    'Ortega',
+    'Salgado',
+    'Quintero',
+    'Vidal',
+    'Arriaga',
+    'Navarro',
+    'Pires',
+    'Cabral',
+    'Ibarra',
+    'Lozano',
+    'Montes',
+    'Serrano',
+    'Duarte',
+    'Robles',
+    'Aguirre',
   ];
 }
 
@@ -192,8 +224,15 @@ class NegotiationOffer {
 class NegotiationTurn {
   const NegotiationTurn({required this.byAgent, required this.text});
 
+  NegotiationTurn.msg({required this.byAgent, required Msg msg})
+    : text = msg.encode();
+
   final bool byAgent;
+
+  /// `Msg` yang di-encode (sesi lama: teks biasa). Tampilkan lewat [display].
   final String text;
+
+  String get display => trText(text);
 
   Map<String, Object> toJson() => {'g': byAgent, 't': text};
 
@@ -315,7 +354,9 @@ class NegotiationSession {
       agentTerms: NegotiationOffer.fromJson(j['at'] as Map<String, dynamic>),
       turns: j['n'] as int? ?? 0,
       lastOffer:
-          lo == null ? null : NegotiationOffer.fromJson(lo as Map<String, dynamic>),
+          lo == null
+              ? null
+              : NegotiationOffer.fromJson(lo as Map<String, dynamic>),
       lowballs: j['lb'] as int? ?? 0,
       log: [
         for (final t in (j['log'] as List? ?? const []))
@@ -393,16 +434,19 @@ abstract final class AgentNegotiator {
   static double durationFactor(int years, int preferred) =>
       1 - 0.03 * (years - preferred).abs();
 
-  static double _factor(NegotiationMode mode, NegotiationOffer o, int preferred) =>
-      switch (mode) {
-        NegotiationMode.contract =>
-          (1 + roleBonus(o.squadStatus)) *
-              durationFactor(o.contractYears, preferred),
-        _ => TransferRules.termsFactor(
-          installmentYears: o.installmentYears,
-          sellOnPct: o.sellOnPct,
-        ),
-      };
+  static double _factor(
+    NegotiationMode mode,
+    NegotiationOffer o,
+    int preferred,
+  ) => switch (mode) {
+    NegotiationMode.contract =>
+      (1 + roleBonus(o.squadStatus)) *
+          durationFactor(o.contractYears, preferred),
+    _ => TransferRules.termsFactor(
+      installmentYears: o.installmentYears,
+      sellOnPct: o.sellOnPct,
+    ),
+  };
 
   /// Nilai paket di mata agen. Mode transfer: biaya × faktor cicilan &
   /// sell-on (sama dengan evaluasi bursa). Mode kontrak: gaji × faktor peran
@@ -457,17 +501,21 @@ abstract final class AgentNegotiator {
     final opening = anchorOffer(base);
     final log = <NegotiationTurn>[
       if (remembered != null)
-        NegotiationTurn(
+        NegotiationTurn.msg(
           byAgent: true,
-          text: 'Kita pernah berhenti di ${describe(mode, opening)}. '
-              'Saya belum lupa, jadi kita mulai dari sana.',
+          msg: Msg('agent.remembered', {'terms': describeMsg(mode, opening)}),
         ),
       if (remembered == null && userOpening != null)
-        NegotiationTurn(
+        NegotiationTurn.msg(
           byAgent: false,
-          text: 'Tawaran awal Anda: ${describe(mode, userOpening)}.',
+          msg: Msg('agent.userOpening', {
+            'terms': describeMsg(mode, userOpening),
+          }),
         ),
-      NegotiationTurn(byAgent: true, text: _openingLine(mode, opening, names)),
+      NegotiationTurn.msg(
+        byAgent: true,
+        msg: _openingLine(mode, opening, names),
+      ),
     ];
     return base.copyWith(log: log);
   }
@@ -479,32 +527,38 @@ abstract final class AgentNegotiator {
     NegotiationOffer offer,
     NegotiationNames names,
   ) {
-    if (!s.isActive) throw StateError('Negosiasi ini sudah selesai.');
+    if (!s.isActive) throw StateError(tr('err.negotiationOver'));
     final mode = s.mode;
     final value = valueOf(mode, offer, s.preferredYears);
-    final userLine = NegotiationTurn(
+    final userLine = NegotiationTurn.msg(
       byAgent: false,
-      text: 'Anda menawarkan ${describe(mode, offer)}.',
+      msg: Msg('agent.userOffer', {'terms': describeMsg(mode, offer)}),
     );
     final turns = s.turns + 1;
 
     // Jarak ke patokan agen, positif = merugikan agen.
-    final gap = mode.agentWantsMore
-        ? (s.anchor - value) / s.anchor
-        : (value - s.anchor) / s.anchor;
-    final withinLimit = mode.agentWantsMore ? value >= s.limit : value <= s.limit;
+    final gap =
+        mode.agentWantsMore
+            ? (s.anchor - value) / s.anchor
+            : (value - s.anchor) / s.anchor;
+    final withinLimit =
+        mode.agentWantsMore ? value >= s.limit : value <= s.limit;
 
     if (withinLimit && gap <= acceptWithin) {
-      const text = 'Syaratnya cocok. Kami setuju dengan kesepakatan ini.';
+      const msg = Msg('agent.accept');
       return AgentResponse(
         verdict: AgentVerdict.accept,
         session: s.copyWith(
           status: NegotiationStatus.agreed,
           turns: turns,
           lastOffer: offer,
-          log: [...s.log, userLine, const NegotiationTurn(byAgent: true, text: text)],
+          log: [
+            ...s.log,
+            userLine,
+            NegotiationTurn.msg(byAgent: true, msg: msg),
+          ],
         ),
-        message: text,
+        message: msg.resolve(),
         patienceDelta: 0,
         lowball: false,
         agreedOffer: offer,
@@ -512,22 +566,23 @@ abstract final class AgentNegotiator {
     }
 
     final lowball = gap > s.agent.lowballTolerance;
-    final gapPenalty = gap <= 0.10
-        ? 0
-        : lowball
-        ? s.agent.lowballPenalty
-        : 10;
+    final gapPenalty =
+        gap <= 0.10
+            ? 0
+            : lowball
+            ? s.agent.lowballPenalty
+            : 10;
     final bonus = concessionBonus(mode, s.lastOffer, offer, s.preferredYears);
-    final durationPenalty = mode == NegotiationMode.contract &&
-            (offer.contractYears - s.preferredYears).abs() >= 2
-        ? 5
-        : 0;
+    final durationPenalty =
+        mode == NegotiationMode.contract &&
+                (offer.contractYears - s.preferredYears).abs() >= 2
+            ? 5
+            : 0;
     final delta = -s.agent.roundPenalty - gapPenalty - durationPenalty + bonus;
     final patience = (s.patience + delta).clamp(0, 100).toInt();
 
     if (patience <= 0) {
-      const text = 'Sepertinya kita tidak akan menemukan titik temu. '
-          'Kami mengakhiri negosiasi.';
+      const msg = Msg('agent.walkOut');
       return AgentResponse(
         verdict: AgentVerdict.walkOut,
         session: s.copyWith(
@@ -536,9 +591,13 @@ abstract final class AgentNegotiator {
           turns: turns,
           lastOffer: offer,
           lowballs: s.lowballs + (lowball ? 1 : 0),
-          log: [...s.log, userLine, const NegotiationTurn(byAgent: true, text: text)],
+          log: [
+            ...s.log,
+            userLine,
+            NegotiationTurn.msg(byAgent: true, msg: msg),
+          ],
         ),
-        message: text,
+        message: msg.resolve(),
         patienceDelta: delta,
         lowball: lowball,
         agreedOffer: null,
@@ -549,9 +608,10 @@ abstract final class AgentNegotiator {
     // Tawaran menghina tidak dibalas dengan potongan.
     var anchor = s.anchor;
     if (!lowball) {
-      final target = mode.agentWantsMore
-          ? (value > s.limit ? value : s.limit)
-          : (value < s.limit ? value : s.limit);
+      final target =
+          mode.agentWantsMore
+              ? (value > s.limit ? value : s.limit)
+              : (value < s.limit ? value : s.limit);
       anchor = (s.anchor + (target - s.anchor) * s.agent.concession).round();
     }
     final next = s.copyWith(
@@ -563,13 +623,13 @@ abstract final class AgentNegotiator {
     );
     // Kontra dinyatakan dengan syarat yang diajukan user.
     final counter = anchorOffer(next, offer);
-    final text = _counterLine(mode, offer, counter, patience, lowball, names);
+    final msg = _counterLine(mode, offer, counter, patience, lowball, names);
     return AgentResponse(
       verdict: AgentVerdict.counter,
       session: next.copyWith(
-        log: [...s.log, userLine, NegotiationTurn(byAgent: true, text: text)],
+        log: [...s.log, userLine, NegotiationTurn.msg(byAgent: true, msg: msg)],
       ),
-      message: text,
+      message: msg.resolve(),
       patienceDelta: delta,
       lowball: lowball,
       agreedOffer: null,
@@ -590,14 +650,22 @@ abstract final class AgentNegotiator {
     switch (mode) {
       case NegotiationMode.transferBuy:
         // Penjual suka dibayar langsung dan sell-on yang lebih besar.
-        changes.add(previous.installmentYears.compareTo(offer.installmentYears));
+        changes.add(
+          previous.installmentYears.compareTo(offer.installmentYears),
+        );
         changes.add(offer.sellOnPct.compareTo(previous.sellOnPct));
       case NegotiationMode.transferSell:
         // Pembeli suka dicicil dan sell-on yang lebih kecil.
-        changes.add(offer.installmentYears.compareTo(previous.installmentYears));
+        changes.add(
+          offer.installmentYears.compareTo(previous.installmentYears),
+        );
         changes.add(previous.sellOnPct.compareTo(offer.sellOnPct));
       case NegotiationMode.contract:
-        changes.add(roleBonus(offer.squadStatus).compareTo(roleBonus(previous.squadStatus)));
+        changes.add(
+          roleBonus(
+            offer.squadStatus,
+          ).compareTo(roleBonus(previous.squadStatus)),
+        );
         changes.add(
           (previous.contractYears - preferred).abs().compareTo(
             (offer.contractYears - preferred).abs(),
@@ -619,35 +687,49 @@ abstract final class AgentNegotiator {
 
   /// Teks satu paket, mis. "€12,5 jt dicicil 2 thn, sell-on 10%" atau
   /// "€450 rb/tahun selama 4 tahun sebagai Starter".
-  static String describe(NegotiationMode mode, NegotiationOffer o) {
+  static String describe(NegotiationMode mode, NegotiationOffer o) =>
+      describeMsg(mode, o).resolve();
+
+  /// [describe] sebagai `Msg`, untuk teks yang disimpan di riwayat.
+  static Msg describeMsg(NegotiationMode mode, NegotiationOffer o) {
     if (mode == NegotiationMode.contract) {
-      return '${moneyLabel(o.amount)}/tahun selama ${o.contractYears} tahun '
-          'sebagai ${o.squadStatus.label}';
+      return Msg('agent.termsContract', {
+        'wage': Msg.money(o.amount),
+        'years': o.contractYears,
+        'role': Msg('squadStatus.${o.squadStatus.name}'),
+      });
     }
-    final parts = [
-      moneyLabel(o.amount),
-      if (o.installmentYears > 1) 'dicicil ${o.installmentYears} thn',
-    ];
-    final head = parts.join(' ');
-    return o.sellOnPct > 0 ? '$head, sell-on ${o.sellOnPct}%' : head;
+    final fee = Msg.money(o.amount);
+    final head =
+        o.installmentYears > 1
+            ? Msg('agent.termsInstallments', {
+              'fee': fee,
+              'n': o.installmentYears,
+            })
+            : fee;
+    return o.sellOnPct > 0
+        ? Msg('agent.termsSellOn', {'head': head, 'pct': o.sellOnPct})
+        : head;
   }
 
-  static String _openingLine(
+  static Msg _openingLine(
     NegotiationMode mode,
     NegotiationOffer o,
     NegotiationNames n,
-  ) => switch (mode) {
-    NegotiationMode.transferBuy =>
-      'Klien saya tertarik, tapi ${n.club} mematok ${describe(mode, o)} '
-          'untuk melepas ${n.player}.',
-    NegotiationMode.transferSell =>
-      '${n.club} menawarkan ${describe(mode, o)} untuk ${n.player}. '
-          'Klien saya ingin tahu angka Anda.',
-    NegotiationMode.contract =>
-      '${n.player} siap bergabung dengan ${describe(mode, o)}.',
-  };
+  ) {
+    final args = {
+      'club': n.club,
+      'player': n.player,
+      'terms': describeMsg(mode, o),
+    };
+    return switch (mode) {
+      NegotiationMode.transferBuy => Msg('agent.openBuy', args),
+      NegotiationMode.transferSell => Msg('agent.openSell', args),
+      NegotiationMode.contract => Msg('agent.openContract', args),
+    };
+  }
 
-  static String _counterLine(
+  static Msg _counterLine(
     NegotiationMode mode,
     NegotiationOffer offer,
     NegotiationOffer counter,
@@ -655,23 +737,22 @@ abstract final class AgentNegotiator {
     bool lowball,
     NegotiationNames n,
   ) {
-    final c = describe(mode, counter);
+    final c = describeMsg(mode, counter);
     if (lowball) {
       return mode == NegotiationMode.transferSell
-          ? '${moneyLabel(offer.amount)} terlalu tinggi bagi ${n.club}. '
-              'Tolong ajukan angka yang realistis.'
-          : 'Tawaran ${moneyLabel(offer.amount)} terlalu jauh dari nilai '
-              'klien saya. Tolong ajukan angka yang lebih serius.';
+          ? Msg('agent.lowballSell', {
+            'amount': Msg.money(offer.amount),
+            'club': n.club,
+          })
+          : Msg('agent.lowball', {'amount': Msg.money(offer.amount)});
     }
     return switch (levelOf(patience)) {
       PatienceLevel.open =>
         mode == NegotiationMode.transferSell
-            ? '${n.club} bisa naik ke $c. Bagaimana?'
-            : 'Angka Anda masih sedikit jauh. Bagaimana jika kita bertemu '
-                'di $c?',
-      PatienceLevel.impatient =>
-        'Kesabaran kami mulai menipis. $c, dan kita bisa selesai hari ini.',
-      _ => 'Kami tidak punya banyak waktu. $c adalah angka terakhir kami.',
+            ? Msg('agent.counterSellOpen', {'club': n.club, 'terms': c})
+            : Msg('agent.counterOpen', {'terms': c}),
+      PatienceLevel.impatient => Msg('agent.counterImpatient', {'terms': c}),
+      _ => Msg('agent.counterFinal', {'terms': c}),
     };
   }
 }
