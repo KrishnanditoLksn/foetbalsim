@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../l10n/l10n.dart';
+import 'rebuild_all.dart';
 
 /// Bahasa aplikasi yang dipilih pemain. Nilai awal di-override di `main()`
 /// dengan hasil [LanguageStore.load].
@@ -24,19 +25,9 @@ class LanguageController extends StateNotifier<AppLanguage> {
     if (lang == state) return;
     L10n.current = lang;
     state = lang;
-    _rebuildAll();
+    // Teks memakai `tr()` global, jadi semua widget perlu dibangun ulang.
+    rebuildAllWidgets();
     await LanguageStore.save(lang);
-  }
-
-  /// Teks memakai `tr()` global, jadi semua widget perlu dibangun ulang saat
-  /// bahasa berganti. Ini tidak mengubah state navigasi atau layar.
-  static void _rebuildAll() {
-    void visit(Element el) {
-      el.markNeedsBuild();
-      el.visitChildren(visit);
-    }
-
-    WidgetsBinding.instance.rootElement?.visitChildren(visit);
   }
 }
 

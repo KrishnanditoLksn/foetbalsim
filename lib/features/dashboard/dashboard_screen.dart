@@ -89,7 +89,7 @@ class _ClubHeader extends StatelessWidget {
     // Ikon status bar mengikuti terang/gelapnya warna klub.
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value:
-          ink == Chalk.white
+          ink.computeLuminance() > 0.5
               ? SystemUiOverlayStyle.light
               : SystemUiOverlayStyle.dark,
       child: Column(
@@ -203,7 +203,7 @@ class _DayNotes extends ConsumerWidget {
       children: [
         SectionHeader(tr('dash.yesterday', {'date': formatDate(report.date)})),
         if (notes.isEmpty)
-          Text(tr('dash.quietDay'), style: const TextStyle(color: Chalk.dim))
+          Text(tr('dash.quietDay'), style: TextStyle(color: Chalk.dim))
         else
           for (final n in notes)
             Padding(
@@ -211,7 +211,7 @@ class _DayNotes extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 9, right: 10),
                     child: SizedBox(
                       width: 8,
@@ -246,7 +246,7 @@ class _NextMatch extends ConsumerWidget {
           SectionHeader(tr('dash.nextMatch')),
           Text(
             status.seasonOver ? tr('dash.seasonOver') : tr('dash.noFixtures'),
-            style: const TextStyle(color: Chalk.dim),
+            style: TextStyle(color: Chalk.dim),
           ),
         ],
       );
@@ -322,11 +322,11 @@ class _NextMatch extends ConsumerWidget {
                     Text(
                       formatDateWithDay(f.date),
                       textAlign: TextAlign.right,
-                      style: const TextStyle(color: Chalk.dim, fontSize: 13),
+                      style: TextStyle(color: Chalk.dim, fontSize: 13),
                     ),
                     Text(
                       tr('common.round', {'n': f.round}),
-                      style: const TextStyle(color: Chalk.dim, fontSize: 13),
+                      style: TextStyle(color: Chalk.dim, fontSize: 13),
                     ),
                   ],
                 ),
@@ -377,7 +377,7 @@ class _TeamLine extends StatelessWidget {
         ),
         if (ours) ...[
           const SizedBox(width: 8),
-          Text(note, style: const TextStyle(color: Chalk.dim, fontSize: 13)),
+          Text(note, style: TextStyle(color: Chalk.dim, fontSize: 13)),
         ],
       ],
     );
@@ -465,7 +465,7 @@ class _NewsRow extends StatelessWidget {
               ),
             ),
             if (!m.isRead)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 6, left: 8),
                 child: SizedBox(
                   width: 8,
@@ -606,11 +606,11 @@ class _ActionBar extends ConsumerWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Divider(color: Chalk.dim),
+                  Divider(color: Chalk.dim),
                   if (res.others.isEmpty)
                     Text(
                       tr('dash.noOtherMatches'),
-                      style: const TextStyle(color: Chalk.dim),
+                      style: TextStyle(color: Chalk.dim),
                     ),
                   for (final o in res.others)
                     Padding(

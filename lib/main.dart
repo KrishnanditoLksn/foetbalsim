@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/language.dart';
 import 'app/providers.dart';
+import 'app/rebuild_all.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
 import 'features/start/start_screen.dart';
@@ -28,13 +29,20 @@ class FutbolApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Aksen aplikasi = warna klub yang sedang dilatih.
+    // Warna papan = identitas klub yang sedang dilatih.
     final club = ref.watch(ourClubProvider);
     final language = ref.watch(languageProvider);
+    final previous = Chalk.palette;
+    final theme = AppTheme.board(club: club);
+    if (Chalk.palette != previous) {
+      // Widget membaca `Chalk.*` langsung (bukan lewat Theme), jadi semua
+      // widget perlu dibangun ulang dengan palet baru.
+      WidgetsBinding.instance.addPostFrameCallback((_) => rebuildAllWidgets());
+    }
     return MaterialApp(
       title: 'Futbol',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.board(club: club),
+      theme: theme,
       // Locale untuk teks bawaan Material (tooltip, dialog tanggal, dll.).
       locale: Locale(language.code),
       supportedLocales: [for (final l in AppLanguage.values) Locale(l.code)],

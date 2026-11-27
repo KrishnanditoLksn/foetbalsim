@@ -86,7 +86,7 @@ class _StartScreenState extends ConsumerState<StartScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'Futbol',
                               style: TextStyle(
@@ -103,7 +103,7 @@ class _StartScreenState extends ConsumerState<StartScreen> {
                       const SizedBox(height: 8),
                       Text(
                         tr('start.tagline'),
-                        style: const TextStyle(color: Chalk.dim, fontSize: 16),
+                        style: TextStyle(color: Chalk.dim, fontSize: 16),
                       ),
                       const SizedBox(height: 56),
                       FutureBuilder<SaveSummary?>(
@@ -181,7 +181,7 @@ class _LastCareer extends StatelessWidget {
                   children: [
                     Text(
                       tr('start.continue'),
-                      style: const TextStyle(color: Chalk.dim, fontSize: 14),
+                      style: TextStyle(color: Chalk.dim, fontSize: 14),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -199,7 +199,7 @@ class _LastCareer extends StatelessWidget {
                     Text(
                       '${tr('common.manager', {'name': save.managerName})}, '
                       '${formatDate(save.currentDate)}',
-                      style: const TextStyle(color: Chalk.dim, fontSize: 14),
+                      style: TextStyle(color: Chalk.dim, fontSize: 14),
                     ),
                   ],
                 ),

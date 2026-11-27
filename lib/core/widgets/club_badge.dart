@@ -17,7 +17,7 @@ class ClubBadge extends StatelessWidget {
     final primary = colorFromHex(club.primaryColor);
     final secondary = colorFromHex(club.secondaryColor);
     final textColor =
-        primary.computeLuminance() > 0.5 ? Chalk.boardDeep : Colors.white;
+        AppTheme.onColor(primary);
 
     return SizedBox(
       width: size * 0.86,

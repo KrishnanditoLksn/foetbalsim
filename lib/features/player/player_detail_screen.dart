@@ -108,7 +108,7 @@ class _Identity extends StatelessWidget {
               children: [
                 Text(
                   p.firstName,
-                  style: const TextStyle(color: Chalk.dim, fontSize: 16),
+                  style: TextStyle(color: Chalk.dim, fontSize: 16),
                 ),
                 Text(
                   p.lastName,
@@ -137,7 +137,7 @@ class _Identity extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(detail.clubName, style: const TextStyle(color: Chalk.dim)),
+                Text(detail.clubName, style: TextStyle(color: Chalk.dim)),
               ],
             ),
           ),
@@ -222,7 +222,7 @@ class _Ability extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Chalk.dim, fontSize: 13)),
+        Text(label, style: TextStyle(color: Chalk.dim, fontSize: 13)),
       ],
     );
   }
@@ -302,7 +302,7 @@ class _TransferActions extends ConsumerWidget {
               TextSpan(text: tr('player.agentPrefix')),
               TextSpan(
                 text: agent.name,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Chalk.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -314,7 +314,7 @@ class _TransferActions extends ConsumerWidget {
               ),
             ],
           ),
-          style: const TextStyle(color: Chalk.dim),
+          style: TextStyle(color: Chalk.dim),
         ),
       );
     }
@@ -342,7 +342,7 @@ class _TransferActions extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 10),
           child: Text(
             blocked,
-            style: const TextStyle(
+            style: TextStyle(
               color: Chalk.red,
               fontWeight: FontWeight.w600,
             ),
@@ -362,7 +362,7 @@ class _TransferActions extends ConsumerWidget {
             interests.isEmpty
                 ? tr('player.noInterest')
                 : tr('player.interestedClubs'),
-            style: const TextStyle(color: Chalk.dim),
+            style: TextStyle(color: Chalk.dim),
           ),
         ),
       );
@@ -377,7 +377,7 @@ class _TransferActions extends ConsumerWidget {
                 'score': i.score,
               }),
               textAlign: TextAlign.end,
-              style: const TextStyle(color: Chalk.dim),
+              style: TextStyle(color: Chalk.dim),
             ),
           ),
         );
@@ -434,7 +434,7 @@ class _TransferActions extends ConsumerWidget {
               : tr('player.windowClosed', {
                 'date': formatDate(window.nextOpensOn!),
               }),
-          style: const TextStyle(color: Chalk.dim, fontSize: 13),
+          style: TextStyle(color: Chalk.dim, fontSize: 13),
         ),
       ],
     );
@@ -446,18 +446,18 @@ class _InfoRow extends StatelessWidget {
   const _InfoRow({
     required this.label,
     required this.child,
-    this.labelColor = Chalk.dim,
+    this.labelColor,
   });
 
   final String label;
   final Widget child;
-  final Color labelColor;
+  final Color? labelColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Chalk.line)),
       ),
       child: Row(
@@ -465,7 +465,7 @@ class _InfoRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: TextStyle(color: labelColor)),
+            child: Text(label, style: TextStyle(color: labelColor ?? Chalk.dim)),
           ),
           const SizedBox(width: 12),
           Expanded(flex: 3, child: child),

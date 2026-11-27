@@ -239,7 +239,7 @@ class _TableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const style = TextStyle(
+    final style = TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w600,
       color: Chalk.dim,

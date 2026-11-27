@@ -280,7 +280,7 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const label = TextStyle(color: Chalk.dim, fontSize: 13);
+    final label = TextStyle(color: Chalk.dim, fontSize: 13);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -295,8 +295,8 @@ class _Controls extends StatelessWidget {
                   DropdownButton<Formation>(
                     value: formation,
                     isExpanded: true,
-                    underline: const Divider(color: Chalk.dim),
-                    style: const TextStyle(
+                    underline: Divider(color: Chalk.dim),
+                    style: TextStyle(
                       fontFamily: Fonts.condensed,
                       fontSize: 34,
                       fontWeight: FontWeight.w700,
@@ -352,21 +352,21 @@ class _SwapHint extends StatelessWidget {
     if (!active) {
       return Text(
         tr('tactics.swapHint'),
-        style: const TextStyle(color: Chalk.dim, fontSize: 14),
+        style: TextStyle(color: Chalk.dim, fontSize: 14),
       );
     }
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
       decoration: BoxDecoration(
         color: Chalk.yellow.withValues(alpha: 0.14),
-        border: const Border(left: BorderSide(color: Chalk.yellow, width: 4)),
+        border: Border(left: BorderSide(color: Chalk.yellow, width: 4)),
       ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               tr('tactics.swapping', {'name': selectedName}),
-              style: const TextStyle(
+              style: TextStyle(
                 color: Chalk.yellow,
                 fontWeight: FontWeight.w600,
               ),

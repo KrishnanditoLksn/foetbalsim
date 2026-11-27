@@ -217,7 +217,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
                 room.mode == NegotiationMode.transferSell
                     ? tr('inbox.reject')
                     : tr('inbox.cancelNegotiation'),
-                style: const TextStyle(color: Chalk.red),
+                style: TextStyle(color: Chalk.red),
               ),
             ),
         ],
@@ -299,7 +299,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
                       children: [...identity, ...history],
                     ),
                   ),
-                  const VerticalDivider(width: 1, color: Chalk.line),
+                  VerticalDivider(width: 1, color: Chalk.line),
                   Expanded(
                     flex: 6,
                     child: ListView(
@@ -392,7 +392,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
           const SizedBox(height: 10),
           Text(
             problem,
-            style: const TextStyle(
+            style: TextStyle(
               color: Chalk.red,
               fontWeight: FontWeight.w600,
             ),
@@ -401,7 +401,7 @@ class _NegotiationRoomScreenState extends ConsumerState<NegotiationRoomScreen> {
         const SizedBox(height: 10),
         Text(
           _tradeOffHint(room.mode),
-          style: const TextStyle(color: Chalk.dim, fontSize: 13, height: 1.35),
+          style: TextStyle(color: Chalk.dim, fontSize: 13, height: 1.35),
         ),
       ],
     ];
@@ -465,7 +465,7 @@ class _PlayerLine extends ConsumerWidget {
                       children: [
                         TextSpan(
                           text: '${p.firstName} ',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Chalk.dim,
                             fontWeight: FontWeight.w500,
                           ),
@@ -499,7 +499,7 @@ class _PlayerLine extends ConsumerWidget {
                   TextSpan(text: '. $subject'),
                 ],
               ),
-              style: const TextStyle(color: Chalk.dim, fontSize: 13),
+              style: TextStyle(color: Chalk.dim, fontSize: 13),
             ),
           ],
         ),
@@ -515,7 +515,7 @@ class _PlayerLine extends ConsumerWidget {
         children: [
           Text(
             p.firstName,
-            style: const TextStyle(color: Chalk.dim, fontSize: 15),
+            style: TextStyle(color: Chalk.dim, fontSize: 15),
           ),
           Text(
             p.lastName,
@@ -541,7 +541,7 @@ class _PlayerLine extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(subject, style: const TextStyle(color: Chalk.dim)),
+          Text(subject, style: TextStyle(color: Chalk.dim)),
         ],
       ),
     );
@@ -595,7 +595,7 @@ class _AgentBoard extends StatelessWidget {
                   TextSpan(text: agent.name),
                   TextSpan(
                     text: '  ${tr('room.agentShort', {'style': style})}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: Fonts.body,
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
@@ -622,7 +622,7 @@ class _AgentBoard extends StatelessWidget {
             ),
             Text(
               tr('room.playerAgent', {'style': style}),
-              style: const TextStyle(color: Chalk.dim, fontSize: 13),
+              style: TextStyle(color: Chalk.dim, fontSize: 13),
             ),
           ],
           SizedBox(height: compact ? 10 : 14),
@@ -819,7 +819,7 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 16, bottom: 6),
-    child: Text(text, style: const TextStyle(color: Chalk.dim, fontSize: 14)),
+    child: Text(text, style: TextStyle(color: Chalk.dim, fontSize: 14)),
   );
 }
 
@@ -893,7 +893,7 @@ class _HistoryState extends State<_History> {
         for (final t in shown)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 9),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: Chalk.line)),
             ),
             // Nama pembicara sebaris dengan kalimatnya, supaya tidak butuh
@@ -970,12 +970,12 @@ class _Outcome extends StatelessWidget {
                 if (note != null && short) TextSpan(text: '  $note'),
               ],
             ),
-            style: const TextStyle(color: Chalk.dim),
+            style: TextStyle(color: Chalk.dim),
           ),
           if (note != null && !short)
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Text(note, style: const TextStyle(color: Chalk.dim)),
+              child: Text(note, style: TextStyle(color: Chalk.dim)),
             ),
           SizedBox(height: short ? 6 : 10),
           Row(
@@ -1025,7 +1025,7 @@ class _ActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return _BottomPanel(
       color: Chalk.board,
-      border: const BorderSide(color: Chalk.line),
+      border: BorderSide(color: Chalk.line),
       child: Row(
         children: [
           Expanded(

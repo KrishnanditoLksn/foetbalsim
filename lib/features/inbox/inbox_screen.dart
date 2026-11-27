@@ -88,7 +88,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             _filter == _InboxFilter.action
                                 ? tr('inbox.noneAction')
                                 : tr('inbox.allRead'),
-                            style: const TextStyle(color: Chalk.dim),
+                            style: TextStyle(color: Chalk.dim),
                           ),
                         )
                         : ListView.separated(
@@ -292,7 +292,7 @@ class _MessageCard extends StatelessWidget {
                         TextSpan(text: ', ${formatDate(m.date)}'),
                       ],
                     ),
-                    style: const TextStyle(fontSize: 13, color: Chalk.dim),
+                    style: TextStyle(fontSize: 13, color: Chalk.dim),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -306,7 +306,7 @@ class _MessageCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       tr('dash.awaitingDecision'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Chalk.red,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -321,7 +321,7 @@ class _MessageCard extends StatelessWidget {
                 width: 9,
                 height: 9,
                 margin: const EdgeInsets.only(left: 10, top: 24),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Chalk.blue,
                   shape: BoxShape.circle,
                 ),

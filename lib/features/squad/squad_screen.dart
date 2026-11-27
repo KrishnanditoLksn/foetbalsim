@@ -128,7 +128,7 @@ class _SquadListViewState extends ConsumerState<SquadListView> {
                       tr('squad.playerCount', {'n': rows.length}),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Chalk.dim, fontSize: 13),
+                      style: TextStyle(color: Chalk.dim, fontSize: 13),
                     ),
                   ),
                   _SortMenu(
@@ -323,7 +323,7 @@ class PlayerListCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Tooltip(
                             message: tr('squad.onTransferList'),
-                            child: const Icon(
+                            child: Icon(
                               Icons.sell_outlined,
                               size: 15,
                               color: Chalk.yellow,
@@ -342,7 +342,7 @@ class PlayerListCard extends StatelessWidget {
                       children: [
                         Text(
                           tr('common.age', {'n': p.age}),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Chalk.dim,
                             fontSize: 13,
                           ),
@@ -361,7 +361,7 @@ class PlayerListCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     formatMoney(p.marketValue),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Chalk.dim,
                       fontSize: 12,
                       fontFeatures: tabular,

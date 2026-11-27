@@ -1,29 +1,227 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/utils/format_utils.dart';
 import '../domain/models/game_models.dart';
 
+/// Satu set warna papan. Papan diwarnai identitas klub yang dilatih
+/// (lihat [ClubPalette.forClub]): Barcelona papan biru tua beraksen grana,
+/// Athletic papan merah berkapur putih, Real Madrid papan putih beraksen emas.
+@immutable
+class ClubPalette {
+  const ClubPalette({
+    required this.brightness,
+    required this.board,
+    required this.boardDeep,
+    required this.boardRaised,
+    required this.line,
+    required this.ink,
+    required this.dim,
+    required this.accent,
+    required this.yellow,
+    required this.red,
+    required this.blue,
+    required this.green,
+    required this.pink,
+    required this.grey,
+  });
+
+  final Brightness brightness;
+  final Color board;
+  final Color boardDeep;
+  final Color boardRaised;
+  final Color line;
+
+  /// Warna tulisan utama ("kapur"): terang di papan gelap, gelap di papan
+  /// terang.
+  final Color ink;
+  final Color dim;
+
+  /// Aksen utama (tombol, indikator terpilih).
+  final Color accent;
+
+  // Kapur berwarna untuk arti tetap (kuning = hari laga/sorotan, merah =
+  // keputusan menunggu/bahaya, biru = info, hijau = positif).
+  final Color yellow;
+  final Color red;
+  final Color blue;
+  final Color green;
+  final Color pink;
+  final Color grey;
+
+  bool get isLight => brightness == Brightness.light;
+
+  /// Papan netral (grafit) untuk menu awal dan karier baru.
+  static const neutral = ClubPalette(
+    brightness: Brightness.dark,
+    board: Color(0xFF202327),
+    boardDeep: Color(0xFF181A1E),
+    boardRaised: Color(0xFF292D32),
+    line: Color(0xFF3B4047),
+    ink: Color(0xFFECEAE1),
+    dim: Color(0xFFA5A9AE),
+    accent: Color(0xFFE8CB6A),
+    yellow: Color(0xFFE8CB6A),
+    red: Color(0xFFE27D6B),
+    blue: Color(0xFF93C4D4),
+    green: Color(0xFFA3D18F),
+    pink: Color(0xFFE3A1B8),
+    grey: Color(0xFF80868D),
+  );
+
+  /// Palet dari warna [club].
+  ///
+  /// - Warna utama putih (Real Madrid, Zaragoza, …) → papan terang, aksen
+  ///   warna kedua.
+  /// - Dua warna yang sama-sama kuat (Barcelona, Levante, Osasuna, …) → papan
+  ///   dari warna yang lebih gelap, aksen dari yang lain: blaugrana.
+  /// - Warna utama kuning (Villarreal, Cádiz) → papan dari warna kedua.
+  /// - Selain itu → papan dari warna utama yang digelapkan; bila warna kedua
+  ///   putih/hitam (Athletic: merah-putih), aksennya kapur putih.
+  static ClubPalette forClub(Club? club) {
+    if (club == null) return neutral;
+    final p = HSLColor.fromColor(colorFromHex(club.primaryColor));
+    final s = HSLColor.fromColor(colorFromHex(club.secondaryColor));
+
+    if (_isWhite(p)) return _light(accentFrom: s);
+
+    var base = p;
+    HSLColor? other = s;
+    if (_isColourful(p) && _isColourful(s)) {
+      final pLum = p.toColor().computeLuminance();
+      final sLum = s.toColor().computeLuminance();
+      if (_isYellow(p) || sLum < pLum) (base, other) = (s, p);
+    } else if (!_isColourful(p) && _isColourful(s)) {
+      // Mis. Valencia: hitam-oranye → papan arang, aksen oranye.
+      (base, other) = (p, s);
+    }
+    if (!_isColourful(other)) other = null;
+    return _dark(base: base, accentFrom: other);
+  }
+
+  static bool _isWhite(HSLColor c) => c.lightness > 0.85;
+  static bool _isColourful(HSLColor c) =>
+      c.saturation >= 0.3 && c.lightness > 0.12 && c.lightness < 0.9;
+  static bool _isYellow(HSLColor c) =>
+      c.hue >= 40 && c.hue <= 70 && c.lightness >= 0.45;
+
+  static Color _hsl(double h, double s, double l) =>
+      HSLColor.fromAHSL(1, h, s.clamp(0, 1), l.clamp(0, 1)).toColor();
+
+  static double _contrast(Color a, Color b) {
+    final la = a.computeLuminance(), lb = b.computeLuminance();
+    return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+  }
+
+  /// Warna klub [c] digeser terang/gelapnya sampai kontrasnya dengan [board]
+  /// minimal 3:1 (cukup untuk tombol dan indikator), hue tetap.
+  static Color _readableOn(Color board, HSLColor c, {required bool lighten}) {
+    var hsl = c.withSaturation(c.saturation.clamp(0, 0.85));
+    hsl = hsl.withLightness(
+      lighten ? math.max(hsl.lightness, 0.55) : math.min(hsl.lightness, 0.45),
+    );
+    for (var i = 0; i < 20 && _contrast(hsl.toColor(), board) < 3.2; i++) {
+      final l = hsl.lightness + (lighten ? 0.025 : -0.025);
+      hsl = hsl.withLightness(l.clamp(0, 1));
+    }
+    return hsl.toColor();
+  }
+
+  static ClubPalette _dark({required HSLColor base, HSLColor? accentFrom}) {
+    final h = base.hue;
+    // Papan tetap gelap agar kapur terbaca, tapi warnanya jelas warna klub.
+    final sat =
+        _isColourful(base) ? (base.saturation * 0.7).clamp(0.3, 0.6) : 0.06;
+    final board = _hsl(h, sat, 0.17);
+    final ink = Color.lerp(const Color(0xFFF3F1EA), _hsl(h, 0.3, 0.9), 0.15)!;
+    final accent =
+        accentFrom == null
+            // Warna kedua putih/hitam: aksen kapur putih bersih.
+            ? const Color(0xFFFFFFFF)
+            : _readableOn(board, accentFrom, lighten: true);
+    return ClubPalette(
+      brightness: Brightness.dark,
+      board: board,
+      boardDeep: _hsl(h, sat, 0.12),
+      boardRaised: _hsl(h, sat * 0.9, 0.22),
+      line: _hsl(h, sat * 0.6, 0.3),
+      ink: ink,
+      dim: Color.lerp(ink, board, 0.35)!,
+      accent: accent,
+      yellow: const Color(0xFFE8CB6A),
+      // Di papan merah, kapur merah dibuat lebih terang agar tetap menonjol.
+      red: (h < 20 || h > 340) && sat > 0.3
+          ? const Color(0xFFFFA390)
+          : const Color(0xFFE27D6B),
+      blue: const Color(0xFF93C4D4),
+      green: const Color(0xFFA3D18F),
+      pink: const Color(0xFFE3A1B8),
+      grey: Color.lerp(ink, board, 0.55)!,
+    );
+  }
+
+  static ClubPalette _light({required HSLColor accentFrom}) {
+    const ink = Color(0xFF1B2130);
+    const board = Color(0xFFF4F2EC);
+    final accent =
+        _isColourful(accentFrom)
+            ? _readableOn(board, accentFrom, lighten: false)
+            : ink;
+    return ClubPalette(
+      brightness: Brightness.light,
+      board: board,
+      boardDeep: const Color(0xFFE9E6DD),
+      boardRaised: const Color(0xFFFFFFFF),
+      line: const Color(0xFFD9D5CA),
+      ink: ink,
+      dim: const Color(0xFF5E6573),
+      accent: accent,
+      yellow: const Color(0xFF9A6B00),
+      red: const Color(0xFFB83C2B),
+      blue: const Color(0xFF2B6A86),
+      green: const Color(0xFF3B7A2C),
+      pink: const Color(0xFFA5426A),
+      grey: const Color(0xFF8A8F98),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ClubPalette &&
+      other.brightness == brightness &&
+      other.board == board &&
+      other.accent == accent &&
+      other.ink == ink;
+
+  @override
+  int get hashCode => Object.hash(brightness, board, accent, ink);
+}
+
 /// "Pizarra": papan taktik kapur milik manajer.
 ///
-/// Papan slate hijau-abu, tulisan kapur putih, dan kapur berwarna yang
-/// pudar untuk arti tetap (kuning = hari laga/sorotan, merah = keputusan
-/// menunggu/bahaya, biru = info, hijau = positif). Aksen utama bukan warna
-/// tetap: aksen adalah warna klub yang dilatih (lihat [AppTheme.accentFor]).
+/// Warna papan mengikuti identitas klub yang dilatih: nilai di sini dibaca
+/// dari [palette] aktif, yang diatur oleh [AppTheme.board]. Karena itu
+/// nilai-nilai ini bukan `const`.
 abstract final class Chalk {
-  static const board = Color(0xFF22302A);
-  static const boardDeep = Color(0xFF1A2520);
-  static const boardRaised = Color(0xFF2B3B33);
-  static const line = Color(0xFF3D5046);
+  static ClubPalette palette = ClubPalette.neutral;
 
-  static const white = Color(0xFFECEAE1);
-  static const dim = Color(0xFFA3AFA6);
+  static Color get board => palette.board;
+  static Color get boardDeep => palette.boardDeep;
+  static Color get boardRaised => palette.boardRaised;
+  static Color get line => palette.line;
 
-  static const yellow = Color(0xFFE8CB6A);
-  static const red = Color(0xFFE27D6B);
-  static const blue = Color(0xFF93C4D4);
-  static const green = Color(0xFFA3D18F);
-  static const pink = Color(0xFFE3A1B8);
-  static const grey = Color(0xFF7D8A82);
+  /// Warna tulisan utama. Namanya tetap `white` demi kompatibilitas; di papan
+  /// terang (Real Madrid) warnanya gelap.
+  static Color get white => palette.ink;
+  static Color get dim => palette.dim;
+
+  static Color get yellow => palette.yellow;
+  static Color get red => palette.red;
+  static Color get blue => palette.blue;
+  static Color get green => palette.green;
+  static Color get pink => palette.pink;
+  static Color get grey => palette.grey;
 }
 
 /// Nama keluarga font (lihat pubspec.yaml).
@@ -34,47 +232,41 @@ abstract final class Fonts {
 
 /// Alias lama: komponen lama memakai nama-nama ini.
 abstract final class FutbolColors {
-  static const canvas = Chalk.board;
-  static const card = Chalk.boardRaised;
-  static const elevated = Chalk.boardRaised;
-  static const border = Chalk.line;
-  static const emerald = Chalk.green;
-  static const amber = Chalk.yellow;
-  static const cyan = Chalk.blue;
-  static const coral = Chalk.red;
-  static const rose = Chalk.pink;
-  static const textPrimary = Chalk.white;
-  static const textSecondary = Chalk.dim;
+  static Color get canvas => Chalk.board;
+  static Color get card => Chalk.boardRaised;
+  static Color get elevated => Chalk.boardRaised;
+  static Color get border => Chalk.line;
+  static Color get emerald => Chalk.green;
+  static Color get amber => Chalk.yellow;
+  static Color get cyan => Chalk.blue;
+  static Color get coral => Chalk.red;
+  static Color get rose => Chalk.pink;
+  static Color get textPrimary => Chalk.white;
+  static Color get textSecondary => Chalk.dim;
 }
 
 abstract final class AppTheme {
-  /// Aksen dari warna klub: warna utama bila cukup berwarna, kalau tidak
-  /// (mis. putih Real Madrid) warna kedua, kalau tidak kapur kuning. Warna
-  /// yang terlalu gelap untuk papan dicerahkan agar tetap terbaca.
-  static Color accentFor(Club? club) {
-    if (club == null) return Chalk.yellow;
-    for (final hex in [club.primaryColor, club.secondaryColor]) {
-      final hsl = HSLColor.fromColor(colorFromHex(hex));
-      if (hsl.saturation < 0.3 || hsl.lightness > 0.9 || hsl.lightness < 0.1) {
-        continue;
-      }
-      final lightness = hsl.lightness.clamp(0.55, 0.72).toDouble();
-      final saturation = hsl.saturation.clamp(0, 0.75).toDouble();
-      return hsl.withLightness(lightness).withSaturation(saturation).toColor();
-    }
-    return Chalk.yellow;
-  }
+  /// Aksen papan untuk [club] (lihat [ClubPalette.forClub]).
+  static Color accentFor(Club? club) => ClubPalette.forClub(club).accent;
 
-  /// Warna teks/ikon di atas [c].
+  static const _darkInk = Color(0xFF1A1D22);
+  static const _lightInk = Color(0xFFF5F3EC);
+
+  /// Warna teks/ikon di atas [c]. Tetap (tidak ikut palet), karena [c] bisa
+  /// warna apa saja (mis. kepala Beranda dalam warna klub).
   static Color onColor(Color c) =>
-      c.computeLuminance() > 0.4 ? Chalk.boardDeep : Chalk.white;
+      c.computeLuminance() > 0.4 ? _darkInk : _lightInk;
 
-  /// Tema papan, beraksen warna [club] bila ada karier aktif.
+  /// Tema papan dalam warna identitas [club] bila ada karier aktif.
+  /// Sekaligus mengatur [Chalk.palette] agar widget yang memakai `Chalk.*`
+  /// ikut berganti warna.
   static ThemeData board({Club? club}) {
-    final accent = accentFor(club);
+    final palette = ClubPalette.forClub(club);
+    Chalk.palette = palette;
+    final accent = palette.accent;
     final onAccent = onColor(accent);
     final scheme = ColorScheme(
-      brightness: Brightness.dark,
+      brightness: palette.brightness,
       primary: accent,
       onPrimary: onAccent,
       primaryContainer: Color.lerp(Chalk.board, accent, 0.28)!,
@@ -95,11 +287,11 @@ abstract final class AppTheme {
       onSurface: Chalk.white,
       onSurfaceVariant: Chalk.dim,
       surfaceContainerLowest: Chalk.boardDeep,
-      surfaceContainerLow: const Color(0xFF26352E),
+      surfaceContainerLow: Color.lerp(Chalk.board, Chalk.boardRaised, 0.5)!,
       surfaceContainer: Chalk.boardRaised,
-      surfaceContainerHigh: const Color(0xFF32443A),
-      surfaceContainerHighest: const Color(0xFF3A4E43),
-      outline: const Color(0xFF5A6E62),
+      surfaceContainerHigh: Color.lerp(Chalk.boardRaised, Chalk.line, 0.4)!,
+      surfaceContainerHighest: Color.lerp(Chalk.boardRaised, Chalk.line, 0.7)!,
+      outline: Color.lerp(Chalk.line, Chalk.dim, 0.4)!,
       outlineVariant: Chalk.line,
       inverseSurface: Chalk.white,
       onInverseSurface: Chalk.board,
@@ -141,7 +333,7 @@ abstract final class AppTheme {
     return base.copyWith(
       scaffoldBackgroundColor: Chalk.board,
       textTheme: text,
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: Chalk.line,
         thickness: 1,
         space: 1,
@@ -191,9 +383,9 @@ abstract final class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: Colors.transparent,
         selectedColor: accent.withValues(alpha: 0.2),
-        side: const BorderSide(color: Chalk.line),
+        side: BorderSide(color: Chalk.line),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: Fonts.body,
           color: Chalk.white,
           fontWeight: FontWeight.w600,
@@ -215,7 +407,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, 46),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          side: const BorderSide(color: Chalk.dim),
+          side: BorderSide(color: Chalk.dim),
           foregroundColor: Chalk.white,
           textStyle: const TextStyle(
             fontFamily: Fonts.body,
@@ -234,7 +426,7 @@ abstract final class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
-          side: const BorderSide(color: Chalk.line),
+          side: BorderSide(color: Chalk.line),
           selectedBackgroundColor: accent.withValues(alpha: 0.2),
           selectedForegroundColor: Chalk.white,
           foregroundColor: Chalk.dim,
@@ -267,7 +459,7 @@ abstract final class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: Chalk.white,
-        contentTextStyle: const TextStyle(
+        contentTextStyle: TextStyle(
           fontFamily: Fonts.body,
           color: Chalk.boardDeep,
           fontWeight: FontWeight.w500,
@@ -280,28 +472,28 @@ abstract final class AppTheme {
         fillColor: Chalk.boardDeep,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: Chalk.line),
+          borderSide: BorderSide(color: Chalk.line),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: Chalk.line),
+          borderSide: BorderSide(color: Chalk.line),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
           borderSide: BorderSide(color: accent, width: 2),
         ),
       ),
-      listTileTheme: const ListTileThemeData(iconColor: Chalk.dim),
+      listTileTheme: ListTileThemeData(iconColor: Chalk.dim),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: accent,
         linearTrackColor: Chalk.line,
       ),
-      badgeTheme: const BadgeThemeData(
+      badgeTheme: BadgeThemeData(
         backgroundColor: Chalk.red,
         textColor: Chalk.boardDeep,
       ),
-      popupMenuTheme: const PopupMenuThemeData(color: Chalk.boardRaised),
-      dropdownMenuTheme: const DropdownMenuThemeData(
+      popupMenuTheme: PopupMenuThemeData(color: Chalk.boardRaised),
+      dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
           backgroundColor: WidgetStatePropertyAll(Chalk.boardRaised),
         ),

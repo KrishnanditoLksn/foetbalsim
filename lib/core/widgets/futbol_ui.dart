@@ -275,7 +275,7 @@ class SectionHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: Fonts.condensed,
                     fontSize: 21,
                     fontWeight: FontWeight.w600,
@@ -287,7 +287,7 @@ class SectionHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          const Divider(color: Chalk.dim, thickness: 1.2),
+          Divider(color: Chalk.dim, thickness: 1.2),
         ],
       ),
     );
@@ -344,7 +344,7 @@ class StatFigure extends StatelessWidget {
           label,
           maxLines: labelLines,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 13, color: Chalk.dim),
+          style: TextStyle(fontSize: 13, color: Chalk.dim),
         ),
       ],
     );
@@ -365,7 +365,7 @@ class StatStrip extends StatelessWidget {
         children: [
           for (var i = 0; i < children.length; i++) ...[
             if (i > 0)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 14),
                 child: VerticalDivider(width: 1, color: Chalk.line),
               ),
