@@ -60,7 +60,10 @@ abstract final class TransferRules {
 
   /// Bobot syarat pembayaran bagi penjual: cicilan mengurangi nilai,
   /// sell-on clause menambah nilai (penjual dapat bagian penjualan berikutnya).
-  static double termsFactor({required int installmentYears, required int sellOnPct}) {
+  static double termsFactor({
+    required int installmentYears,
+    required int sellOnPct,
+  }) {
     final installment = switch (installmentYears) {
       2 => 0.95,
       3 => 0.92,
@@ -75,7 +78,11 @@ abstract final class TransferRules {
     required int installmentYears,
     required int sellOnPct,
   }) =>
-      (fee * termsFactor(installmentYears: installmentYears, sellOnPct: sellOnPct))
+      (fee *
+              termsFactor(
+                installmentYears: installmentYears,
+                sellOnPct: sellOnPct,
+              ))
           .round();
 
   /// Pembayaran di muka (€K): cicilan pertama, sisanya tiap 1 Juli.
