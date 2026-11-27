@@ -115,7 +115,8 @@ enum PlayerSort {
   wage,
   name;
 
-  String get label => tr('playerSort.$name');
+  // `this.` wajib: nilai enum `name` di atas menutupi getter `Enum.name`.
+  String get label => tr('playerSort.${this.name}');
 }
 
 /// Filter pencarian pemain. Nilai null = tidak dibatasi.

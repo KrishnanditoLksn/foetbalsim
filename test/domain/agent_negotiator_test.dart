@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:futbol/domain/enums/squad_status.dart';
 import 'package:futbol/domain/transfer/agent_negotiator.dart';
+import 'package:futbol/l10n/l10n.dart';
 
 /// Mesin tawar-menawar Ruang Negosiasi (README_NEGOTIATION_ROOM B & F).
 void main() {
@@ -68,7 +69,7 @@ void main() {
       expect(AgentNegotiator.anchorOffer(s).amount, 12000);
       expect(s.log.last.byAgent, isTrue);
       expect(s.log.last.text, contains('Sevilla'));
-      expect(s.log.first.text, contains('Tawaran awal Anda'));
+      expect(asMsg(s.log.first.text).key, 'agent.userOpening');
     });
 
     test('tawaran ≥ batas dan ≤ 3% dari patokan diterima', () {

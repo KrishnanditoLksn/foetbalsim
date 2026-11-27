@@ -10,6 +10,7 @@ import 'package:futbol/data/services/game_engine.dart';
 import 'package:futbol/domain/enums/inbox.dart';
 import 'package:futbol/domain/generators/world_generator.dart';
 import 'package:futbol/domain/models/game_models.dart';
+import 'package:futbol/l10n/l10n.dart';
 
 const _ourClub = 'real-madrid';
 
@@ -90,7 +91,10 @@ void main() {
     await _advanceUntil(engine, (d) => d.isAfter(DateTime.utc(2026, 9, 1)));
 
     final inbox = await engine.inbox();
-    expect(inbox.any((m) => m.title == 'Bursa ditutup'), isTrue);
+    expect(
+      inbox.any((m) => asMsg(m.title).key == 'msg.windowClosed.title'),
+      isTrue,
+    );
   });
 
   test('pemain yang baru pindah terkunci sampai jendela berikutnya', () async {

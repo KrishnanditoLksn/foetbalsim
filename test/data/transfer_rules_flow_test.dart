@@ -16,6 +16,7 @@ import 'package:futbol/domain/models/game_models.dart';
 import 'package:futbol/domain/models/transfer_models.dart';
 import 'package:futbol/domain/transfer/transfer_rules.dart';
 import 'package:futbol/domain/transfer/valuation.dart';
+import 'package:futbol/l10n/l10n.dart';
 
 /// Ketentuan transfer README_FASE3 (B.5, B.9, B.10.7) dari sisi user.
 const _us = 'real-madrid';
@@ -115,7 +116,7 @@ void main() {
     await resolveOn(2);
     final offer = await offerOf(p);
     expect(offer.status, TransferOfferStatus.rejected);
-    expect(offer.reason, 'Tawaran terlalu rendah.');
+    expect(asMsg(offer.reason!).key, 'reason.tooLow');
     expect(await TransferRepository(db).memory('lowballCount'), 1);
     expect(await askFor(p), greaterThan(ask));
   });

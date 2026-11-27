@@ -46,7 +46,8 @@ enum _SortField {
   name,
   position;
 
-  String get label => tr('squad.sort.$name');
+  // `this.` wajib: nilai enum `name` di atas menutupi getter `Enum.name`.
+  String get label => tr('squad.sort.${this.name}');
 }
 
 /// Daftar skuad seperti lembar susunan pemain: filter posisi, urutan, dan

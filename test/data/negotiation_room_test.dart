@@ -17,6 +17,7 @@ import 'package:futbol/domain/generators/world_generator.dart';
 import 'package:futbol/domain/models/game_models.dart';
 import 'package:futbol/domain/models/season_models.dart';
 import 'package:futbol/domain/transfer/agent_negotiator.dart';
+import 'package:futbol/l10n/l10n.dart';
 
 /// Ruang Negosiasi dari sisi layanan (README_NEGOTIATION_ROOM F).
 const _us = 'real-madrid';
@@ -242,7 +243,7 @@ void main() {
     );
     expect(again.session.anchor, lastAnchor);
     expect(again.session.patience, 100);
-    expect(again.session.log.first.text, contains('belum lupa'));
+    expect(asMsg(again.session.log.first.text).key, 'agent.remembered');
   });
 
   test('jual: pembeli naik bertahap, sepakat, pemain pindah dengan harga baru', () async {
