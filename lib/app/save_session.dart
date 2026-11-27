@@ -4,6 +4,7 @@ import '../core/rng/seeded_random.dart';
 import '../data/database/save_storage.dart';
 import '../data/repositories/world_repository.dart';
 import '../data/services/game_engine.dart';
+import '../data/services/legacy_inbox_upgrade.dart';
 import '../domain/generators/world_generator.dart';
 import '../domain/models/game_models.dart';
 import 'providers.dart';
@@ -14,6 +15,9 @@ Future<void> activateSave(WidgetRef ref, int slot) async {
   final db = await SaveStorage.open(slot);
   // Save lama (v1) belum punya jadwal; dibuatkan di sini bila perlu.
   await GameEngine(db).ensureSeasonInitialized();
+  // Pesan Inbox dari save lama: teks Indonesia mentah → teks terjemahan,
+  // dan berita transfer dilengkapi rincian untuk kartu detail.
+  await LegacyInboxUpgrade(db).run();
   ref.read(currentDatabaseProvider.notifier).state = db;
   ref.read(activeSaveSlotProvider.notifier).state = slot;
   await previous?.close();

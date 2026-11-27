@@ -33,7 +33,14 @@ class _StartScreenState extends ConsumerState<StartScreen> {
   }
 
   /// Dipanggil setelah kembali dari layar lain (mis. save dihapus).
-  void _refresh() => setState(() => _latest = _loadLatest());
+  void _refresh() {
+    // Body blok, bukan panah: `() => _latest = …` mengembalikan Future hasil
+    // assignment, dan setState menolak callback yang mengembalikan Future.
+    final next = _loadLatest();
+    setState(() {
+      _latest = next;
+    });
+  }
 
   Future<void> _push(String route) async {
     await Navigator.of(context).pushNamed(route);

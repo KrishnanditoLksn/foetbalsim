@@ -5,6 +5,7 @@ import '../../domain/enums/transfer.dart';
 
 import '../../domain/models/game_models.dart';
 import '../../domain/models/season_models.dart';
+import '../../domain/models/transfer_news_payload.dart';
 import '../../domain/transfer/club_ai_profile.dart';
 import '../../domain/transfer/interest_engine.dart';
 import '../../domain/transfer/market_heat.dart';
@@ -466,7 +467,15 @@ class TransferMarketService {
               }).encode(),
           isRead: false,
           actionType: InboxActionType.incomingTransferOffer,
-          payload: 'offer:$offerId',
+          payload: _txNews(
+            p,
+            w,
+            fromClubId: ourClubId,
+            toClubId: buyer.id,
+            status: TransferNewsStatus.incomingOffer,
+            fee: fee,
+            offerId: offerId,
+          ).encode(head: 'offer:$offerId'),
           resolved: false,
           choice: null,
         ),
@@ -530,10 +539,42 @@ class TransferMarketService {
         body: Msg('msg.playerOffered.body', {'text': text}).encode(),
         isRead: false,
         actionType: InboxActionType.none,
-        payload: 'player:${p.id}',
+        payload: _txNews(
+          p,
+          w,
+          fromClubId: p.clubId,
+          toClubId: ourClubId,
+          status: TransferNewsStatus.offered,
+          fee: ask,
+        ).encode(head: 'player:${p.id}'),
         resolved: false,
         choice: null,
       ),
+    );
+  }
+
+  /// Rincian berita transfer dengan kontrak pemain saat ini.
+  static TransferNewsPayload _txNews(
+    Player p,
+    _World w, {
+    required String fromClubId,
+    required String toClubId,
+    required TransferNewsStatus status,
+    required int fee,
+    int? offerId,
+  }) {
+    final contract = w.contracts[p.id];
+    return TransferNewsPayload(
+      playerId: p.id,
+      playerName: p.fullName,
+      fromClubId: fromClubId,
+      toClubId: toClubId,
+      status: status,
+      fee: fee,
+      contractEndDate: contract?.endDate,
+      wage: contract?.wage,
+      squadStatus: contract?.squadStatus,
+      offerId: offerId,
     );
   }
 

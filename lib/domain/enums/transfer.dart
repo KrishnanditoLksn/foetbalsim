@@ -29,3 +29,25 @@ enum TransferType {
 
   String get label => tr('transferType.$name');
 }
+
+/// Status yang ditampilkan pada berita transfer di Inbox (snapshot saat
+/// berita dibuat, bukan status tawaran saat ini).
+enum TransferNewsStatus {
+  completed,
+  incomingOffer,
+  pendingBid,
+  counterOffer,
+  contractTalks,
+  offered,
+  rejected,
+  failed,
+  cancelled;
+
+  String get label => tr('txStatus.$name');
+
+  /// Transfer sudah terjadi: kontrak di payload adalah kontrak baru.
+  bool get isDone => this == completed;
+
+  /// Transfer tidak terjadi: kontrak baru tidak ditampilkan.
+  bool get isDead => this == rejected || this == failed || this == cancelled;
+}

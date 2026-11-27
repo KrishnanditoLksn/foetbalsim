@@ -354,7 +354,7 @@ const Map<String, Tr> engineStrings = {
   ),
   'msg.boardWelcome.body': (
     en:
-        'Welcome to {club}, Manager {manager}. This season\'s target: finish {target}th or better. Accept the target to start the season.',
+        'Welcome to {club}, Manager {manager}. This season\'s target: finish {target, ordinal} or better. Accept the target to start the season.',
     id:
         'Selamat datang di {club}, Manajer {manager}. Target musim ini: finis di posisi {target} atau lebih baik. Terima target ini untuk memulai musim.',
     fr:
@@ -384,7 +384,7 @@ const Map<String, Tr> engineStrings = {
   ),
   'msg.scout.bodyHome': (
     en:
-        'Home match tomorrow. {club} are {pos}th with {points} points. Recent form: {form}. Key player: {player} (CA {ca}).',
+        'Home match tomorrow. {club} are {pos, ordinal} with {points} points. Recent form: {form}. Key player: {player} (CA {ca}).',
     id:
         'Laga kandang besok. {club} di posisi {pos} dengan {points} poin. Bentuk terakhir: {form}. Pemain kunci: {player} (CA {ca}).',
     fr:
@@ -392,7 +392,7 @@ const Map<String, Tr> engineStrings = {
   ),
   'msg.scout.bodyAway': (
     en:
-        'Away match tomorrow. {club} are {pos}th with {points} points. Recent form: {form}. Key player: {player} (CA {ca}).',
+        'Away match tomorrow. {club} are {pos, ordinal} with {points} points. Recent form: {form}. Key player: {player} (CA {ca}).',
     id:
         'Laga tandang besok. {club} di posisi {pos} dengan {points} poin. Bentuk terakhir: {form}. Pemain kunci: {player} (CA {ca}).',
     fr:
@@ -418,7 +418,7 @@ const Map<String, Tr> engineStrings = {
   ),
   'msg.seasonEnd.body': (
     en:
-        'Final position {pos} of {teams} with {points} points ({won}W {drawn}D {lost}L). Board target: {target}th. {verdict}',
+        'Final position {pos} of {teams} with {points} points ({won}W {drawn}D {lost}L). Board target: {target, ordinal}. {verdict}',
     id:
         'Posisi akhir {pos} dari {teams} dengan {points} poin ({won}M {drawn}S {lost}K). Target dewan: posisi {target}. {verdict}',
     fr:

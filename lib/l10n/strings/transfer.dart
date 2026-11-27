@@ -9,6 +9,100 @@ const Map<String, Tr> transferStrings = {
     fr: 'Offre envoyée. Réponse du club sous 1 à 2 jours.',
   ),
   'flow.negotiate': (en: 'Negotiate', id: 'Negosiasi', fr: 'Négocier'),
+
+  // --- Detail berita transfer (Inbox) ---
+  'txStatus.completed': (
+    en: 'Official · Completed',
+    id: 'Resmi · Selesai',
+    fr: 'Officiel · Conclu',
+  ),
+  'txStatus.incomingOffer': (
+    en: 'Incoming offer',
+    id: 'Tawaran masuk',
+    fr: 'Offre reçue',
+  ),
+  'txStatus.pendingBid': (
+    en: 'Awaiting reply',
+    id: 'Menunggu respons',
+    fr: 'En attente de réponse',
+  ),
+  'txStatus.counterOffer': (
+    en: 'Counter-offer',
+    id: 'Kontra-tawaran',
+    fr: 'Contre-offre',
+  ),
+  'txStatus.contractTalks': (
+    en: 'Contract talks',
+    id: 'Negosiasi kontrak',
+    fr: 'Négociation du contrat',
+  ),
+  'txStatus.offered': (en: 'Offered', id: 'Ditawarkan', fr: 'Proposé'),
+  'txStatus.rejected': (en: 'Rejected', id: 'Ditolak', fr: 'Refusé'),
+  'txStatus.failed': (
+    en: 'Transfer failed',
+    id: 'Transfer gagal',
+    fr: 'Transfert échoué',
+  ),
+  'txStatus.cancelled': (en: 'Cancelled', id: 'Dibatalkan', fr: 'Annulé'),
+  'txDetail.move': (
+    en: 'Club move',
+    id: 'Perpindahan klub',
+    fr: 'Changement de club',
+  ),
+  'txDetail.fromClub': (en: 'Leaving', id: 'Klub asal', fr: 'Club quitté'),
+  'txDetail.toClub': (en: 'Joining', id: 'Klub tujuan', fr: 'Club rejoint'),
+  'txDetail.details': (
+    en: 'Transfer & contract',
+    id: 'Rincian transfer & kontrak',
+    fr: 'Transfert et contrat',
+  ),
+  'txDetail.fee': (
+    en: 'Transfer fee',
+    id: 'Biaya transfer',
+    fr: 'Indemnité de transfert',
+  ),
+  'txDetail.offer': (en: 'Offer', id: 'Nilai tawaran', fr: 'Offre'),
+  'txDetail.askingPrice': (
+    en: 'Asking price',
+    id: 'Harga minta',
+    fr: 'Prix demandé',
+  ),
+  'txDetail.paidUpfront': (
+    en: 'Paid in full',
+    id: 'Pembayaran langsung',
+    fr: 'Payé en une fois',
+  ),
+  'txDetail.contractLength': (
+    en: 'Contract length',
+    id: 'Masa kontrak',
+    fr: 'Durée du contrat',
+  ),
+  'txDetail.currentContract': (
+    en: 'Current contract',
+    id: 'Kontrak saat ini',
+    fr: 'Contrat actuel',
+  ),
+  'txDetail.until': (en: 'Until {date}', id: 'Hingga {date}', fr: "Jusqu'au {date}"),
+  'txDetail.annualWage': (
+    en: 'Annual wage',
+    id: 'Gaji tahunan',
+    fr: 'Salaire annuel',
+  ),
+  'txDetail.minWage': (
+    en: 'Minimum wage demand',
+    id: 'Gaji minimal diminta',
+    fr: 'Salaire minimum exigé',
+  ),
+  'txDetail.squadRole': (
+    en: 'Squad role',
+    id: 'Peran skuad',
+    fr: "Rôle dans l'effectif",
+  ),
+  'txDetail.unknownPlayer': (
+    en: 'Player no longer in the database',
+    id: 'Pemain tidak lagi ada di database',
+    fr: "Joueur absent de la base",
+  ),
   'flow.continueNegotiation': (
     en: 'Continue negotiation',
     id: 'Lanjutkan negosiasi',

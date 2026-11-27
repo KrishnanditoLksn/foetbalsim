@@ -6,6 +6,7 @@ import '../../domain/enums/transfer.dart';
 import '../../domain/finance/money_label.dart';
 import '../../domain/models/game_models.dart';
 import '../../domain/models/season_models.dart';
+import '../../domain/models/transfer_news_payload.dart';
 import '../../domain/models/transfer_models.dart';
 import '../../domain/transfer/agent_negotiator.dart';
 import '../../domain/transfer/club_ai_profile.dart';
@@ -287,6 +288,16 @@ class TransferService {
       installmentYears: installmentYears,
       sellOnPct: sellOnPct,
     );
+    final news = await _currentContractNews(
+      player,
+      fromClubId: player.clubId,
+      toClubId: ourClubId,
+      status: TransferNewsStatus.pendingBid,
+      fee: fee,
+      installmentYears: installmentYears,
+      sellOnPct: sellOnPct,
+      offerId: offerId,
+    );
     await _inbox.add(
       _info(
         now,
@@ -297,7 +308,7 @@ class TransferService {
           'club': seller?.name ?? player.clubId,
           'days': days,
         }),
-        payload: 'offer:$offerId',
+        payload: news.encode(head: 'offer:$offerId'),
       ),
     );
   }
@@ -413,7 +424,11 @@ class TransferService {
                   }).encode(),
               isRead: false,
               actionType: InboxActionType.counterOffer,
-              payload: 'offer:${o.id}',
+              payload: (await _offerNews(
+                o,
+                player,
+                TransferNewsStatus.counterOffer,
+              )).encode(head: 'offer:${o.id}'),
               resolved: false,
               choice: null,
             ),
@@ -438,6 +453,12 @@ class TransferService {
                 'terms': terms,
                 'reason': asMsg(reason),
               }),
+              payload:
+                  (await _offerNews(
+                    o,
+                    player,
+                    TransferNewsStatus.rejected,
+                  )).encode(),
             ),
           );
       }
@@ -475,7 +496,13 @@ class TransferService {
             }).encode(),
         isRead: false,
         actionType: InboxActionType.contractNegotiation,
-        payload: 'offer:${o.id}|min:$wage',
+        // Baca ulang: biaya bisa baru saja diubah ke harga kesepakatan agen.
+        payload: (await _offerNews(
+          await _transfers.offerById(o.id) ?? o,
+          player,
+          TransferNewsStatus.contractTalks,
+          minWage: wage,
+        )).encode(head: 'offer:${o.id}|min:$wage'),
         resolved: false,
         choice: null,
       ),
@@ -971,6 +998,12 @@ class TransferService {
                   'reason': asMsg(reason),
                   'player': player.fullName,
                 }),
+            payload:
+                (await _offerNews(
+                  offer,
+                  player,
+                  TransferNewsStatus.failed,
+                )).encode(),
           ),
         );
         return NegotiationStep(response: response, summary: trText(reason));
@@ -1047,6 +1080,12 @@ class TransferService {
                   date,
                   Msg('msg.failed.title', {'player': player.fullName}),
                   asMsg(refusal),
+                  payload:
+                      (await _offerNews(
+                        offer,
+                        player,
+                        TransferNewsStatus.failed,
+                      )).encode(),
                 ),
               );
               return NegotiationStep(
@@ -1182,6 +1221,12 @@ class TransferService {
           date,
           Msg('msg.failed.title', {'player': player.fullName}),
           asMsg(reason),
+          payload:
+              (await _offerNews(
+                offer,
+                player,
+                TransferNewsStatus.failed,
+              )).encode(),
         ),
       );
       return;
@@ -1253,6 +1298,7 @@ class TransferService {
     final newWage =
         wage ?? detail?.contract?.wage ?? DynamicValuation.expectedWage(player);
     final newYears = years ?? 3;
+    final newEndDate = DateTime.utc(date.year + newYears, 6, 30);
     final upfront = TransferRules.upfront(fee, installmentYears);
     final sellOns = await _transfers.memoryWithPrefix('sellon|${player.id}|');
     await _db.transaction(() async {
@@ -1286,7 +1332,7 @@ class TransferService {
         playerId: player.id,
         clubId: buyerId,
         wage: newWage,
-        endDate: DateTime.utc(date.year + newYears, 6, 30),
+        endDate: newEndDate,
         squadStatus: squadStatus,
       );
       await _players.setLockedUntil(player.id, _nextWindowOpen(date));
@@ -1320,6 +1366,23 @@ class TransferService {
             'to': buyerName,
             'terms': termsMsg(fee, installmentYears, sellOnPct),
           }),
+          payload:
+              TransferNewsPayload(
+                playerId: player.id,
+                playerName: player.fullName,
+                fromClubId: sellerId,
+                toClubId: buyerId,
+                status: TransferNewsStatus.completed,
+                transferType: type,
+                fee: fee,
+                installmentYears: installmentYears,
+                sellOnPct: sellOnPct,
+                contractYears: newYears,
+                contractEndDate: newEndDate,
+                wage: newWage,
+                squadStatus: squadStatus,
+                offerId: offerId,
+              ).encode(),
         ),
       );
     });
@@ -1389,12 +1452,59 @@ class TransferService {
         choice: null,
       );
 
-  /// Payload pesan transfer: "offer:ID" atau "offer:ID|min:GAJI".
-  static int? _offerIdOf(String? payload) {
-    if (payload == null || !payload.startsWith('offer:')) return null;
-    final head = payload.split('|').first;
-    return int.tryParse(head.substring('offer:'.length));
+  /// Rincian berita untuk tawaran [o] (pemain pindah dari klub penjual
+  /// `o.toClubId` ke klub penawar `o.fromClubId`). Kontrak yang dicatat =
+  /// kontrak pemain saat ini.
+  Future<TransferNewsPayload> _offerNews(
+    TransferOffer o,
+    Player player,
+    TransferNewsStatus status, {
+    int? minWage,
+  }) => _currentContractNews(
+    player,
+    fromClubId: o.toClubId,
+    toClubId: o.fromClubId,
+    status: status,
+    fee: o.fee,
+    installmentYears: o.installmentYears,
+    sellOnPct: o.sellOnPct,
+    offerId: o.id,
+    minWage: minWage,
+  );
+
+  Future<TransferNewsPayload> _currentContractNews(
+    Player player, {
+    required String fromClubId,
+    required String toClubId,
+    required TransferNewsStatus status,
+    required int fee,
+    int installmentYears = 1,
+    int sellOnPct = 0,
+    int? offerId,
+    int? minWage,
+  }) async {
+    final contract = (await _players.detail(player.id))?.contract;
+    return TransferNewsPayload(
+      playerId: player.id,
+      playerName: player.fullName,
+      fromClubId: fromClubId,
+      toClubId: toClubId,
+      status: status,
+      fee: fee,
+      installmentYears: installmentYears,
+      sellOnPct: sellOnPct,
+      contractEndDate: contract?.endDate,
+      wage: contract?.wage,
+      squadStatus: contract?.squadStatus,
+      offerId: offerId,
+      minWage: minWage,
+    );
   }
+
+  /// Payload pesan transfer: "offer:ID", "offer:ID|min:GAJI", atau
+  /// dengan rincian berita "offer:ID|tx:{...}".
+  static int? _offerIdOf(String? payload) =>
+      TransferNewsPayload.offerIdOf(payload);
 
   /// Format pilihan negosiasi: "wage:GAJI|years:TAHUN".
   static ({int wage, int years})? _parseNegotiation(String choice) {

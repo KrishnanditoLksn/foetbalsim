@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_actions.dart';
 import '../../app/providers.dart';
 import '../../app/theme.dart';
+import '../../core/widgets/futbol_ui.dart';
 import '../../domain/enums/inbox.dart';
 import '../../app/router.dart';
 import '../../domain/models/season_models.dart';
 import '../../domain/models/transfer_models.dart';
+import '../../domain/models/transfer_news_payload.dart';
 import '../../l10n/l10n.dart';
 import '../transfer/transfer_flow.dart';
+import 'inbox_message_dialog.dart';
+import 'transfer_news_detail_dialog.dart';
 
 enum _InboxFilter { all, action, unread }
 
@@ -118,6 +122,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     if (!context.mounted) return;
 
     Future<void> submit(String choice) => GameActions.resolve(ref, m, choice);
+    final news = TransferNewsPayload.tryParse(m.payload);
 
     // Tombol dibangun di dalam builder dialog agar Navigator.pop menutup
     // dialog, bukan layar Inbox. Ruang Negosiasi dibuka memakai context
@@ -134,7 +139,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         );
         final List<Widget> actions;
         if (!m.needsAction) {
-          final playerId = _playerIdOf(m.payload);
+          final playerId = TransferNewsPayload.playerIdOf(m.payload);
           actions = [
             if (playerId != null)
               TextButton(
@@ -195,11 +200,16 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           }
         }
 
-        return AlertDialog(
-          title: Text(trText(m.title)),
-          content: SingleChildScrollView(child: Text(trText(m.body))),
-          actions: actions,
-        );
+        // Berita transfer: kartu detail transfer. Pesan lain: kartu pesan
+        // bergaya sama.
+        if (news != null) {
+          return TransferNewsDetailDialog(
+            message: m,
+            news: news,
+            actions: actions,
+          );
+        }
+        return InboxMessageDialog(message: m, actions: actions);
       },
     );
     if (next == null || !context.mounted) return;
@@ -225,16 +235,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   static Future<TransferOffer?> _offerOf(WidgetRef ref, InboxMessage m) async {
-    final head = m.payload?.split('|').first;
-    if (head == null || !head.startsWith('offer:')) return null;
-    final id = int.tryParse(head.substring('offer:'.length));
+    final id = TransferNewsPayload.offerIdOf(m.payload);
     if (id == null) return null;
     return ref.read(transferRepositoryProvider).offerById(id);
-  }
-
-  static int? _playerIdOf(String? payload) {
-    if (payload == null || !payload.startsWith('player:')) return null;
-    return int.tryParse(payload.substring('player:'.length));
   }
 }
 
@@ -246,20 +249,15 @@ class _MessageCard extends StatelessWidget {
   final InboxMessage message;
   final VoidCallback onTap;
 
-  static Color colorOf(InboxCategory c) => switch (c) {
-    InboxCategory.board => Chalk.pink,
-    InboxCategory.match => Chalk.green,
-    InboxCategory.scouting => Chalk.blue,
-    InboxCategory.finance => Chalk.yellow,
-    InboxCategory.contract => Chalk.pink,
-    InboxCategory.season => Chalk.yellow,
-    InboxCategory.transfer => Chalk.blue,
-  };
 
   @override
   Widget build(BuildContext context) {
     final m = message;
-    final color = colorOf(m.category);
+    final color = inboxCategoryColor(m.category);
+    final news =
+        m.category == InboxCategory.transfer
+            ? TransferNewsPayload.tryParse(m.payload)
+            : null;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -275,25 +273,32 @@ class _MessageCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (news != null) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: TransferNewsThumb(news: news),
+              ),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text.rich(
-                    TextSpan(
+                  if (news != null)
+                    Row(
                       children: [
-                        TextSpan(
-                          text: m.category.label,
-                          style: TextStyle(
-                            color: color,
-                            fontWeight: FontWeight.w600,
+                        Expanded(child: _categoryLine(m, color)),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: StatusBadge(
+                            news.status.label,
+                            color: transferNewsColor(news.status),
                           ),
                         ),
-                        TextSpan(text: ', ${formatDate(m.date)}'),
                       ],
-                    ),
-                    style: TextStyle(fontSize: 13, color: Chalk.dim),
-                  ),
+                    )
+                  else
+                    _categoryLine(m, color),
                   const SizedBox(height: 3),
                   Text(
                     trText(m.title),
@@ -302,6 +307,10 @@ class _MessageCard extends StatelessWidget {
                       fontWeight: m.isRead ? FontWeight.w400 : FontWeight.w700,
                     ),
                   ),
+                  if (news != null) ...[
+                    const SizedBox(height: 2),
+                    TransferNewsRoute(news: news),
+                  ],
                   if (m.needsAction) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -331,6 +340,19 @@ class _MessageCard extends StatelessWidget {
       ),
     );
   }
+
+  static Widget _categoryLine(InboxMessage m, Color color) => Text.rich(
+    TextSpan(
+      children: [
+        TextSpan(
+          text: m.category.label,
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        ),
+        TextSpan(text: ', ${formatDate(m.date)}'),
+      ],
+    ),
+    style: TextStyle(fontSize: 13, color: Chalk.dim),
+  );
 }
 
 enum _NextKind { choice, player, room }

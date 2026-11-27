@@ -10,6 +10,8 @@
 /// - `{name}` diganti argumen `name`.
 /// - `{n, plural, one{# hari} other{# hari}}` memilih bentuk tunggal/jamak
 ///   (`#` = angka). Aturan "one": en n == 1, fr n <= 1, id tidak pernah.
+/// - `{n, ordinal}` = bilangan urutan: en "1st/2nd/3rd/4th", bahasa lain angka
+///   saja (teks sekitarnya yang menambah akhiran, mis. fr "{n, ordinal}e").
 library;
 
 import 'dart:convert';
@@ -146,7 +148,23 @@ String translate(AppLanguage lang, String key, Map<String, Object?> args) {
 final RegExp _pluralRe = RegExp(
   r'\{(\w+), plural, one\{([^{}]*)\} other\{([^{}]*)\}\}',
 );
+final RegExp _ordinalRe = RegExp(r'\{(\w+), ordinal\}');
 final RegExp _argRe = RegExp(r'\{(\w+)\}');
+
+String _ordinal(AppLanguage lang, num n) {
+  if (lang != AppLanguage.en) return '$n';
+  final i = n.toInt();
+  final suffix =
+      (i % 100 >= 11 && i % 100 <= 13)
+          ? 'th'
+          : switch (i % 10) {
+            1 => 'st',
+            2 => 'nd',
+            3 => 'rd',
+            _ => 'th',
+          };
+  return '$i$suffix';
+}
 
 String _interpolate(AppLanguage lang, String text, Map<String, Object?> args) {
   var out = text.replaceAllMapped(_pluralRe, (m) {
@@ -157,6 +175,10 @@ String _interpolate(AppLanguage lang, String text, Map<String, Object?> args) {
       AppLanguage.id => false,
     };
     return (one ? m[2]! : m[3]!).replaceAll('#', '$n');
+  });
+  out = out.replaceAllMapped(_ordinalRe, (m) {
+    final v = args[m[1]];
+    return v is num ? _ordinal(lang, v) : _argText(lang, v);
   });
   out = out.replaceAllMapped(_argRe, (m) {
     final name = m[1]!;
